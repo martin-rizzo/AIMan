@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+
+source './1_aiman/helpers.sh'
+
+# define the allowed commands as a string with space-separated values
+VALID_COMMANDS="install remove launch config info"
+
+
+function read_modules() {
+
+    # loop through each line in the file
+    while read -r name hash description
+    do
+        # Print the name, hash, and description for each line
+        echo "Name: $name"
+        echo "Hash: $hash"
+        echo "Description: $description"
+    done < file.txt}
+}
+
+function cmd_info() {
+    local help=$1 options=$2 apps=$3
+    
+    echo "help = '$help'"
+    echo "options = '$options'"
+    echo "apps = '$apps'"
+    
+    
+    if $help; then
+      echo "display details about a app or group of apps"
+      exit 0
+    fi
+    if [[ -n $options ]]; then
+      error_unrecognized_arguments $options
+      exit 1
+    fi
+    
+    for app in $apps; do
+        load_app_info $app
+        echo "Name        : $app_name"
+        echo "Summary     : $app_brief"
+        echo "License     : $app_license"
+        echo "Repository  : $app_repo"
+        echo "Hash        : $app_hash"
+        echo "Description : $app_description"
+        echo
+    done
+
+}
+
+
+#================================== START ==================================#
+
+command=''
+apps=''
+options=''
+show_help=false
+
+# loop through all the script parameters
+while [ $# -gt 0 ]; do
+    param=$1
+    case "$param" in
+        -h | --help)          show_help=true             ;;
+        -v | --version)       command=print_version      ;;
+        -*)                   options="$options $param"  ;;
+        *)
+          if [[ " $VALID_COMMANDS " == *" $param "* ]]; then
+            command=$param
+          else 
+            apps="$apps $param"
+          fi
+          ;;
+    esac
+    shift
+done
+# trim leading spaces
+options=${options#" "}
+apps=${apps#" "}
+
+
+echo "command = '$command'"
+echo "options = '$options'"
+echo "apps = '$apps'"
+
+
+if [[ -n $command ]]; then
+  "cmd_$command" "$show_help" "$options" "$apps"
+else
+  echo "print main help!"
+fi
+
+
+
+
+## execute script command
+#"$Command"
