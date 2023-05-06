@@ -6,8 +6,8 @@
 # Repo    : https://github.com/martin-rizzo/AIAppManager
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#                      Stable Diffusion Prompt Viewer
-#      A plugin for "Eye of GNOME" that displays SD embedded prompts.
+#                                    AIMan
+#        A basic package management system for AI open source projects
 #   
 #     Copyright (c) 2023 Martin Rizzo
 #     
@@ -61,6 +61,25 @@ error_unrecognized_arguments() {
   exit 1
 }
 
+#---------------------------------- GIT ------------------------------------#
+
+function clone_project() {
+    local directory=$1 repo=$2 hash=$3
+    
+    if [[ -z $repo ]]; then
+        repo=$(print_project @repo)
+    fi
+    if [[ -z $directory ]]; then
+        directory=$(print_project @directory)
+    fi
+    if [[ -z $hash ]]; then
+        hash=$(print_project @hash)
+    fi
+    git clone "$repo" "$directory"
+    cd "$directory"
+    git reset --hard "$hash"
+}
+
 #------------------------------ PROJECT INFO -------------------------------#
 
 declare -a cur_proj_info
@@ -79,18 +98,18 @@ declare -a cur_proj_info
 # Example:
 #   load_project "webui"
 #
-load_project() {
+function load_project() {
     local project_to_find=$1
     local IFS=,
     while read -r project dir repo hash license name brief description; do
-        cur_proj_info[0]=$project
-        cur_proj_info[1]=$dir
-        cur_proj_info[2]=$repo
-        cur_proj_info[3]=$hash
-        cur_proj_info[4]=$license
-        cur_proj_info[5]=$name
-        cur_proj_info[6]=$brief
-        cur_proj_info[7]=$description
+        cur_proj_info[0]=${project##* }
+        cur_proj_info[1]=${dir##* }
+        cur_proj_info[2]=${repo##* }
+        cur_proj_info[3]=${hash##* }
+        cur_proj_info[4]=${license##* }
+        cur_proj_info[5]=${name##* }
+        cur_proj_info[6]=${brief##* }
+        cur_proj_info[7]=${description##* }
         if [[ $project == $project_to_find ]]; then
             return
         fi
@@ -104,7 +123,7 @@ load_project() {
 #   Any number of parameters may be passed to the function, which
 #   correspond to the project information to be printed.
 #   Valid parameters are:
-#     "@dir"         - prints the project's directory
+#     "@directory"   - prints the project's directory
 #     "@repo"        - prints the project's repository URL
 #     "@hash"        - prints the project's commit hash
 #     "@license"     - prints the project's license
@@ -123,11 +142,11 @@ load_project() {
 #   print_project @name @description @repo
 #   Output: "Project Description of the project https://github.com/user/project.git"
 #
-print_project() {
+function print_project() {
     # loop through each parameter passed to the function
     for parameter in "$@"; do
         case $parameter in
-            "@dir"        ) echo -n "${cur_proj_info[1]}" ;;
+            "@directory"  ) echo -n "${cur_proj_info[1]}" ;;
             "@repo"       ) echo -n "${cur_proj_info[2]}" ;;
             "@hash"       ) echo -n "${cur_proj_info[3]}" ;;
             "@license"    ) echo -n "${cur_proj_info[4]}" ;;

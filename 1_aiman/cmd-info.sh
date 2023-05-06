@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# File    : project-invoke.sh
-# Brief   : Controls the local copy of the "invoke" project.
+# File    : cmd-info.sh
+# Brief   : Command to display details about each project
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 5, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
@@ -30,32 +30,38 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+Help="
+Usage: $ScriptName info [APP ...]
+
+display details about a project or group of projects
+
+Options:
+    -h, --help     show command help
+    -V, --version  show $ScriptName version and exit
+
+Examples:
+    $ScriptName info webui
+"
 
 
+function run_command() {
+    local options=$1 projects=$2
+    
+    if [[ -n $options ]]; then
+      error_unrecognized_arguments $options
+      exit 1
+    fi
+    
+    for project in $projects; do
+        load_project $project
+        print_project "Name        :" @name
+        print_project "Summary     :" @brief
+        print_project "License     :" @license
+        print_project "Directory   :" @directory
+        print_project "Repository  :" @repo
+        print_project "Hash        :" @hash
+        print_project "Description :" @description
+        echo
+    done
 
-function install() {
-
-    clone_project
-    
-    #activate_virtual_env
-    
-    ## NVIDIA GPU
-    #pip install -e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117
-    
-    ## AMD GPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2
-    
-    ## CPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu
-    
 }
-
-function launch() {
-
-    echo launch invoke
-    #activate_virtual_env
-    #invokeai --web
-    
-}
-
-

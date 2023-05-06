@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# File    : command-info.sh
-# Brief   : Command that provides information about each project
+# File    : cmd-install.sh
+# Brief   : Command to install projects on the aiman directory
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 5, 2023
-# Repo    : https://github.com/martin-rizzo/AIAppManager
+# Date    : May 6, 2023
+# Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#                      Stable Diffusion Prompt Viewer
-#      A plugin for "Eye of GNOME" that displays SD embedded prompts.
+#                                    AIMan
+#        A basic package management system for AI open source projects
 #   
 #     Copyright (c) 2023 Martin Rizzo
 #     
@@ -31,37 +31,27 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName info [APP ...]
+Usage: $ScriptName install PROJECT [PROJECT ...]
 
-display details about a project or group of projects
+install a project or projects on the aiman directory
 
 Options:
     -h, --help     show command help
     -V, --version  show $ScriptName version and exit
 
 Examples:
-    $ScriptName info webui
+    $ScriptName install invoke
 "
 
 
-function run_command() {
-    local options=$1 projects=$2
-    
-    if [[ -n $options ]]; then
-      error_unrecognized_arguments $options
-      exit 1
-    fi
-    
-    for project in $projects; do
-        load_project $project
-        print_project "Name        :" @name
-        print_project "Summary     :" @brief
-        print_project "License     :" @license
-        print_project "Directory   :" @dir
-        print_project "Repository  :" @repo
-        print_project "Hash        :" @hash
-        print_project "Description :" @description
-        echo
-    done
 
+function run_command() {
+    local options=$1 project=$2
+
+    # load_project_code $project
+    # load_project_data $project
+    
+    source "$CodeDir/project-$project.sh"
+    load_project $project
+    install
 }

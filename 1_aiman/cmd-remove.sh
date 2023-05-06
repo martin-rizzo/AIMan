@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# File    : project-invoke.sh
-# Brief   : Controls the local copy of the "invoke" project.
+# File    : cmd-remove.sh
+# Brief   : Command to remove projects from the aiman directory
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 5, 2023
+# Date    : May 6, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30,32 +30,23 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+Help="
+Usage: $ScriptName remove [PROJECT ...]
 
+remove a project or projects from the aiman directory
 
+Options:
+    -h, --help     show command help
+    -V, --version  show $ScriptName version and exit
 
-function install() {
+Examples:
+    $ScriptName remove comfyui
+"
+SingleProjectCommand=true
 
-    clone_project
-    
-    #activate_virtual_env
-    
-    ## NVIDIA GPU
-    #pip install -e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117
-    
-    ## AMD GPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2
-    
-    ## CPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu
-    
+function run_command() {
+    local options=$1 project=$2
+
+    echo "Not implemented yet"
+    exit 1
 }
-
-function launch() {
-
-    echo launch invoke
-    #activate_virtual_env
-    #invokeai --web
-    
-}
-
-

@@ -3,11 +3,11 @@
 # Brief   : Main script
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 5, 2023
-# Repo    : https://github.com/martin-rizzo/AIAppManager
+# Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#                      Stable Diffusion Prompt Viewer
-#      A plugin for "Eye of GNOME" that displays SD embedded prompts.
+#                                    AIMan
+#        A basic package management system for AI open source projects
 #   
 #     Copyright (c) 2023 Martin Rizzo
 #     
@@ -55,22 +55,7 @@ CodeDir='./1_aiman'
 source "$CodeDir/helpers.sh"
 
 # define the allowed commands as a string with space-separated values
-VALID_COMMANDS='info' #"install remove launch config"
-
-
-function read_modules() {
-
-    # loop through each line in the file
-    while read -r name hash description
-    do
-        # Print the name, hash, and description for each line
-        echo "Name: $name"
-        echo "Hash: $hash"
-        echo "Description: $description"
-    done < file.txt}
-}
-
-
+VALID_COMMANDS='info install remove' #"launch config"
 
 
 #================================== START ==================================#
@@ -79,13 +64,14 @@ command=''
 projects=''
 options=''
 show_help=false
+show_version=false
 
 # loop through all the script parameters
 while [ $# -gt 0 ]; do
     param=$1
     case "$param" in
         -h | --help)          show_help=true             ;;
-        -v | --version)       command=print_version      ;;
+        -v | --version)       show_version=true          ;;
         -*)                   options="$options $param"  ;;
         *)
           if [[ " $VALID_COMMANDS " == *" $param "* ]]; then
@@ -97,26 +83,25 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
-# trim leading spaces
+# trim leading spaces from acumulative strings
 options=${options#" "}
 projects=${projects#" "}
 
-#echo "command = '$command'"
-#echo "options = '$options'"
-#echo "projects = '$projects'"
-
-if [[ "$command" == print_version ]]; then
-    echo $ScriptVersion
-    exit 0
-elif [[ -n $command ]]; then
-    source "$CodeDir/command-$command.sh"
+# load the command code
+if [[ -n $command ]]; then
+    source "$CodeDir/cmd-$command.sh"
 fi
 
+# print help or version
 if $show_help; then
     echo "$Help"
     exit 0
-else
-    run_command "$options" "$projects"
-    exit $?
+elif $show_version; then
+    echo $ScriptVersion
+    exit 0
 fi
+
+# run the command code
+run_command "$options" "$projects"
+exit $?
 
