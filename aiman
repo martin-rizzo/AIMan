@@ -1,10 +1,61 @@
 #!/usr/bin/env bash
+# File    : aiman
+# Brief   : Main script
+# Author  : Martin Rizzo | <martinrizzo@gmail.com>
+# Date    : May 5, 2023
+# Repo    : https://github.com/martin-rizzo/AIAppManager
+# License : MIT
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#                      Stable Diffusion Prompt Viewer
+#      A plugin for "Eye of GNOME" that displays SD embedded prompts.
+#   
+#     Copyright (c) 2023 Martin Rizzo
+#     
+#     Permission is hereby granted, free of charge, to any person obtaining
+#     a copy of this software and associated documentation files (the
+#     "Software"), to deal in the Software without restriction, including
+#     without limitation the rights to use, copy, modify, merge, publish,
+#     distribute, sublicense, and/or sell copies of the Software, and to
+#     permit persons to whom the Software is furnished to do so, subject to
+#     the following conditions:
+#     
+#     The above copyright notice and this permission notice shall be
+#     included in all copies or substantial portions of the Software.
+#     
+#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+#     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+#     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+#     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+#     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
+#     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+ScriptName="${0##*/}";ScriptVersion=0.1
+Help="
+usage: $ScriptName [options] COMMAND
 
+List of Commands:
+    help            display a helpful usage message
+    info            display details about a project or group of projects
+    install         install projects on the aiman directory
+    list            list projects
+    reinstall       reinstall a project
+    remove          remove projects from the aiman directory
 
-source './1_aiman/helpers.sh'
+Options:
+    -h, --help      show command help
+    -V, --version   show $ScriptName version and exit
+
+Examples:
+    $ScriptName info webui
+"
+
+CodeDir='./1_aiman'
+
+source "$CodeDir/helpers.sh"
 
 # define the allowed commands as a string with space-separated values
-VALID_COMMANDS="install remove launch config info"
+VALID_COMMANDS='info' #"install remove launch config"
 
 
 function read_modules() {
@@ -19,41 +70,13 @@ function read_modules() {
     done < file.txt}
 }
 
-function cmd_info() {
-    local help=$1 options=$2 apps=$3
-    
-    echo "help = '$help'"
-    echo "options = '$options'"
-    echo "apps = '$apps'"
-    
-    
-    if $help; then
-      echo "display details about a app or group of apps"
-      exit 0
-    fi
-    if [[ -n $options ]]; then
-      error_unrecognized_arguments $options
-      exit 1
-    fi
-    
-    for app in $apps; do
-        load_app_info $app
-        echo "Name        : $app_name"
-        echo "Summary     : $app_brief"
-        echo "License     : $app_license"
-        echo "Repository  : $app_repo"
-        echo "Hash        : $app_hash"
-        echo "Description : $app_description"
-        echo
-    done
 
-}
 
 
 #================================== START ==================================#
 
 command=''
-apps=''
+projects=''
 options=''
 show_help=false
 
@@ -68,7 +91,7 @@ while [ $# -gt 0 ]; do
           if [[ " $VALID_COMMANDS " == *" $param "* ]]; then
             command=$param
           else 
-            apps="$apps $param"
+            projects="$projects $param"
           fi
           ;;
     esac
@@ -76,22 +99,24 @@ while [ $# -gt 0 ]; do
 done
 # trim leading spaces
 options=${options#" "}
-apps=${apps#" "}
+projects=${projects#" "}
 
+#echo "command = '$command'"
+#echo "options = '$options'"
+#echo "projects = '$projects'"
 
-echo "command = '$command'"
-echo "options = '$options'"
-echo "apps = '$apps'"
-
-
-if [[ -n $command ]]; then
-  "cmd_$command" "$show_help" "$options" "$apps"
-else
-  echo "print main help!"
+if [[ "$command" == print_version ]]; then
+    echo $ScriptVersion
+    exit 0
+elif [[ -n $command ]]; then
+    source "$CodeDir/command-$command.sh"
 fi
 
+if $show_help; then
+    echo "$Help"
+    exit 0
+else
+    run_command "$options" "$projects"
+    exit $?
+fi
 
-
-
-## execute script command
-#"$Command"

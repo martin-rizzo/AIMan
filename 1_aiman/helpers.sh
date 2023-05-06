@@ -1,5 +1,35 @@
 #!/usr/bin/env bash
-
+# File    : helpers.sh
+# Brief   : Contains helper functions, e.g: printing status, checking cmds..
+# Author  : Martin Rizzo | <martinrizzo@gmail.com>
+# Date    : May 5, 2023
+# Repo    : https://github.com/martin-rizzo/AIAppManager
+# License : MIT
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#                      Stable Diffusion Prompt Viewer
+#      A plugin for "Eye of GNOME" that displays SD embedded prompts.
+#   
+#     Copyright (c) 2023 Martin Rizzo
+#     
+#     Permission is hereby granted, free of charge, to any person obtaining
+#     a copy of this software and associated documentation files (the
+#     "Software"), to deal in the Software without restriction, including
+#     without limitation the rights to use, copy, modify, merge, publish,
+#     distribute, sublicense, and/or sell copies of the Software, and to
+#     permit persons to whom the Software is furnished to do so, subject to
+#     the following conditions:
+#     
+#     The above copyright notice and this permission notice shall be
+#     included in all copies or substantial portions of the Software.
+#     
+#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+#     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+#     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+#     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+#     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+#     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
+#     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 
 # Function that allows printing messages with different formats.
@@ -31,20 +61,83 @@ error_unrecognized_arguments() {
   exit 1
 }
 
+#------------------------------ PROJECT INFO -------------------------------#
 
-load_app_info() {
-    local module=$1
-    local module_ name_ brief_ license_ repo_ hash_ description_
+declare -a cur_proj_info
+
+# load_project - loads info about a project from a file called "projects.lst"
+#
+# Arguments:
+#   $1 - the name of the project to look up
+#
+# Globals:
+#   cur_proj_info - an array that stores info for the current loaded project
+#
+# Returns:
+#   None
+#
+# Example:
+#   load_project "webui"
+#
+load_project() {
+    local project_to_find=$1
     local IFS=,
-    while read -r module_ name_ brief_ license_ repo_ hash_ description_; do
-        app_name=$name_ ; app_brief=$brief_ ; app_license=$license_
-        app_repo=$repo_ ; app_hash=$hash_
-        app_description=$description_
-        if [[ $module_ == $module ]]; then
+    while read -r project dir repo hash license name brief description; do
+        cur_proj_info[0]=$project
+        cur_proj_info[1]=$dir
+        cur_proj_info[2]=$repo
+        cur_proj_info[3]=$hash
+        cur_proj_info[4]=$license
+        cur_proj_info[5]=$name
+        cur_proj_info[6]=$brief
+        cur_proj_info[7]=$description
+        if [[ $project == $project_to_find ]]; then
             return
         fi
-    done < "1_aiman/modules.lst"  
-    app_name=''
+    done < "$CodeDir/projects.lst"
+    cur_proj_info=()
+}
+
+# print_project - prints info about the current project based on the parameters
+#
+# Arguments:
+#   Any number of parameters may be passed to the function, which
+#   correspond to the project information to be printed.
+#   Valid parameters are:
+#     "@dir"         - prints the project's directory
+#     "@repo"        - prints the project's repository URL
+#     "@hash"        - prints the project's commit hash
+#     "@license"     - prints the project's license
+#     "@name"        - prints the project's name
+#     "@brief"       - prints a brief description of the project
+#     "@description" - prints a more detailed description of the project
+#     Any other parameter will be printed as-is.
+#
+# Globals:
+#   cur_proj_info - an array that stores info for the current loaded project
+#
+# Returns:
+#   None
+#
+# Example:
+#   print_project @name @description @repo
+#   Output: "Project Description of the project https://github.com/user/project.git"
+#
+print_project() {
+    # loop through each parameter passed to the function
+    for parameter in "$@"; do
+        case $parameter in
+            "@dir"        ) echo -n "${cur_proj_info[1]}" ;;
+            "@repo"       ) echo -n "${cur_proj_info[2]}" ;;
+            "@hash"       ) echo -n "${cur_proj_info[3]}" ;;
+            "@license"    ) echo -n "${cur_proj_info[4]}" ;;
+            "@name"       ) echo -n "${cur_proj_info[5]}" ;;
+            "@brief"      ) echo -n "${cur_proj_info[6]}" ;;
+            "@description") echo -n "${cur_proj_info[7]}" ;;
+            *)              echo -n "$parameter"          ;;
+        esac
+    done
+    echo
 }
 
 
