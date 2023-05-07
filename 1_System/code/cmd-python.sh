@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# File    : project-invoke.sh
-# Brief   : Controls the local copy of the "invoke" project.
+# File    : cmd-python.sh
+# Brief   : Command to manage the python virtual environment
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 5, 2023
+# Date    : May 6, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30,32 +30,28 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+Help="
+Usage: $ScriptName python <action>
+
+manage the python virtual environment
+
+Options:
+    -h, --help     show command help
+    -V, --version  show $ScriptName version and exit
+
+Examples:
+    $ScriptName python activate
+    $ScriptName python destroy
+"
 
 
+function run_command() {
+    local options=$1 subcommand=$2
 
-function install() {
-
-    clone_project
-    
-    #activate_virtual_env
-    
-    ## NVIDIA GPU
-    #pip install -e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117
-    
-    ## AMD GPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2
-    
-    ## CPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu
-    
+    case $subcommand in
+        activate) activate_python_env subshell ;;
+        destroy)  rm -Rf "$PythonDir" ;;
+        *) echo "invalid command" ;;
+    esac
 }
-
-function launch() {
-
-    echo launch invoke
-    #activate_virtual_env
-    #invokeai --web
-    
-}
-
 

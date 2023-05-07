@@ -80,6 +80,70 @@ function clone_project() {
     git reset --hard "$hash"
 }
 
+
+#--------------------------- SYSTEM EVALUATION -----------------------------#
+
+# Function that checks whether a given command is available in the system
+# and prints an error message with installation instructions if it is not.
+# Usage: ensure_command <command>
+# Arguments:
+#   - command: the name of the command to be checked.
+#
+function ensure_command() {
+    if ! command -v $1 &> /dev/null; then
+        echoex error "$1 is not available!"
+        echoex "   you can try to install '$1' using the following command:"
+        echoex "   > sudo dnf install $1\n"
+        exit 1
+    else
+        echoex check "$1 is installed"
+    fi
+}
+
+#------------------------ PYTHON VIRT ENVIRONMENT --------------------------#
+
+
+function ensure_python_env() {
+
+    if [[ ! -d $PythonDir ]]; then
+        echoex wait 'creating python virtual environment'
+        "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
+        echoex check 'new python virtual environment created:'
+        echoex  "     $PythonDir"
+    elif [[ ! -e "$PythonDir/bin/$CompatiblePython" ]]; then
+        echoex warn "a different version of python was selected ($CompatiblePython)"
+        echoex wait "recreating virtual environment"
+        rm -Rf "$PythonDir"
+        "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
+        echoex check "virtual environment recreated for $CompatiblePython"
+    else
+        echoex check 'virtual environment already exists'
+    fi
+}
+
+# Function that checks whether a virtual environment exists, and creates
+# a new one if it doesn't.
+# Usage: ensure_virt_env <venv_dir> <python>
+# Arguments:
+#   - venv_dir: the path of the virtual environment dir to be checked.
+#   - python  : the Python interpreter that will create the v. environment.
+#
+
+function activate_python_env() {
+    local mode=$1
+    local venv_prompt="aiman-$CompatiblePython"
+    ensure_python_env
+    
+    if [[ $mode == 'subshell' ]]; then
+        /usr/bin/env bash -i -c "source '$PythonDir/bin/activate'; exec /bin/bash -i"
+        exit 0
+    else
+        source "$PythonDir/bin/activate"
+    fi
+}
+
+
+
 #------------------------------ PROJECT INFO -------------------------------#
 
 declare -a cur_proj_info
