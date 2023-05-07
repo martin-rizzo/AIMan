@@ -2,8 +2,12 @@
 #
 # PROJECTS
 #
-/invoke-ai
-/stable-diffusion-webui
-/comfyui
-/scal-sdt
+/invoke-ai/
+/stable-diffusion-webui/
+/comfyui/
+/scal-sdt/
 
+#
+# Python virtual environment
+#
+/1_System/venv/
