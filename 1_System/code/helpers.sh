@@ -61,10 +61,15 @@ error_unrecognized_arguments() {
   exit 1
 }
 
+function change_to_main_directory() {
+    cd "$MainDir" &> /dev/null
+}
+
 #---------------------------------- GIT ------------------------------------#
 
-function clone_project() {
+function clone_project_to() {
     local directory=$1 repo=$2 hash=$3
+    local previous_dir=$(pwd)
     
     if [[ -z $repo ]]; then
         repo=$(print_project @repo)
@@ -76,8 +81,11 @@ function clone_project() {
         hash=$(print_project @hash)
     fi
     git clone "$repo" "$directory"
-    cd "$directory"
-    git reset --hard "$hash"
+    if [[ $hash != '-' && ${#hash} -ge 6 ]]; then
+        cd "$directory"
+        git reset --hard "$hash"
+    fi
+    cd "$previous_dir" &> /dev/null
 }
 
 
@@ -103,7 +111,7 @@ function ensure_command() {
 #------------------------ PYTHON VIRT ENVIRONMENT --------------------------#
 
 
-function ensure_python_env() {
+function require_virtual_python() {
 
     if [[ ! -d $PythonDir ]]; then
         echoex wait 'creating python virtual environment'
@@ -117,7 +125,7 @@ function ensure_python_env() {
         "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
         echoex check "virtual environment recreated for $CompatiblePython"
     else
-        echoex check 'virtual environment already exists'
+        echoex check 'virtual environment exists'
     fi
 }
 
@@ -128,6 +136,34 @@ function ensure_python_env() {
 #   - venv_dir: the path of the virtual environment dir to be checked.
 #   - python  : the Python interpreter that will create the v. environment.
 #
+
+
+function is_virtual_python() {
+    local current_virtual_dir=$VIRTUAL_ENV
+    if [[ -z $current_virtual_dir ]]; then
+        return 1
+    fi
+    if [[ $current_virtual_dir == '~'* ]]; then
+        current_virtual_dir="${current_virtual_dir/\~\//}"
+    fi
+    if [[ "$PythonDir" == *"$current_virtual_dir" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function virtual_python() {
+
+    if ! is_virtual_python; then
+        echoex wait 'activating virtual environment'
+        source "$PythonDir/bin/activate"
+        echoex check 'virtual environment activated'
+    else
+        echoex check "virtual environment already activated"
+    fi
+    python $@
+}
 
 function activate_python_env() {
     local mode=$1

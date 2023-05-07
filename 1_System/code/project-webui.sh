@@ -43,8 +43,15 @@ function revert() {
 }
 
 function install() {
-    clone_project
-    revert    
+    local project_dir=$(print_project @directory)
+        
+   #require_system_command git wget
+    require_virtual_python
+    
+    change_to_main_directory
+    clone_project_to "$project_dir"
+    cd "$project_dir"
+    virtual_python launch.py --no-download-sd-model --exit    
 }
 
 function launch() {

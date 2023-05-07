@@ -47,11 +47,28 @@ Examples:
 
 function run_command() {
     local options=$1 subcommand=$2
+    local exitmsg="To exit from this Python virtual environment, type 'exit' and press Enter."
 
     case $subcommand in
-        activate) activate_python_env subshell ;;
-        destroy)  rm -Rf "$PythonDir" ;;
-        *) echo "invalid command" ;;
+        activate)
+            require_virtual_python
+            if is_virtual_python; then
+                #echoex check "virtual environment already activated (nothing to do)"
+                echoex check "virtual environment is already activated (no further action is necessary)"
+                echoex "$exitmsg"
+            else
+                echoex wait "activating virtual environment"
+                echoex "$exitmsg"
+                /usr/bin/env bash -i -c \
+                    "source '$PythonDir/bin/activate'; exec /bin/bash -i"
+            fi
+            ;;
+        destroy)
+            rm -Rf "$PythonDir"
+            ;;
+        *)
+            echo "invalid command"
+            ;;
     esac
 }
 

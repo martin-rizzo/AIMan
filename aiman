@@ -53,8 +53,9 @@ Examples:
 "
 
 # Directories
-UserDir='./0_User'
-SystemDir='./1_System'
+MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}") )
+UserDir="$MainDir/0_User"
+SystemDir="$MainDir/1_System"
 CodeDir="$SystemDir/code"
 PythonDir="$SystemDir/venv"
 
@@ -71,8 +72,8 @@ ValidCommands='info install remove python' #"launch config"
 
 
 #================================== START ==================================#
-cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null
 source "$CodeDir/helpers.sh"
+change_to_main_directory
 
 command=''
 projects=''
@@ -114,11 +115,6 @@ elif $show_version; then
     echo $ScriptVer
     exit 0
 fi
-
-# verify 
-ensure_command wget
-ensure_command git
-ensure_command "$CompatiblePython"
 
 # run the command code
 run_command "$options" "$projects"
