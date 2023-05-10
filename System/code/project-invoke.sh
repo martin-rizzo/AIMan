@@ -32,39 +32,32 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 
-function update() {
-    git pull
-}
-
-function revert() {
-    local hash=$(print_project @hash)
-    if [[ -n "$hash" ]]; then
-        git reset --hard "$hash"
-    fi
-}
 
 function install() {
-    clone_project
-    revert
+    local project_dir=$(print_project @directory)
+
+    change_to_repo_directory
+    clone_project_to "$project_dir"
+    cd "$project_dir"
     
-    activate_virtual_env
+    # export INVOKEAI_ROOT=$project_dir
+
+
     
-    ## NVIDIA GPU
-    #pip install -e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117
+    # NVIDIA GPU
+    virtual_python !pip install -e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117
     
     ## AMD GPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2
+    #virtual_python !pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2
     
     ## CPU
-    #pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu
+    #virtual_python !pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu
     
-}
-
-function launch() {
-
-    echo launch invoke
-    #activate_virtual_env
-    #invokeai --web
+    ## configure / downloads models
+    #virtual_python !invokeai-configure --root_dir "$project_dir"
+    
+    ## launch
+    #virtual_python !invokeai --web --root_dir "$project_dir"
     
 }
 

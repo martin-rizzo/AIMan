@@ -1,13 +1,17 @@
 
 #
-# PROJECTS
+# REPOSITORIES
 #
-/invoke-ai/
-/stable-diffusion-webui/
-/comfyui/
-/scal-sdt/
+/Repos/
+
+#
+# STORAGE
+#
+/Storage/
+/Models
+/Output
 
 #
 # Python virtual environment
 #
-/1_System/venv/
+/System/venv/

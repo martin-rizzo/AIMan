@@ -52,12 +52,15 @@ Examples:
     $ScriptName info webui
 "
 
+
 # Directories
 MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}") )
-UserDir="$MainDir/0_User"
-SystemDir="$MainDir/1_System"
+RepoDir="$MainDir/Repos"
+StorageDir="$MainDir/Storage"
+SystemDir="$MainDir/System"
 CodeDir="$SystemDir/code"
 PythonDir="$SystemDir/venv"
+
 
 # Compatible version of Python to be used in the virtual environment.
 # ATTENTION: The version must be 3.10 or lower!
@@ -73,6 +76,7 @@ ValidCommands='info install remove python' #"launch config"
 
 #================================== START ==================================#
 source "$CodeDir/helpers.sh"
+source "$CodeDir/helper-dir.sh"
 change_to_main_directory
 
 command=''
@@ -102,9 +106,12 @@ done
 options=${options#" "}
 projects=${projects#" "}
 
-# load the command code
+# load the selected command's code
+# if no command is selected then force the help to be displayed
 if [[ -n $command ]]; then
     source "$CodeDir/cmd-$command.sh"
+else
+    show_help=true
 fi
 
 # print help or version
@@ -117,6 +124,7 @@ elif $show_version; then
 fi
 
 # run the command code
+require_storage_directory
 run_command "$options" "$projects"
 exit $?
 

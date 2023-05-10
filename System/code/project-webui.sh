@@ -31,6 +31,23 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
+
+function install() {
+    local project_dir=$(print_project @directory)
+    
+    require_system_command git wget
+    require_virtual_python
+    
+    change_to_repo_directory
+    clone_project_to "$project_dir"
+    cd "$project_dir"
+    virtual_python launch.py --no-download-sd-model --exit    
+}
+
+function launch() {
+   virtual_python launch.py '????'
+}
+
 function update() {
     git pull
 }
@@ -41,22 +58,4 @@ function revert() {
         git reset --hard "$hash"
     fi
 }
-
-function install() {
-    local project_dir=$(print_project @directory)
-        
-   #require_system_command git wget
-    require_virtual_python
-    
-    change_to_main_directory
-    clone_project_to "$project_dir"
-    cd "$project_dir"
-    virtual_python launch.py --no-download-sd-model --exit    
-}
-
-function launch() {
-    activate_virtual_env
-    
-}
-
 

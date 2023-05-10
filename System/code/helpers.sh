@@ -32,26 +32,36 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 
-# Function that allows printing messages with different formats.
-# Usage: echoex [check|error|wait] <message>
-# Arguments:
-#   - check: shows the message in green with a checkmark symbol in front.
-#   - error: shows the message in red with an X symbol in front.
-#   - wait : shows the message in yellow with a dash symbol in front.
-#   - message: the message to be displayed.
+# Prints messages with different formats. If the format is not specified,
+# the message will be printed like the echo command.
+#
+# Usage: echoex [format] message
+#
+# Parameters:
+#   format - Optional format for the message. Can be one of the following:
+#     * check: shows the message in green with a checkmark symbol in front.
+#     * wait: shows the message in brown with a dash symbol in front.
+#     * info: shows the message in blue with a circle symbol in front.
+#     * warn: shows the message in yellow with an exclamation symbol in front.
+#     * error: shows the message in red with an X symbol in front.
+#     * fatal: shows the message in blinking red with a double X symbol in front.
+#
+#   message - The message to be printed.
 #
 function echoex() {
-    if [[ $1 == check ]]; then
-        echo -e "\033[32m \xE2\x9C\x94 $2\033[0m"
-    elif [[ $1 == warn ]]; then
-        echo -e "\033[33m ! $2\033[0m"
-    elif [[ $1 == error ]]; then
-        echo -e "\033[31m x $2\033[0m"
-    elif [[ $1 == wait ]]; then
-        echo -e "\033[33m . $2...\033[0m"
-    else
-        echo -e "$1"
-    fi
+    local format=$1 prefix='' suffix=''
+
+    case "$format" in
+        check) prefix='\033[32m \xE2\x9C\x94 ' ; suffix='\033[0m' ; shift ;;
+        wait ) prefix='\033[33m - ' ; suffix='...\033[0m' ; shift ;;
+        info ) prefix='\033[96m \xE2\x93\x98 ' ; suffix='\033[0m' ; shift ;;
+        warn ) prefix='\033[93m ! ' ; suffix='\033[0m' ; shift ;;
+        error) prefix='\033[31m \xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
+        fatal) prefix='\033[7;31m \xE2\x9C\x96\xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
+    esac
+    echo -e -n "$prefix"
+    echo    -n $@
+    echo -e    "$suffix"
 }
 
 # Function to display an error message for unrecognized arguments
@@ -61,9 +71,6 @@ error_unrecognized_arguments() {
   exit 1
 }
 
-function change_to_main_directory() {
-    cd "$MainDir" &> /dev/null
-}
 
 #---------------------------------- GIT ------------------------------------#
 
@@ -71,11 +78,13 @@ function clone_project_to() {
     local directory=$1 repo=$2 hash=$3
     local previous_dir=$(pwd)
     
+    if [[ -z $directory ]]; then
+        echoex fatal 'clone_project_to() requires the "directory" parameter.'
+        echoex info  'Usage: clone_project_to <directory> [repo] [hash]'
+        exit 1
+    fi
     if [[ -z $repo ]]; then
         repo=$(print_project @repo)
-    fi
-    if [[ -z $directory ]]; then
-        directory=$(print_project @directory)
     fi
     if [[ -z $hash ]]; then
         hash=$(print_project @hash)
@@ -89,7 +98,21 @@ function clone_project_to() {
 }
 
 
-#--------------------------- SYSTEM EVALUATION -----------------------------#
+#-------------------------------- SYSTEM ----------------------------------#
+
+
+function require_system_command() {
+    for cmd in "$@"; do
+        if ! command -v $cmd &> /dev/null; then
+            echoex error "$cmd is not available!"
+            echoex "   you can try to install '$cmd' using the following command:"
+            echoex "   > sudo dnf install $cmd\n"
+            exit 1
+        else
+            echoex check "$cmd is installed"
+        fi
+    done
+}
 
 # Function that checks whether a given command is available in the system
 # and prints an error message with installation instructions if it is not.
@@ -97,17 +120,6 @@ function clone_project_to() {
 # Arguments:
 #   - command: the name of the command to be checked.
 #
-function ensure_command() {
-    if ! command -v $1 &> /dev/null; then
-        echoex error "$1 is not available!"
-        echoex "   you can try to install '$1' using the following command:"
-        echoex "   > sudo dnf install $1\n"
-        exit 1
-    else
-        echoex check "$1 is installed"
-    fi
-}
-
 #------------------------ PYTHON VIRT ENVIRONMENT --------------------------#
 
 
@@ -154,7 +166,8 @@ function is_virtual_python() {
 }
 
 function virtual_python() {
-
+    
+    # 1) ensure virtual environment is activated
     if ! is_virtual_python; then
         echoex wait 'activating virtual environment'
         source "$PythonDir/bin/activate"
@@ -162,7 +175,17 @@ function virtual_python() {
     else
         echoex check "virtual environment already activated"
     fi
-    python $@
+    
+    # 2) execute command inside the virtual environment    
+    if [[ "$1" == "!"* ]]; then
+        # remove the '!' character from the beginning of the first param
+        # and execute that command with the rest of the arguments
+        local command_name=${1:1}
+        shift
+        "$command_name" "$@"
+    else
+        python $@
+    fi
 }
 
 function activate_python_env() {

@@ -1,0 +1,13 @@
+> sudo useradd aiman
+> sudo passwd aiman
+> sudo chmod 2750 /home/aiman
+> su - aiman
+> git clone git@mendoserver:martin-rizzo/aiman
+> aiman/aiman setdir @models /mnt/disk_x/marti/AI-Models
+> aiman/aiman install webui
+> aiman/aiman launch webui
+
+
+-----
+> sudo userdel -r aiman
+-----
