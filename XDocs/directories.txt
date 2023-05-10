@@ -7,30 +7,26 @@
 ~/Repos - This directory is used to store the source code of all AI-related projects that are cloned by 'aiman' from GitHub. Here, you can find open-source AI projects that you wish to use and manage through the software.
 
 
-    750 ~
-    770 ~/Models
-    770 ~/Output
-    750 ~/Repos
-    770 ~/aiman/Models  -> ~/Models
-    770 ~/aiman/Output  -> ~/Output
-    750 ~/aiman/Repos   -> ~/Repos
-    750 ~/aiman/System
-    750 ~/aiman
-
-
+ -------
     750 ~
     770 ~/Models        -> ~/aiman/Storage/Models
     770 ~/Output        -> ~/aiman/Storage/Output
+ -------  
     770 ~/aiman/Models  -> Storage/Models
     770 ~/aiman/Output  -> Storage/Output
     750 ~/aiman/Repos
     770 ~/aiman/Storage
+          +- Config
+          +- Models
+          +- Output
     750 ~/aiman/System
+          +- bin
+          +- venv
     750 ~/aiman
 
 
 
-    ~/aiman/Models
+    ~/aiman/Storage/Models
       +- BLIP/
       +- Codeformer/
       +- deepbooru/
@@ -49,14 +45,4 @@
       +- VAE-approx/
       
       
-      
-    ~/aiman/Models/BLIP/
-    ~/aiman/Models/Codeformer/
-    ~/aiman/Models/
-    ~/aiman/Models/
-    ~/aiman/Models/
-    ~/aiman/Models/
-    ~/aiman/Models/
-    ~/aiman/Models/
-    
-    
+
