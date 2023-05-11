@@ -42,7 +42,9 @@ List of Commands:
     list            list projects
     reinstall       reinstall a project
     remove          remove projects from the aiman directory
+    setdir          change directories used by the AI applications
     python          manage the python virtual envionment
+    verify          verify directories, repos and other aiman elements
 
 Options:
     -h, --help      show command help
@@ -55,6 +57,8 @@ Examples:
 
 # Directories
 MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}") )
+ModelsDir="$MainDir/Models"
+OutputDir="$MainDir/Output"
 RepoDir="$MainDir/Repos"
 StorageDir="$MainDir/Storage"
 SystemDir="$MainDir/System"
@@ -70,8 +74,12 @@ CompatiblePython='python3.10'
 PythonPrompt="aiman-$CompatiblePython"
 
 # Allowed commands (a string with space-separated values)
-ValidCommands='info install remove python' #"launch config"
+ValidCommands='info install remove setdir python verify' #"launch config"
 
+# Subdirectories of /Modules (a string with space-separated names)
+ValidModelsSubdirs='
+BLIP Codeformer deepbooru embeddings ESRGAN GFPGAN hypernetworks karlo
+LDSR Lora RealESRGAN ScuNET Stable-diffusion SwinIR VAE VAE-approx'
 
 
 #================================== START ==================================#
@@ -86,6 +94,7 @@ show_help=false
 show_version=false
 
 # loop through all the script parameters
+all_parameters=("$@")
 while [ $# -gt 0 ]; do
     param=$1
     case "$param" in
@@ -125,6 +134,11 @@ fi
 
 # run the command code
 require_storage_directory
-run_command "$options" "$projects"
+
+if [[ $CommandMode == all-parameters ]]; then
+    run_command "${all_parameters[@]}"
+else
+    run_command "$options" "$projects"
+fi
 exit $?
 

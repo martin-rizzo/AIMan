@@ -32,6 +32,51 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 
+function report_subdirectories() {
+    local directory="$1" # Path to the directory to check
+    local subdirs_list="$2" # Space-separated list of subdirectories to check for
+    local subdir_name
+    local -a subdirs_array=($subdirs_list)
+    local -a missing_subdirs=("${subdirs_array[@]}")
+
+    # loop through each subdirectory in the given directory
+    for subdir in "$directory"/*/; do
+        # extract the name of the subdirectory without the full path
+        subdir_name=$(basename "$subdir")
+
+        # check if the subdirectory name is in the list of subdirectories
+        if [[ " ${subdirs_array[@]} " =~ " ${subdir_name} " ]]; then
+            echoex check "   --    /$subdir_name"
+            # Remove the subdirectory from the list of missing subdirectories
+            missing_subdirs=(${missing_subdirs[@]//"$subdir_name"})
+        else
+            echoex warn "unknown  /$subdir_name"
+        fi
+    done
+    for subdir in "${missing_subdirs[@]}"; do
+        subdir_name=$(basename "$subdir")    
+        echoex error "missing  /$subdir_name"
+    done
+
+} 
+
+function print_short_dir() {
+    local cmd=$1 directory
+    
+    case "$cmd" in
+        readlink) directory=$(readlink "$2") ;;
+        *)        directory=$1               ;;
+    esac
+    if [[ $directory == "$MainDir"* ]]; then
+        echo ".${directory#$MainDir}"
+    elif [[ $directory == "$HOME"* ]]; then
+        echo "~${directory#$HOME}"
+    else
+        echo "$directory"
+    fi    
+}
+
+
 function change_to_main_directory() {
     cd "$MainDir" &> /dev/null
 }
@@ -71,7 +116,7 @@ function require_soft_link() {
 }
 
 function modify_storage_link() {
-    local link_name=$1 new_directory=$2 old_directory=$3
+    local link_name=$1 directory=$2 old_directory=$3
     if [[ ! -L "$link_name" ]]; then
        return
     fi
@@ -81,23 +126,12 @@ function modify_storage_link() {
             return
         fi
     fi
-    ln -sf "$new_directory" "$link_name"
-    echoex check "$link_name" -> "$new_directory"
-}
-
-
-function set_storage_dir() {
-    local store=$1 new_directory=$2 old_directory
-    if [[ $store == '@models' ]]; then
-        old_directory=$(readlink "$MainDir/Models")
-        modify_storage_link "$MainDir/Models" "$new_directory"
-        modify_storage_link "$HOME/Models"    "$new_directory" "$old_directory"
+    # remove any trailing slash from the path to avoid issues
+    if [ "${directory: -1}" = "/" ]; then
+        directory="${directory::-1}"
     fi
-    if [[ $store == '@output' ]]; then
-        old_directory=$(readlink "$MainDir/Output")
-        modify_storage_link "$MainDir/Output" "$new_directory"
-        modify_storage_link "$HOME/Output"    "$new_directory" "$old_directory"
-    fi
+    ln -nsf "$directory" "$link_name"
+    echoex check "$link_name -> $directory"
 }
 
 function require_storage_directory() {

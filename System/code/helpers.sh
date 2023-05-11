@@ -60,7 +60,7 @@ function echoex() {
         fatal) prefix='\033[7;31m \xE2\x9C\x96\xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
     esac
     echo -e -n "$prefix"
-    echo    -n $@
+    echo    -n "$@"
     echo -e    "$suffix"
 }
 
