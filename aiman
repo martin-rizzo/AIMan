@@ -33,27 +33,32 @@
 ScriptName=${BASH_SOURCE[0]##*/}
 ScriptVer=0.1
 Help="
-usage: $ScriptName [options] COMMAND
+Usage: $ScriptName [options] COMMAND
 
-List of Commands:
-    help            display a helpful usage message
-    info            display details about a project or group of projects
-    install         install projects on the aiman directory
-    list            list projects
-    reinstall       reinstall a project
-    remove          remove projects from the aiman directory
-    setdir          change directories used by the AI applications
-    python          manage the python virtual envionment
-    verify          verify directories, repos and other aiman elements
+  A command-line package manager for AI open source projects.
+
+Commands:
+    install         Install projects on the aiman directory.
+    remove          Remove installed projects.
+    launch          Launch a project.
+    info            Display details about a project or group of projects.
+    list            List projects.
+    help            Display help information.
+    reinstall       Reinstall a project.
+    setdir          Change directories used by the AI applications.
+    python          Manage the python virtual envionment.
+    verify          Verify directories, repos and other aiman elements.
+
+Run '$ScriptName COMMAND --help' for more information on a command.
 
 Options:
-    -h, --help      show command help
-    -V, --version   show $ScriptName version and exit
+    -h, --help      Show command help
+    -V, --version   Show $ScriptName version and exit
 
 Examples:
     $ScriptName info webui
+    $ScriptName launch invoke
 "
-
 
 # Directories
 MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}") )
@@ -65,6 +70,20 @@ SystemDir="$MainDir/System"
 CodeDir="$SystemDir/code"
 PythonDir="$SystemDir/venv"
 
+# Models directories
+ModelsCodeformerDir="$ModelsDir/Codeformer"
+ModelsEmbeddingsDir="$ModelsDir/embeddings"
+ModelsEsrganDir="$ModelsDir/ESRGAN"
+ModelsGfpganDir="$ModelsDir/GFPGAN"
+ModelsHypernetworkDir="$ModelsDir/hypernetworks"
+ModelsLdsrDir="$ModelsDir/LDSR"
+ModelsLoraDir="$ModelsDir/Lora"
+ModelsRealesrganDir="$ModelsDir/RealESRGAN"
+ModelsScunetDir="$ModelsDir/ScuNET"
+ModelsStableDiffusionDir="$ModelsDir/Stable-diffusion"
+ModelsSwinirDir="$ModelsDir/SwinIR"
+ModelsVaeDir="$ModelsDir/VAE"
+
 
 # Compatible version of Python to be used in the virtual environment.
 # ATTENTION: The version must be 3.10 or lower!
@@ -74,7 +93,7 @@ CompatiblePython='python3.10'
 PythonPrompt="aiman-$CompatiblePython"
 
 # Allowed commands (a string with space-separated values)
-ValidCommands='info install remove setdir python verify' #"launch config"
+ValidCommands='install remove launch info setdir python verify' #"launch config"
 
 # Subdirectories of /Modules (a string with space-separated names)
 ValidModelsSubdirs='

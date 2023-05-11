@@ -45,7 +45,30 @@ function install() {
 }
 
 function launch() {
-   virtual_python launch.py '????'
+    local project_dir=$(print_project @directory)
+    local options=()
+    local directories=()
+    
+    options+=(--xformers)
+    options+=(--theme dark)
+    options+=(--autolaunch)
+    
+    directories+=(--codeformer-models-path "$ModelsCodeformerDir")
+    directories+=(--embeddings-dir "$ModelsEmbeddingsDir")
+    directories+=(--esrgan-models-path "$ModelsEsrganDir")
+    directories+=(--gfpgan-models-path "$ModelsGfpganDir")
+    directories+=(--hypernetwork-dir "$ModelsHypernetworkDir")
+    directories+=(--ldsr-models-path "$ModelsLdsrDir")
+    directories+=(--lora-dir "$ModelsLoraDir")
+    directories+=(--realesrgan-models-path "$ModelsRealesrganDir")
+    directories+=(--scunet-models-path "$ModelsScunetDir")
+    directories+=(--ckpt-dir "$ModelsStableDiffusionDir")
+    directories+=(--swinir-models-path "$ModelsSwinirDir")
+    directories+=(--vae-dir "$ModelsVaeDir")
+    
+    change_to_repo_directory
+    cd "$project_dir"
+    virtual_python launch.py "${options[@]}" "${directories[@]}"
 }
 
 function update() {

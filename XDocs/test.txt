@@ -2,7 +2,7 @@
 > sudo passwd aiman
 > sudo chmod 2750 /home/aiman
 > su - aiman
-> git clone git@mendoserver:martin-rizzo/aiman
+> git clone git@github.com:martin-rizzo/AIMan.git
 > aiman/aiman setdir @models /mnt/disk_x/marti/AI-Models
 > aiman/aiman install webui
 > aiman/aiman launch webui

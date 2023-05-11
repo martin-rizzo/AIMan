@@ -139,10 +139,12 @@ function require_directory() {
 function require_soft_link() {
     local link_name=$1 target=$2
     
-    if [[ ! -e $link_name ]]; then
+    if [[ -L $link_name ]]; then
+        return
+    elif [[ ! -e $link_name ]]; then
         echoex wait "creating link $link_name"
         ln -s "$target" "$link_name"
-    elif [[ ! -L $link_name ]]; then
+    else
         echoex fatal "$link_name must be a soft link"
         exit 1
     fi
