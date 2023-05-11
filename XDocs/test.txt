@@ -2,11 +2,12 @@
 > sudo passwd aiman
 > sudo chmod 2750 /home/aiman
 > su - aiman
-> git clone git@github.com:martin-rizzo/AIMan.git
-> aiman/aiman setdir @models /mnt/disk_x/marti/AI-Models
-> aiman/aiman install webui
-> aiman/aiman launch webui
-
+> git clone https://github.com/martin-rizzo/AIMan.git
+> AIMan/aiman add2path
+> source ~/.bashrc
+> aiman setdir @models /mnt/disk_x/marti/AI-Models
+> aiman install webui
+> aiman launch webui
 
 -----
 > sudo userdel -r aiman

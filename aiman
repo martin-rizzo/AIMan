@@ -93,7 +93,7 @@ CompatiblePython='python3.10'
 PythonPrompt="aiman-$CompatiblePython"
 
 # Allowed commands (a string with space-separated values)
-ValidCommands='install remove launch info setdir python verify' #"launch config"
+ValidCommands='install remove launch info setdir python verify add2path' #"launch config"
 
 # Subdirectories of /Modules (a string with space-separated names)
 ValidModelsSubdirs='

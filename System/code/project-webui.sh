@@ -51,7 +51,7 @@ function launch() {
     
     options+=(--xformers)
     options+=(--theme dark)
-    options+=(--autolaunch)
+   #options+=(--autolaunch)
     
     directories+=(--codeformer-models-path "$ModelsCodeformerDir")
     directories+=(--embeddings-dir "$ModelsEmbeddingsDir")
