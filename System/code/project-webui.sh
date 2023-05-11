@@ -46,7 +46,7 @@ function install() {
 
 function launch() {
     local project_dir=$(print_project @directory)
-    local options=()
+    local options=("$@")
     local directories=()
     
     options+=(--xformers)

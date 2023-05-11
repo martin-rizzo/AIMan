@@ -54,5 +54,5 @@ function run_command() {
     fi
     source "$CodeDir/project-$project.sh"
     load_project $project
-    launch
+    launch $options
 }
