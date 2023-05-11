@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File    : helper-dir.sh
-# Brief   : Internal directories
+# Brief   : Helper functions to handle aiman directories
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 6, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
@@ -32,38 +32,71 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 
+# Reports on the existence of a list of subdirs within a given directory.
+#
+# Usage:
+#   report_subdirectories DIRECTORY SUBDIRS_LIST
+#
+# Parameters:
+#   DIRECTORY: path to the directory to check.
+#   SUBDIRS_LIST: space-separated list of subdirectories to check for.
+#
+# Example:
+#   report_subdirectories /path/to/directory "subdir1 subdir2 subdir3"
+#
 function report_subdirectories() {
-    local directory="$1" # Path to the directory to check
-    local subdirs_list="$2" # Space-separated list of subdirectories to check for
-    local subdir_name
-    local -a subdirs_array=($subdirs_list)
-    local -a missing_subdirs=("${subdirs_array[@]}")
+    local directory=$1
+    local subdirs_list=$2
+    local -a missing_subdirs=($subdirs_list)
+    local found subdir_name
 
     # loop through each subdirectory in the given directory
-    for subdir in "$directory"/*/; do
+    for subdir in "$directory"/*/
+    do
         # extract the name of the subdirectory without the full path
         subdir_name=$(basename "$subdir")
-
-        # check if the subdirectory name is in the list of subdirectories
-        if [[ " ${subdirs_array[@]} " =~ " ${subdir_name} " ]]; then
+        
+        # check if the dir name matches any of the subdirs we're looking for
+        found=false
+        for (( i=0; i<${#missing_subdirs[@]}; i++ )); do
+            if [[ ${missing_subdirs[i]} == $subdir_name ]]; then
+                missing_subdirs[i]=''
+                found=true
+            fi
+        done
+        # report on whether the subdirectory was found or not
+        if $found; then
             echoex check "   --    /$subdir_name"
-            # Remove the subdirectory from the list of missing subdirectories
-            missing_subdirs=(${missing_subdirs[@]//"$subdir_name"})
         else
-            echoex warn "unknown  /$subdir_name"
+            echoex warn  "unknown  /$subdir_name"        
         fi
     done
+    # check if any of the subdirectories were not found and report them
     for subdir in "${missing_subdirs[@]}"; do
-        subdir_name=$(basename "$subdir")    
-        echoex error "missing  /$subdir_name"
+        if [[ $subdir ]]; then
+            subdir_name=$(basename "$subdir")
+            echoex error "missing  /$subdir_name"
+        fi
     done
-
 } 
 
+# Prints a shortened version of a given directory path.
+#
+# Usage:
+#   print_short_dir [readlink] DIRECTORY
+#
+# Parameters:
+#   readlink (optional): If specified, the `readlink` command will be used to
+#                        resolve any symbolic links in the path to the directory.
+#   DIRECTORY: the path to the directory to print.
+#
+# Example:
+#   print_short_dir /path/to/directory
+#   print_short_dir readlink /path/to/directory
+#
 function print_short_dir() {
-    local cmd=$1 directory
-    
-    case "$cmd" in
+    local directory
+    case "$1" in
         readlink) directory=$(readlink "$2") ;;
         *)        directory=$1               ;;
     esac
