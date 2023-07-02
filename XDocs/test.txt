@@ -6,6 +6,7 @@
 > AIMan/aiman add2path
 > source ~/.bashrc
 > aiman setdir @models /mnt/disk_x/marti/AI-Models
+> aiman setdir @output /var/tmp/aiman-output
 > aiman install webui
 > aiman launch webui
 

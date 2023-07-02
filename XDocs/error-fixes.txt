@@ -1,0 +1,34 @@
+
+
+
+ERROR: Could not load library libcudnn_cnn_infer.so.8. Error: libnvrtc.so: cannot open shared object file: No such file or directory
+FIX: https://discuss.pytorch.org/t/could-not-load-library-libcudnn-cnn-infer-so-8/175139/7
+
+  > cd yourenv/lib/python3.10/site-packages/torch/lib
+  > ln -s libnvrtc-672ee683.so.11.2 libnvrtc.so
+
+
+"Checkpoint Merger" builtin tool
+--------------------------------
+  Force save merged checkpoints in the './outputs' directory
+    modules/extras.py (line 232)
+      ckpt_dir = shared.cmd_opts.ckpt_dir or sd_models.model_path
+      ckpt_dir = 'outputs'
+    
+
+"SuperMerger" Extension
+-----------------------
+  Add button to select the output format "safetensors"
+    scripts/mergers/pluslora.py (line 54)
+    sml_settings = gr.CheckboxGroup(["same to Strength", "overwrite","safetensors"], label="settings")^M
+
+
+"Model Converter" Extension
+---------------------------
+  Force save converted checkpoints in the '/output' directory
+    scripts/convert.py (line 222)
+     ckpt_dir = shared.cmd_opts.ckpt_dir or sd_models.model_path
+     ckpt_dir = 'outputs'
+
+    
+
