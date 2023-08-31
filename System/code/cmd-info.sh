@@ -42,6 +42,7 @@ Options:
 Examples:
     $ScriptName info webui
 "
+CommandMode=projects
 
 
 function run_command() {

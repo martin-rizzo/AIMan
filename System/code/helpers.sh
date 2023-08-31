@@ -75,7 +75,7 @@ error_unrecognized_arguments() {
 #---------------------------------- GIT ------------------------------------#
 
 function clone_project_to() {
-    local directory=$1 repo=$2 hash=$3
+    local directory=$1 hash_or_tag=$2 repo=$3
     local previous_dir=$(pwd)
     
     if [[ -z $directory ]]; then
@@ -86,13 +86,13 @@ function clone_project_to() {
     if [[ -z $repo ]]; then
         repo=$(print_project @repo)
     fi
-    if [[ -z $hash ]]; then
-        hash=$(print_project @hash)
+    if [[ -z $hash_or_tag ]]; then
+        hash_or_tag=$(print_project @hash)
     fi
     git clone "$repo" "$directory"
-    if [[ $hash != '-' && ${#hash} -ge 6 ]]; then
+    if [[ $hash_or_tag != '-' ]]; then
         cd "$directory"
-        git reset --hard "$hash"
+        git reset --hard "$hash_or_tag"
     fi
     cd "$previous_dir" &> /dev/null
 }

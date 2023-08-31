@@ -31,9 +31,9 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName install PROJECT [PROJECT ...]
+Usage: $ScriptName install PROJECT [version]
 
-install a project or projects on the aiman directory
+install a project on the aiman directory
 
 Options:
     -h, --help     show command help
@@ -42,16 +42,33 @@ Options:
 Examples:
     $ScriptName install invoke
 "
-
-
+CommandMode=projects
 
 function run_command() {
-    local options=$1 project=$2
+    local options=$1 projects=$2
+    local version parts project_script
 
-    # load_project_code $project
-    # load_project_data $project
+    if [[ -n $options ]]; then
+      error_unrecognized_arguments $options
+      exit 1
+    fi
     
-    source "$CodeDir/project-$project.sh"
-    load_project $project
-    install
+    for project in $projects; do
+        IFS=':' read -ra parts <<< "$project"
+        project=${parts[0]}
+        version=${parts[1]}
+        project_script="$CodeDir/project-$project.sh"
+        
+        # verificar si el proyecto existe
+        if [[ ! -f "$project_script" ]]; then
+            echoex error "no se conoce la aplicacion $project"
+            exit 1
+        fi
+
+        # ejectuar el proyeto
+        source "$CodeDir/project-$project.sh"
+        load_project $project
+        install $version
+    done
+    
 }

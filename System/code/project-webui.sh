@@ -33,13 +33,14 @@
 
 
 function install() {
+    local hash_or_tag=$1
     local project_dir=$(print_project @directory)
     
     require_system_command git wget
     require_virtual_python
     
     change_to_repo_directory
-    clone_project_to "$project_dir"
+    clone_project_to "$project_dir" $hash_or_tag
     cd "$project_dir"
     virtual_python launch.py --no-download-sd-model --exit    
 }

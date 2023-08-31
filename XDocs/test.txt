@@ -1,3 +1,24 @@
+
+--------------------------
+Experimental
+------------
+
+> sudo useradd aiman160
+> sudo passwd  aiman160
+> sudo chmod 2750 /home/aiman160
+> su - aiman160
+> git clone -b experimental https://github.com/martin-rizzo/AIMan.git
+> AIMan/aiman add2path
+> source ~/.bashrc
+> aiman setdir @models /mnt/disk_x/marti/AI-Models
+> aiman setdir @output /var/tmp/aiman-output
+> aiman install webui:v1.6.0
+> aiman launch webui
+
+--------------------------
+Master
+------
+
 > sudo useradd aiman
 > sudo passwd aiman
 > sudo chmod 2750 /home/aiman
@@ -10,6 +31,6 @@
 > aiman install webui
 > aiman launch webui
 
------
+--------------------------
 > sudo userdel -r aiman
------
+
