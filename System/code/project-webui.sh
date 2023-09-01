@@ -42,6 +42,7 @@ function install() {
     change_to_repo_directory
     clone_project_to "$project_dir" $hash_or_tag
     cd "$project_dir"
+    require_soft_link 'outputs' '../../Output' 1
     virtual_python launch.py --no-download-sd-model --exit    
 }
 

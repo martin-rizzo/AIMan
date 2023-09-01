@@ -136,13 +136,31 @@ function require_directory() {
     fi
 }
 
+# Ensures the existence of a symbolic link
+#
+# Usage:
+#   require_soft_link <link_name> <target> [force]
+#
+# Parameters:
+#   - link_name: The name of the symbolic link to be checked or created.
+#   - target   : The target path that the symbolic link should point to.
+#   - force (optional): If set to 1, it can convert a dir to a symbolic link.
+#
+# Example:
+#   require_soft_link ~/mylink ~/target_folder
+#   (ensure sym-link named 'mylink' exists, pointing to 'target_folder')
+#
 function require_soft_link() {
-    local link_name=$1 target=$2
+    local link_name=$1 target=$2 force=${3:-0}
     
     if [[ -L $link_name ]]; then
         return
     elif [[ ! -e $link_name ]]; then
         echoex wait "creating link $link_name"
+        ln -s "$target" "$link_name"
+    elif [[ $force -eq 1 && -d $link_name ]]; then
+        echoex wait "converting directory in a soft link $link_name"
+        mv "$link_name" "$link_name-old"
         ln -s "$target" "$link_name"
     else
         echoex fatal "$link_name must be a soft link"
