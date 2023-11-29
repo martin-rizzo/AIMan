@@ -47,14 +47,14 @@ To install AIMan from scratch, follow these steps:
     source ~/.bashrc
     ```
 
-8. Set the directory for AI models:
+8. Set the directory where the AI models are located (optional):
     ```
-    aiman setdir @models /mnt/disk_x/marti/AI-Models
+    aiman setdir @models /path/to/your/models/directory
     ```
 
-9. Set the output directory for AIMan:
+9. Set the output directory for AIMan (optional):
     ```
-    aiman setdir @output /var/tmp/aiman-output
+    aiman setdir @output /path/to/your/output/directory
     ```
 
 10. Install the web UI package (replace `webui` with the desired package name):
