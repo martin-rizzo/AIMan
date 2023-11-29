@@ -9,7 +9,7 @@ Experimental
 > sudo chmod 2750 /home/aimantest
 > su - aimantest
 > mkdir .bashrc.d
-> echo "umask 007" > .bashrc.d/20_umask.conf
+> echo umask 007 > .bashrc.d/20_umask.conf
 > git clone -b experimental https://github.com/martin-rizzo/AIMan.git
 > AIMan/aiman add2path
 > source ~/.bashrc
