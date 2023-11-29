@@ -42,8 +42,9 @@ function install() {
     change_to_repo_directory
     clone_project_to "$project_dir"
     cd "$project_dir"
-    require_soft_link 'models/checkpoints' '../../Output' 1
-    
+    require_soft_link 'models/checkpoints' '../../../Models/Stable-diffusion' 1
+    require_soft_link 'models/vae'         '../../../Models/VAE'              1
+    require_soft_link 'output'             '../../Output'                     1
     # export INVOKEAI_ROOT=$project_dir
 
     # NVIDIA GPU
