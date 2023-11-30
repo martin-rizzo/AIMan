@@ -45,6 +45,7 @@ function install() {
     require_soft_link 'models/checkpoints' '../../../Models/Stable-diffusion' 1
     require_soft_link 'models/vae'         '../../../Models/VAE'              1
     require_soft_link 'models/loras'       '../../../Models/Lora'             1
+    require_soft_link 'models/controlnet'  '../../../Models/ControlNet'       1
     require_soft_link 'output'             '../../Output'                     1
     # export INVOKEAI_ROOT=$project_dir
 
