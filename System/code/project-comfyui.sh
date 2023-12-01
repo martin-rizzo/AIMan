@@ -48,6 +48,20 @@ function install() {
     require_soft_link 'models/controlnet'  '../../../Models/ControlNet'       1
     require_soft_link 'output'             '../../Output'                     1
     # export INVOKEAI_ROOT=$project_dir
+    
+    #--- custom nodes ----
+    cd custom_nodes
+    
+    # Advanced CLIP Text Encode
+    # nodes that allows for more control over the way prompt weighting should be interpreted
+    git clone https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb.git
+    
+    # ComfyUI Noise
+    # nodes that allows for more control and flexibility over noise to do
+    git clone https://github.com/BlenderNeko/ComfyUI_Noise.git
+    
+    cd ..
+    #-----------------------
 
     # NVIDIA GPU
     virtual_python !pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
