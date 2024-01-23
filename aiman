@@ -31,7 +31,9 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ScriptName=${BASH_SOURCE[0]##*/}
-ScriptVer=0.1
+ScriptVer=0.1      # script version
+CommandName=       # the name of the command to execute
+CommandParams=()   # the command parameters
 Help="
 Usage: $ScriptName [options] COMMAND
 
@@ -93,7 +95,7 @@ CompatiblePython='python3.10'
 PythonPrompt="aiman-$CompatiblePython"
 
 # Allowed commands (a string with space-separated values)
-ValidCommands='install remove launch info setdir python verify add2path' #"launch config"
+ValidCommands='install remove launch info setdir python pip verify add2path' #"launch config"
 
 # Subdirectories of /Modules (a string with space-separated names)
 ValidModelsSubdirs='
@@ -106,7 +108,6 @@ source "$CodeDir/helpers.sh"
 source "$CodeDir/helper-dir.sh"
 change_to_main_directory
 
-command=''
 projects=''
 options=''
 show_help=false
@@ -117,27 +118,38 @@ all_parameters=("$@")
 while [ $# -gt 0 ]; do
     param=$1
     case "$param" in
-        -h | --help)          show_help=true             ;;
-        -v | --version)       show_version=true          ;;
-        -*)                   options="$options $param"  ;;
+        -h | --help)    show_help=true    ;;
+        -v | --version) show_version=true ;;
+        -*)
+          options="$options $param"
+          CommandParams+=( "$param" )
+          ;;
         *)
-          if [[ " $ValidCommands " == *" $param "* ]]; then
-            command=$param
+          if [[ -z $CommandName ]]; then
+            CommandName=$param
           else 
             projects="$projects $param"
+            CommandParams+=( "$param" )
           fi
           ;;
     esac
     shift
 done
+
+# check if the user-supplied command is valid
+if [[ -n $CommandName && " $ValidCommands " != *" $CommandName "* ]]; then
+    echoex error "Invalid command - $CommandName"
+    exit 1
+fi
+
 # trim leading spaces from acumulative strings
 options=${options#" "}
 projects=${projects#" "}
 
 # load the selected command's code
 # if no command is selected then force the help to be displayed
-if [[ -n $command ]]; then
-    source "$CodeDir/cmd-$command.sh"
+if [[ -n $CommandName ]]; then
+    source "$CodeDir/cmd-$CommandName.sh"
 else
     show_help=true
 fi
