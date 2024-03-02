@@ -3,79 +3,81 @@
 AIMan is a basic package management system for open source AI projects. It is
 entirely programmed in bash scripts and designed to be easily installed on any
 Linux system without the need for additional languages or dependencies.
+
 Please note that this project is currently in its early stages and may not be
 actively maintained for a long time. It is primarily developed as a personal
-tool but is published on GitHub for source control and to facilitate bug
-reporting and feature requests.
+tool but is also published on GitHub for source control, bug reporting,
+feature requests, and potential pull requests.
+
+
+## AI projects supported
+
+ - [x] Stable Diffusion web UI
+ - [ ] Stable Diffusion WebUI Forge
+ - [x] ComfyUI
+ - [x] InvokeAI
+ 
 
 ## Installation
 
 To install AIMan from scratch, follow these steps:
 
-1. Create a new user for AIMan:
+1. Create a new user for AIMan and set a password:
     ```
-    sudo useradd aiman
-    ```
-
-2. Set a password for the AIMan user:
-    ```
-    sudo passwd aiman
+    sudo useradd -m aiman && sudo passwd aiman
     ```
 
-3. Set appropriate permissions for the AIMan user's home directory:
+2. Set appropriate permissions for the AIMan user's home directory:
     ```
     sudo chmod 2750 /home/aiman
     ```
 
-4. Switch to the AIMan user:
+3. Switch to the AIMan user:
     ```
     su - aiman
     ```
 
-5. Clone the AIMan repository from GitHub:
+4. Clone the AIMan repository from GitHub:
     ```
     git clone https://github.com/martin-rizzo/AIMan.git
     ```
 
-6. Add AIMan to the system's PATH:
+5. (optional) Add AIMan to the PATH and update the shell session:
     ```
-    AIMan/aiman add2path
-    ```
-
-7. Update the current shell session to include the AIMan changes:
-    ```
-    source ~/.bashrc
+    AIMan/aiman add2path && source ~/.bashrc
     ```
 
-8. Set the directory where the AI models are located (optional):
+6. (optional) Set the directory where the AI models are located:
     ```
-    aiman setdir @models /path/to/your/models/directory
-    ```
-
-9. Set the output directory for AIMan (optional):
-    ```
-    aiman setdir @output /path/to/your/output/directory
+    AIMan/aiman setdir @models /path/to/your/models/directory
     ```
 
-10. Install the web UI package (replace `webui` with the desired package name):
+7. (optional) Set the output directory for AIMan:
     ```
-    aiman install webui
+    AIMan/aiman setdir @output /path/to/your/output/directory
     ```
 
-11. Launch the web UI (replace `webui` with the desired package name):
+8. Install the web UI package (replace `webui` with the desired package name):
     ```
-    aiman launch webui
+    AIMan/aiman install webui
+    ```
+
+9. Launch the web UI (replace `webui` with the desired package name):
+    ```
+    AIMan/aiman launch webui
     ```
 
 Please note that these instructions assume a Linux system and may require
 additional steps or modifications based on your specific environment.
 
+
 ## Contributing
 
-As mentioned earlier, this project is experimental and primarily developed for
-personal use. However, contributions, bug reports, and feature requests are
-welcome. If you encounter any issues or have suggestions, please open an issue
-on the GitHub repository.
+As mentioned earlier, this project is experimental and primarily developed
+for personal use. However, contributions, bug reports, and pull requests are
+welcome. If you encounter any issues or have suggestions, please open an
+issue on the GitHub repository.
+
 
 ## License
 

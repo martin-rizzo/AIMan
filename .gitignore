@@ -15,3 +15,10 @@
 # Python virtual environment
 #
 /System/venv/
+
+
+# Ignore system and user-specific files
+.DS_Store
+.profile
+Thumbs.db
+README-PERSONAL.MD

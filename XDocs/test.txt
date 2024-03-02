@@ -1,8 +1,23 @@
 
---------------------------
-Experimental
-------------
+=============================================================================
 
+Experimental Prototype
+----------------------
+
+ #  sudo useradd -m aiman2 && sudo passwd aiman2
+ #  sudo usermod aiman2 -aG aiman
+??? sudo chmod 2750 /home/aiman2
+ #  su - aiman2
+ #  git clone -b proto https://github.com/martin-rizzo/AIMan.git
+ #  AIMan/aiman add2path && source ~/.bashrc
+??? echo umask 007 > .bashrc.d/20_umask.conf
+ #  aiman setdir @models /mnt/disk_x/marti/AI-Models/
+ #  aiman setdir @output /var/tmp/aiman-output/
+ #  aiman install webui
+ #  aiman launch  webui
+
+
+Old method:
 > sudo useradd aimantest
 > sudo passwd  aimantest
 > sudo usermod aimantest -aG aiman
@@ -10,7 +25,7 @@ Experimental
 > su - aimantest
 > mkdir .bashrc.d
 > echo umask 007 > .bashrc.d/20_umask.conf
-> git clone -b experimental https://github.com/martin-rizzo/AIMan.git
+> git clone -b proto https://github.com/martin-rizzo/AIMan.git
 > AIMan/aiman add2path
 > source ~/.bashrc
 > aiman setdir @models /mnt/disk_x/marti/AI-Models/
@@ -18,26 +33,36 @@ Experimental
 > aiman install comfyui
 > aiman launch  comfyui
 
+=============================================================================
 
-? sudo usermod aiman160 -g aiman
-? sudo chmod 2750 /home/aiman160
-
---------------------------
 Master
 ------
 
-> sudo useradd aiman
-> sudo passwd  aiman
-> sudo chmod 2750 /home/aiman
-> su - aiman
-> git clone https://github.com/martin-rizzo/AIMan.git
-> AIMan/aiman add2path
-> source ~/.bashrc
-> aiman setdir @models /mnt/disk_x/marti/AI-Models
-> aiman setdir @output /var/tmp/aiman-output
-> aiman install webui
-> aiman launch  webui
+ #  sudo useradd -m aiman && sudo passwd aiman
+??? sudo chmod 2750 /home/aiman
+ #  su - aiman
+ #  git clone https://github.com/martin-rizzo/AIMan.git
+ #  AIMan/aiman add2path && source ~/.bashrc
+ #  aiman setdir @models /mnt/disk_x/marti/AI-Models
+ #  aiman setdir @output /var/tmp/aiman-output
+ #  aiman install webui
+ #  aiman launch  webui
 
---------------------------
-> sudo userdel -r aiman
 
+=============================================================================
+
+Other commands
+--------------
+
+Delete user with their home directory and files:
+  > sudo userdel -r aiman2
+
+Create 'proto' branch:
+  > git checkout -b proto
+  > git push -u origin proto
+
+
+Delete 'proto' branch:
+  > git push origin --delete proto
+  > git branch -d proto
+ 
