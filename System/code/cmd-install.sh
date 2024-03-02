@@ -59,13 +59,12 @@ function run_command() {
         version=${parts[1]}
         project_script="$CodeDir/project-$project.sh"
         
-        # verificar si el proyecto existe
+        # check if the project exists
         if [[ ! -f "$project_script" ]]; then
-            echoex error "no se conoce la aplicacion $project"
-            exit 1
+            fatal_error "Unknown project: $project"
         fi
 
-        # ejectuar el proyeto
+        # execute the project
         source "$CodeDir/project-$project.sh"
         load_project $project
         install $version

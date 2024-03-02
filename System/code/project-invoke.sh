@@ -34,7 +34,7 @@
 
 
 function install() {
-    local project_dir=$(print_project @directory)
+    local project_dir=$(print_project @local_dir)
 
     change_to_repo_directory
     clone_project_to "$project_dir"

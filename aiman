@@ -62,15 +62,21 @@ Examples:
     $ScriptName launch invoke
 "
 
-# Directories
-MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}") )
+# Determine the main directory containing the script
+MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+
+# Define directory paths relative to the main directory
 ModelsDir="$MainDir/Models"
 OutputDir="$MainDir/Output"
 RepoDir="$MainDir/Repos"
 StorageDir="$MainDir/Storage"
 SystemDir="$MainDir/System"
 CodeDir="$SystemDir/code"
-PythonDir="$SystemDir/venv"
+
+# Each project typically requires its own virtual environment (venv) for Python.
+# If this variable is left empty, the script will dynamically configure it based
+# on the selected project by the user, which is the recommended approach.
+PythonDir=
 
 # Models directories
 ModelsCodeformerDir="$ModelsDir/Codeformer"

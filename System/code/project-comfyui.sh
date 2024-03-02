@@ -34,7 +34,7 @@
 
 
 function install() {
-    local project_dir=$(print_project @directory)
+    local project_dir=$(print_project @local_dir)
 
     require_system_command git
     require_virtual_python
@@ -72,7 +72,7 @@ function install() {
 }
 
 function launch() {
-    local project_dir=$(print_project @directory)
+    local project_dir=$(print_project @local_dir)
     local options=("$@")
 
     change_to_repo_directory

@@ -58,7 +58,8 @@ function run_command() {
         print_project "Name        :" @name
         print_project "Summary     :" @brief
         print_project "License     :" @license
-        print_project "Directory   :" @directory
+        print_project "Directory   :" @local_dir
+        print_project "Virt.enviro :" @local_venv
         print_project "Repository  :" @repo
         print_project "Hash        :" @hash
         print_project "Description :" @description

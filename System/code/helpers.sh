@@ -48,7 +48,7 @@
 #
 #   message - The message to be printed.
 #
-function echoex() {
+function echox() {
     local format=$1 prefix='' suffix=''
 
     case "$format" in
@@ -62,6 +62,21 @@ function echoex() {
     echo -e -n "$prefix"
     echo    -n "$@"
     echo -e    "$suffix"
+}
+
+# Compatibility with legacy code
+# TODO: Remove all uses of 'echoex' from the entire codebase and replace
+#       them with 'echox'.
+#
+function echoex() {
+    echox "$@"
+}
+
+function fatal_error() {
+    local fatal_message=$1 comment=$2
+    [[ -n $fatal_message ]] && echox fatal "$fatal_message"
+    [[ -n $comment       ]] && echox info  "$comment"
+    exit 1
 }
 
 # Function to display an error message for unrecognized arguments
@@ -79,9 +94,8 @@ function clone_project_to() {
     local previous_dir=$(pwd)
     
     if [[ -z $directory ]]; then
-        echoex fatal 'clone_project_to() requires the "directory" parameter.'
-        echoex info  'Usage: clone_project_to <directory> [repo] [hash]'
-        exit 1
+        fatal_error 'clone_project_to() requires the "directory" parameter.' \
+                    'Usage: clone_project_to <directory> [repo] [hash]'
     fi
     if [[ -z $repo ]]; then
         repo=$(print_project @repo)
@@ -98,9 +112,14 @@ function clone_project_to() {
 }
 
 
-#-------------------------------- SYSTEM ----------------------------------#
+#--------------------------------- SYSTEM ----------------------------------#
 
-
+# Function that checks whether a given command is available in the system
+# and prints an error message with installation instructions if it is not.
+# Usage: ensure_command <command>
+# Arguments:
+#   - command: the name of the command to be checked.
+#
 function require_system_command() {
     for cmd in "$@"; do
         if ! command -v $cmd &> /dev/null; then
@@ -114,13 +133,97 @@ function require_system_command() {
     done
 }
 
-# Function that checks whether a given command is available in the system
-# and prints an error message with installation instructions if it is not.
-# Usage: ensure_command <command>
-# Arguments:
-#   - command: the name of the command to be checked.
+
+#------------------------------ PROJECT INFO -------------------------------#
+
+declare -a cur_proj_info
+
+# load_project - loads info about a project from a file called "projects.csv"
 #
-#------------------------ PYTHON VIRT ENVIRONMENT --------------------------#
+# Arguments:
+#   $1 - the name of the project to look up
+#
+# Globals:
+#   cur_proj_info - an array that stores info for the current loaded project
+#
+# Returns:
+#   None
+#
+# Example:
+#   load_project "webui"
+#
+function load_project() {
+    local project_to_find=$1
+    local IFS=,    
+    [[ ${#cur_proj_info[@]} -ne 0 ]] && \
+        fatal_error "The project was loaded twice using 'load_project()', which is not fully supported."
+        
+    while read -r project dir repo hash license name brief description; do
+        if [[ $project == $project_to_find ]]; then
+            cur_proj_info[0]=${project##* }
+            cur_proj_info[1]=${dir##* }
+            cur_proj_info[2]=${repo##* }
+            cur_proj_info[3]=${hash##* }
+            cur_proj_info[4]=${license##* }
+            cur_proj_info[5]=${name##* }
+            cur_proj_info[6]=${brief##* }
+            cur_proj_info[7]=${description##* }
+            if [[ -z $PythonDir ]]; then
+                PythonDir="$RepoDir/${cur_proj_info[1]}-venv"
+            fi
+            return 0
+        fi
+    done < "$CodeDir/projects.csv"
+    cur_proj_info=()
+    return 1
+}
+
+# print_project - prints info about the current project based on the parameters
+#
+# Arguments:
+#   Any number of parameters may be passed to the function, which
+#   correspond to the project information to be printed.
+#   Valid parameters are:
+#     "@local_dir"   - prints the project's local directory
+#     "@local_venv"  - prints the project's virtual python environment dir
+#     "@repo"        - prints the project's repository URL
+#     "@hash"        - prints the project's commit hash
+#     "@license"     - prints the project's license
+#     "@name"        - prints the project's name
+#     "@brief"       - prints a brief description of the project
+#     "@description" - prints a more detailed description of the project
+#     Any other parameter will be printed as-is.
+#
+# Globals:
+#   cur_proj_info - an array that stores info for the current loaded project
+#
+# Returns:
+#   None
+#
+# Example:
+#   print_project @name @description @repo
+#   Output: "Project Description of the project https://github.com/user/project.git"
+#
+function print_project() {
+    # loop through each parameter passed to the function
+    for parameter in "$@"; do
+        case $parameter in
+            "@local_dir"  ) echo -n "${cur_proj_info[1]}" ;;
+            "@local_venv" ) echo -n "$PythonDir"          ;;
+            "@repo"       ) echo -n "${cur_proj_info[2]}" ;;
+            "@hash"       ) echo -n "${cur_proj_info[3]}" ;;
+            "@license"    ) echo -n "${cur_proj_info[4]}" ;;
+            "@name"       ) echo -n "${cur_proj_info[5]}" ;;
+            "@brief"      ) echo -n "${cur_proj_info[6]}" ;;
+            "@description") echo -n "${cur_proj_info[7]}" ;;
+            *)              echo -n "$parameter"          ;;
+        esac
+    done
+    echo
+}
+
+
+#----------------------- PYTHON VIRTUAL ENVIRONMENT ------------------------#
 
 
 function require_virtual_python() {
@@ -199,87 +302,6 @@ function activate_python_env() {
     else
         source "$PythonDir/bin/activate"
     fi
-}
-
-
-
-#------------------------------ PROJECT INFO -------------------------------#
-
-declare -a cur_proj_info
-
-# load_project - loads info about a project from a file called "projects.lst"
-#
-# Arguments:
-#   $1 - the name of the project to look up
-#
-# Globals:
-#   cur_proj_info - an array that stores info for the current loaded project
-#
-# Returns:
-#   None
-#
-# Example:
-#   load_project "webui"
-#
-function load_project() {
-    local project_to_find=$1
-    local IFS=,
-    while read -r project dir repo hash license name brief description; do
-        cur_proj_info[0]=${project##* }
-        cur_proj_info[1]=${dir##* }
-        cur_proj_info[2]=${repo##* }
-        cur_proj_info[3]=${hash##* }
-        cur_proj_info[4]=${license##* }
-        cur_proj_info[5]=${name##* }
-        cur_proj_info[6]=${brief##* }
-        cur_proj_info[7]=${description##* }
-        if [[ $project == $project_to_find ]]; then
-            return
-        fi
-    done < "$CodeDir/projects.lst"
-    cur_proj_info=()
-}
-
-# print_project - prints info about the current project based on the parameters
-#
-# Arguments:
-#   Any number of parameters may be passed to the function, which
-#   correspond to the project information to be printed.
-#   Valid parameters are:
-#     "@directory"   - prints the project's directory
-#     "@repo"        - prints the project's repository URL
-#     "@hash"        - prints the project's commit hash
-#     "@license"     - prints the project's license
-#     "@name"        - prints the project's name
-#     "@brief"       - prints a brief description of the project
-#     "@description" - prints a more detailed description of the project
-#     Any other parameter will be printed as-is.
-#
-# Globals:
-#   cur_proj_info - an array that stores info for the current loaded project
-#
-# Returns:
-#   None
-#
-# Example:
-#   print_project @name @description @repo
-#   Output: "Project Description of the project https://github.com/user/project.git"
-#
-function print_project() {
-    # loop through each parameter passed to the function
-    for parameter in "$@"; do
-        case $parameter in
-            "@directory"  ) echo -n "${cur_proj_info[1]}" ;;
-            "@repo"       ) echo -n "${cur_proj_info[2]}" ;;
-            "@hash"       ) echo -n "${cur_proj_info[3]}" ;;
-            "@license"    ) echo -n "${cur_proj_info[4]}" ;;
-            "@name"       ) echo -n "${cur_proj_info[5]}" ;;
-            "@brief"      ) echo -n "${cur_proj_info[6]}" ;;
-            "@description") echo -n "${cur_proj_info[7]}" ;;
-            *)              echo -n "$parameter"          ;;
-        esac
-    done
-    echo
 }
 
 

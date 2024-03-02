@@ -34,7 +34,7 @@
 
 function install() {
     local hash_or_tag=$1
-    local project_dir=$(print_project @directory)
+    local project_dir=$(print_project @local_dir)
     
     require_system_command git wget
     require_virtual_python
@@ -42,19 +42,26 @@ function install() {
     change_to_repo_directory
     clone_project_to "$project_dir" $hash_or_tag
     cd "$project_dir"
-    require_soft_link 'outputs' '../../Output' 1
+    require_soft_link 'output' '../../Output' 1
     virtual_python launch.py --no-download-sd-model --exit    
 }
 
 function launch() {
-    local project_dir=$(print_project @directory)
+    local project_dir=$(print_project @local_dir)
     local options=("$@")
     local directories=()
     
-    options+=(--xformers)
-    options+=(--theme dark)
-   #options+=(--autolaunch)
+    #-- ENABLE OPTIMIZATIONS --#
+    options+=(--opt-sdp-attention)         # non-deterministic, can be faster but uses more VRAM than xFormers
+    #options+=(--opt-sdp-no-mem-attention) # deterministic, can be faster but uses more VRAM than xFormers
+    #options+=(--xformers)                 # possibly no longer necessary with Torch 2
     
+    #-- CONFIGURE USER SETTINGS --#
+    options+=(--listen)      # disable browser launch and allows connection from LAN
+    options+=(--theme dark)  # start in dark mode
+    #options+=(--autolaunch) # force browser launch even when --listen is enabled
+    
+    #-- REDIRECT DIRECTORIES FOR AIMAN --#
     directories+=(--codeformer-models-path "$ModelsCodeformerDir")
     directories+=(--embeddings-dir "$ModelsEmbeddingsDir")
     directories+=(--esrgan-models-path "$ModelsEsrganDir")
@@ -70,6 +77,7 @@ function launch() {
     
     change_to_repo_directory
     cd "$project_dir"
+    require_soft_link 'output' '../../Output' 1
     virtual_python launch.py "${options[@]}" "${directories[@]}"
 }
 
