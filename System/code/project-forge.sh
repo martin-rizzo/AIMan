@@ -52,7 +52,11 @@ function launch() {
     local directories=()
     
     #-- ENABLE OPTIMIZATIONS --#
-    options+=(--opt-sdp-attention)         # non-deterministic, can be faster but uses more VRAM than xFormers
+    options+=(--pin-shared-memory) # for potential speed improvements.
+    options+=(--cuda-malloc)       # for potential speed improvements.
+    options+=(--cuda-stream)       # for potential speed improvements.
+    
+    #options+=(--opt-sdp-attention)         # non-deterministic, can be faster but uses more VRAM than xFormers
     #options+=(--opt-sdp-no-mem-attention) # deterministic, can be faster but uses more VRAM than xFormers
     #options+=(--xformers)                 # possibly no longer necessary with Torch 2
     
