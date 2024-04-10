@@ -8,9 +8,9 @@
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
 #        A basic package management system for AI open source projects
-#   
-#     Copyright (c) 2023 Martin Rizzo
-#     
+#
+#     Copyright (c) 2023-2024 Martin Rizzo
+#
 #     Permission is hereby granted, free of charge, to any person obtaining
 #     a copy of this software and associated documentation files (the
 #     "Software"), to deal in the Software without restriction, including
@@ -18,10 +18,10 @@
 #     distribute, sublicense, and/or sell copies of the Software, and to
 #     permit persons to whom the Software is furnished to do so, subject to
 #     the following conditions:
-#     
+#
 #     The above copyright notice and this permission notice shall be
 #     included in all copies or substantial portions of the Software.
-#     
+#
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 #     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 #     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -31,11 +31,12 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ScriptName=${BASH_SOURCE[0]##*/}
-ScriptVer=0.1      # script version
+ScriptVer=0.2      # script version
+ProjectName=       # el nombre del proyecto sobre el cual ejecutar el comando
 CommandName=       # the name of the command to execute
 CommandParams=()   # the command parameters
 Help="
-Usage: $ScriptName [options] COMMAND
+Usage: $ScriptName [PROJECT.]COMMAND [param1] [param2] ... [paramN]
 
   A command-line package manager for AI open source projects.
 
@@ -58,8 +59,10 @@ Options:
     -V, --version   Show $ScriptName version and exit
 
 Examples:
-    $ScriptName info webui
-    $ScriptName launch invoke
+    $ScriptName info
+    $ScriptName webui.info
+    $ScriptName webui.console pip upgrade
+    $ScriptName launch --help
 "
 
 # Determine the main directory containing the script
@@ -72,6 +75,12 @@ RepoDir="$MainDir/Repos"
 StorageDir="$MainDir/Storage"
 SystemDir="$MainDir/System"
 CodeDir="$SystemDir/code"
+
+CommandsCodeDir="$SystemDir/commands"
+HelpersCodeDir="$SystemDir/helpers"
+ProjectsCodeDir="$SystemDir/projects"
+
+
 
 # Each project typically requires its own virtual environment (venv) for Python.
 # If this variable is left empty, the script will dynamically configure it based
@@ -100,82 +109,111 @@ CompatiblePython='python3.10'
 # Prompt to be displayed when the virtual Python environment is activated
 PythonPrompt="aiman-$CompatiblePython"
 
-# Allowed commands (a string with space-separated values)
-ValidCommands='install remove launch info setdir python pip verify add2path' #"launch config"
-
 # Subdirectories of /Modules (a string with space-separated names)
 ValidModelsSubdirs='
 BLIP Codeformer deepbooru embeddings ESRGAN GFPGAN hypernetworks karlo
 LDSR Lora RealESRGAN ScuNET Stable-diffusion SwinIR VAE VAE-approx'
 
 
-#================================== START ==================================#
-source "$CodeDir/helpers.sh"
-source "$CodeDir/helper-dir.sh"
-change_to_main_directory
+function is_valid_command() {
+    local command_name=$1
+    [[ -f "$CommandsCodeDir/$command_name.sh" ]]
+    #----------------------------------------------------------
+    ## allowed commands (a string with space-separated values)
+    #local ValidCommands='install remove launch info setdir python pip verify add2path'
+    #[[ " $ValidCommands " == *" $command "* ]]
+    #----------------------------------------------------------
+}
 
-projects=''
-options=''
-show_help=false
-show_version=false
+#================================== START ==================================#
+
+# load helper functions
+source "$HelpersCodeDir/misc.sh"
+source "$HelpersCodeDir/directories.sh"
+source "$HelpersCodeDir/projects_db.sh"
+change_to_main_directory
+set_projects_db "$CodeDir/projects.csv"
 
 # loop through all the script parameters
-all_parameters=("$@")
+show_help=false
+show_version=false
+has_parameters=false
 while [ $# -gt 0 ]; do
     param=$1
+    CommandParams+=( "$param" )
     case "$param" in
-        -h | --help)    show_help=true    ;;
-        -v | --version) show_version=true ;;
+        -h | --help)
+            show_help=true
+            ;;
+        -v | --version)
+            show_version=true
+            ;;
         -*)
-          options="$options $param"
-          CommandParams+=( "$param" )
-          ;;
+            ;;
         *)
-          if [[ -z $CommandName ]]; then
-            CommandName=$param
-          else 
-            projects="$projects $param"
-            CommandParams+=( "$param" )
-          fi
-          ;;
+            if [[ -z $CommandName ]]; then
+                CommandName=$param
+                length=${#CommandParams[@]}
+                unset 'CommandParams[length-1]'
+            else
+                has_parameters=true
+            fi
+            ;;
     esac
     shift
 done
 
-# check if the user-supplied command is valid
-if [[ -n $CommandName && " $ValidCommands " != *" $CommandName "* ]]; then
+# try to extract the project name from the command name
+# (the user can use the dot to enter both, e.g., "webui.install").
+if [[ "$CommandName" == *'.'* ]]; then
+    ProjectName=${CommandName%%.*}
+    CommandName=${CommandName#*.}
+    # correct if the user mistakenly reverses the command and project name
+    if is_valid_command "$ProjectName" ; then
+        temp=$ProjectName
+        ProjectName=$CommandName
+        CommandName=$temp
+    fi
+fi
+
+# if the user did not provide any command, then force the help to be displayed.
+# if the user provided a command but it is invalid, then print an error and exit.
+if [[ -z "$CommandName" ]]; then
+    show_help=true
+elif ! is_valid_command "$CommandName"; then
     echoex error "Invalid command - $CommandName"
     exit 1
 fi
 
-# trim leading spaces from acumulative strings
-options=${options#" "}
-projects=${projects#" "}
-
 # load the selected command's code
-# if no command is selected then force the help to be displayed
-if [[ -n $CommandName ]]; then
-    source "$CodeDir/cmd-$CommandName.sh"
-else
-    show_help=true
+if [[ -n "$CommandName" ]]; then
+    source "$CommandsCodeDir/$CommandName.sh"
 fi
 
-# print help or version
-if $show_help; then
-    echo "$Help"
-    exit 0
-elif $show_version; then
-    echo $ScriptVer
-    exit 0
+# if the user did not provide any parameters
+# then check if it's necessary to print help or version
+if [[ $has_parameters == false ]]; then
+    if [[ $show_version == true ]]; then
+        echo $ScriptVer
+        exit 0
+    elif [[ $show_help == true ]]; then
+        echo "$Help"
+        exit 0
+    fi
+fi
+
+# if no project name is provided,
+# attempt to use the first parameter as the project name
+if [[ -z "$ProjectName" ]]; then
+    if is_valid_project "${CommandParams[0]}"; then
+        ProjectName=${CommandParams[0]}
+        CommandParams=( "${CommandParams[@]:1}" )
+    fi
 fi
 
 # run the command code
-require_storage_directory
-
-if [[ $CommandMode == all-parameters ]]; then
-    run_command "${all_parameters[@]}"
-else
-    run_command "$options" "$projects"
-fi
+run_command "${CommandParams[@]}"
 exit $?
+
+#require_storage_directory
 

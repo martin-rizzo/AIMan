@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# File    : helper-dir.sh
+# File    : helpers/directories.sh
 # Brief   : Helper functions to handle aiman directories
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 6, 2023
@@ -8,9 +8,9 @@
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
 #        A basic package management system for AI open source projects
-#   
-#     Copyright (c) 2023 Martin Rizzo
-#     
+#
+#     Copyright (c) 2023-2024 Martin Rizzo
+#
 #     Permission is hereby granted, free of charge, to any person obtaining
 #     a copy of this software and associated documentation files (the
 #     "Software"), to deal in the Software without restriction, including
@@ -18,10 +18,10 @@
 #     distribute, sublicense, and/or sell copies of the Software, and to
 #     permit persons to whom the Software is furnished to do so, subject to
 #     the following conditions:
-#     
+#
 #     The above copyright notice and this permission notice shall be
 #     included in all copies or substantial portions of the Software.
-#     
+#
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 #     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 #     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -55,7 +55,7 @@ function report_subdirectories() {
     do
         # extract the name of the subdirectory without the full path
         subdir_name=$(basename "$subdir")
-        
+
         # check if the dir name matches any of the subdirs we're looking for
         found=false
         for (( i=0; i<${#missing_subdirs[@]}; i++ )); do
@@ -68,7 +68,7 @@ function report_subdirectories() {
         if $found; then
             echoex check "   --    /$subdir_name"
         else
-            echoex warn  "unknown  /$subdir_name"        
+            echoex warn  "unknown  /$subdir_name"
         fi
     done
     # check if any of the subdirectories were not found and report them
@@ -78,7 +78,7 @@ function report_subdirectories() {
             echoex error "missing  /$subdir_name"
         fi
     done
-} 
+}
 
 # Prints a shortened version of a given directory path.
 #
@@ -106,7 +106,7 @@ function print_short_dir() {
         echo "~${directory#$HOME}"
     else
         echo "$directory"
-    fi    
+    fi
 }
 
 
@@ -152,7 +152,7 @@ function require_directory() {
 #
 function require_soft_link() {
     local link_name=$1 target=$2 force=${3:-0}
-    
+
     if [[ -L $link_name ]]; then
         echoex check "soft link '$link_name' already exists."
         return

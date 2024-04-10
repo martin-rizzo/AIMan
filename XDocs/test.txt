@@ -9,8 +9,9 @@ Experimental Prototype
 ??? sudo chmod 2750 /home/aiman2
  #  su - aiman2
  #  git clone -b proto https://github.com/martin-rizzo/AIMan.git
+ o  mkdir .bashrc.d && echo umask 007 > .bashrc.d/20_umask.conf
+ o  echo umask 007 >> .bashrc
  #  AIMan/aiman add2path && source ~/.bashrc
-??? echo umask 007 > .bashrc.d/20_umask.conf
  #  aiman setdir @models /mnt/disk_x/marti/AI-Models/
  #  aiman setdir @output /var/tmp/aiman-output/
  #  aiman install webui
@@ -40,8 +41,11 @@ Master
 
  #  sudo useradd -m aiman && sudo passwd aiman
 ??? sudo chmod 2750 /home/aiman
+??? sudo chmod 775 /tmp/gradio
+??? sudo chown aiman:aiman /tmp/gradio
  #  su - aiman
  #  git clone https://github.com/martin-rizzo/AIMan.git
+ o  echo umask 007 > .bashrc.d/20_umask.conf
  #  AIMan/aiman add2path && source ~/.bashrc
  #  aiman setdir @models /mnt/disk_x/marti/AI-Models
  #  aiman setdir @output /var/tmp/aiman-output

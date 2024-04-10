@@ -51,33 +51,51 @@ function launch() {
     local options=("$@")
     local directories=()
     
-    #-- ENABLE OPTIMIZATIONS --#
-    options+=(--pin-shared-memory) # for potential speed improvements.
-    options+=(--cuda-malloc)       # for potential speed improvements.
-    options+=(--cuda-stream)       # for potential speed improvements.
+    #====== ENABLE OPTIMIZATIONS ======#
     
+    # --always-gpu: ????
+    #
+    options+=(--always-gpu)
+    
+    # --cuda-malloc: Ask PyTorch to use cudaMallocAsync for tensor allocation.
+    #                Many users have reported issues where the asynchronous allocation
+    #                crashes the program. Enable this command flag at your own risk.
+    #options+=(--cuda-malloc) # (has not shown a significant speed increase)
+    
+    # --cuda-stream: Use PyTorch CUDA streams to move models and compute tensors simultaneously.
+    #                Unfortunately, this can lead to the generation of pure
+    #                black images. Enable this command flag at your own risk.
+    #options+=(--cuda-stream) # (has not shown a significant speed increase)
+    
+    # --pin-shared-memory: Offload modules to Shared GPU Memory instead of system RAM.
+    #                      Very risky because running out of shared GPU memory is a
+    #                      severe problem. Enable this command flag at your own risk.
+    #options+=(--pin-shared-memory) # (has not shown a significant speed increase)
+    
+    #options+=(--xformers)                  # possibly no longer necessary with Torch 2
     #options+=(--opt-sdp-attention)         # non-deterministic, can be faster but uses more VRAM than xFormers
-    #options+=(--opt-sdp-no-mem-attention) # deterministic, can be faster but uses more VRAM than xFormers
-    #options+=(--xformers)                 # possibly no longer necessary with Torch 2
+    #options+=(--opt-sdp-no-mem-attention)  # deterministic, can be faster but uses more VRAM than xFormers
     
-    #-- CONFIGURE USER SETTINGS --#
-    options+=(--listen)      # disable browser launch and allows connection from LAN
+    
+    #====== CONFIGURE USER SETTINGS ======#
     options+=(--theme dark)  # start in dark mode
+    #options+=(--listen)     # disable browser launch and allows connection from LAN
     #options+=(--autolaunch) # force browser launch even when --listen is enabled
     
-    #-- REDIRECT DIRECTORIES FOR AIMAN --#
-    directories+=(--codeformer-models-path "$ModelsCodeformerDir")
-    directories+=(--embeddings-dir "$ModelsEmbeddingsDir")
-    directories+=(--esrgan-models-path "$ModelsEsrganDir")
-    directories+=(--gfpgan-models-path "$ModelsGfpganDir")
-    directories+=(--hypernetwork-dir "$ModelsHypernetworkDir")
-    directories+=(--ldsr-models-path "$ModelsLdsrDir")
-    directories+=(--lora-dir "$ModelsLoraDir")
-    directories+=(--realesrgan-models-path "$ModelsRealesrganDir")
-    directories+=(--scunet-models-path "$ModelsScunetDir")
-    directories+=(--ckpt-dir "$ModelsStableDiffusionDir")
-    directories+=(--swinir-models-path "$ModelsSwinirDir")
-    directories+=(--vae-dir "$ModelsVaeDir")
+    
+    #====== REDIRECT DIRECTORIES FOR AIMAN ======#
+    directories+=( --codeformer-models-path "$ModelsCodeformerDir"      )
+    directories+=( --embeddings-dir         "$ModelsEmbeddingsDir"      )
+    directories+=( --esrgan-models-path     "$ModelsEsrganDir"          )
+    directories+=( --gfpgan-models-path     "$ModelsGfpganDir"          )
+    directories+=( --hypernetwork-dir       "$ModelsHypernetworkDir"    )
+    directories+=( --ldsr-models-path       "$ModelsLdsrDir"            )
+    directories+=( --lora-dir               "$ModelsLoraDir"            )
+    directories+=( --realesrgan-models-path "$ModelsRealesrganDir"      )
+    directories+=( --scunet-models-path     "$ModelsScunetDir"          )
+    directories+=( --ckpt-dir               "$ModelsStableDiffusionDir" )
+    directories+=( --swinir-models-path     "$ModelsSwinirDir"          )
+    directories+=( --vae-dir                "$ModelsVaeDir"             )
     
     change_to_repo_directory
     cd "$project_dir"
