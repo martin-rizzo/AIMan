@@ -55,7 +55,7 @@ function run_command() {
 
     # check if the ~/.bashrc file exists
     if [[ ! -e $file ]]; then
-        fatal_error "unable to set PATH. '$file' file does not exist"
+        fatal_error "Unable to set PATH. '$file' file does not exist"
     fi
     # check if the line to add already exists in the ~/.bashrc file
     if grep -Fxq "$line_to_add" "$file"; then

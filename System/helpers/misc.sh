@@ -31,6 +31,14 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
+RED='\e[1;31m'
+GREEN='\e[1;32m'
+YELLOW='\e[1;33m'
+BLUE='\e[1;34m'
+CYAN='\e[1;36m'
+DEFAULT_COLOR='\e[0m'
+PADDING='   '
+
 
 # Prints messages with different formats. If the format is not specified,
 # the message will be printed like the echo command.
@@ -52,12 +60,12 @@ function echox() {
     local format=$1
     local prefix suffix
     case "$format" in
-        check) prefix='\033[32m \xE2\x9C\x94 ' ; suffix='\033[0m' ; shift ;;
-        wait ) prefix='\033[33m - ' ; suffix='...\033[0m' ; shift ;;
-        info ) prefix='\033[96m \xE2\x93\x98 ' ; suffix='\033[0m' ; shift ;;
-        warn ) prefix='\033[93m ! ' ; suffix='\033[0m' ; shift ;;
-        error) prefix='\033[31m \xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
-        fatal) prefix='\033[7;31m \xE2\x9C\x96\xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
+        check) prefix="${PADDING}${GREEN}\xE2\x9C\x94${DEFAULT_COLOR} " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        wait ) prefix="\033[33m - " ; suffix="...${DEFAULT_COLOR}" ; shift ;;
+        info ) prefix="${CYAN}\xE2\x93\x98  " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        warn ) prefix="${PADDING}${YELLOW}! " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        error) prefix="${CYAN}[${RED}ERROR${CYAN}]${DEFAULT_COLOR}: " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        #fatal) prefix='\033[7;31m \xE2\x9C\x96\xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
     esac
     echo -e -n "$prefix"
     echo    -n "$@"
@@ -81,8 +89,10 @@ function echoex() {
 
 function fatal_error() {
     local fatal_message=$1 comment=$2
-    [[ -n $fatal_message ]] && echox fatal "$fatal_message"
+    echo
+    [[ -n $fatal_message ]] && echox error "$fatal_message"
     [[ -n $comment       ]] && echox info  "$comment"
+    echo
     exit 1
 }
 

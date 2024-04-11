@@ -54,8 +54,8 @@ function run_command() {
     # ensure the user has provided a project name
     # if not, display the help information and exit without taking any action
     if [[ -z $ProjectName ]]; then
-        fatal_error "a project name is required" \
-                    "e.g. ./aiman webui.$CommandName"
+        fatal_error "A project name is required" \
+                    "Please provide a project name. For example, you could run: ./$ScriptName webui.$CommandName"
     fi
 
     # load the project information requerida by the user

@@ -181,7 +181,8 @@ fi
 if [[ -z "$CommandName" ]]; then
     show_help=true
 elif ! is_valid_command "$CommandName"; then
-    echoex error "Invalid command - $CommandName"
+    fatal_error "Invalid command - $CommandName" \
+                "To view the available commands, please run: ./$ScriptName --help"
     exit 1
 fi
 
