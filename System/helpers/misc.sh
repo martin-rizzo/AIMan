@@ -49,8 +49,8 @@
 #   message - The message to be printed.
 #
 function echox() {
-    local format=$1 prefix='' suffix=''
-
+    local format=$1
+    local prefix suffix
     case "$format" in
         check) prefix='\033[32m \xE2\x9C\x94 ' ; suffix='\033[0m' ; shift ;;
         wait ) prefix='\033[33m - ' ; suffix='...\033[0m' ; shift ;;

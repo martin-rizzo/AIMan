@@ -81,7 +81,7 @@ To launch any AI project after the initial installation, follow these steps:
 
 2. Launch the web UI (replace `webui` with the desired project name):
    ```
-   ./aiman webui.launch
+   aiman webui.launch
    ```
 
 

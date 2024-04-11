@@ -11,17 +11,17 @@
     750 ~
     770 ~/Models        -> ~/aiman/Storage/Models
     770 ~/Output        -> ~/aiman/Storage/Output
- -------  
+ -------
     770 ~/aiman/Models  -> Storage/Models
     770 ~/aiman/Output  -> Storage/Output
     750 ~/aiman/Repos
     770 ~/aiman/Storage
-          +- Config
           +- Models
           +- Output
     750 ~/aiman/System
-          +- bin
-          +- venv
+          +- commands
+          +- helpers
+          +- projects
     750 ~/aiman
 
 
@@ -43,6 +43,6 @@
       +- SwinIR/
       +- VAE/
       +- VAE-approx/
-      
-      
+
+
 

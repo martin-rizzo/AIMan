@@ -48,14 +48,13 @@ function run_command() {
 
     # this command does not support any parameters
     if [[ -n $first_param ]]; then
-        error_unrecognized_arguments $param
+        error_unrecognized_arguments $first_param
     fi
 
     # ensure the user has provided a project name
     # if not, display the help information and exit without taking any action
     if [[ -z $ProjectName ]]; then
-        echo "$Help"
-        exit 0
+        fatal_error "un nombre de proyecto es requerido" "por ejemplo ./aiman webui.$CommandName"
     fi
 
     # load the project specified by the user and display all relevant info

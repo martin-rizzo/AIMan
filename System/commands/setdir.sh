@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# File    : cmd-add2path.sh
-# Brief   : Command to ...
+# File    : cmd-setdir.sh
+# Brief   : Change the directories used for input and output.
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 5, 2023
+# Date    : May 10, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
 #        A basic package management system for AI open source projects
-#   
-#     Copyright (c) 2023 Martin Rizzo
-#     
+#
+#     Copyright (c) 2023-2024 Martin Rizzo
+#
 #     Permission is hereby granted, free of charge, to any person obtaining
 #     a copy of this software and associated documentation files (the
 #     "Software"), to deal in the Software without restriction, including
@@ -18,10 +18,10 @@
 #     distribute, sublicense, and/or sell copies of the Software, and to
 #     permit persons to whom the Software is furnished to do so, subject to
 #     the following conditions:
-#     
+#
 #     The above copyright notice and this permission notice shall be
 #     included in all copies or substantial portions of the Software.
-#     
+#
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 #     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 #     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -31,40 +31,35 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName add2path
+Usage: $ScriptName setdir <ELEMENT> <DIRECTORY>
 
-add $ScriptName script to the system's PATH, allowing you to run it from any directory.
+  Change the directories used for input and output by the AI applications.
+
+ELEMENT specifies which directory to change:
+    @models   The directory where the AI models are stored.
+    @output   The directory where generated files are stored.
 
 Options:
-    -h, --help     show command help
-    -V, --version  show $ScriptName version and exit
+    -h, --help     Show this help message and exit.
+    -V, --version  Print version information and exit.
 
 Examples:
-    $ScriptName add2path
+    $ScriptName setdir @models /mnt/the-ai-disk/models
+    $ScriptName setdir @output /var/output
 "
 
-
 function run_command() {
-    local options=$1
-    local file=~/.bashrc
-    local line_to_add='export PATH=$PATH'":$MainDir"
-    
-    if [[ $options ]]; then
-        echoex error "unrecognized options: $options"
-        exit 1
+    local element=$1 directory=$2
+    local old_directory
+
+    if [[ $element == '@models' ]]; then
+        old_directory=$(readlink "$MainDir/Models")
+        modify_storage_link "$MainDir/Models" "$directory"
+        modify_storage_link "$HOME/Models"    "$directory" "$old_directory"
     fi
-        
-    # check if the ~/.bashrc file exists
-    if [[ ! -e $file ]]; then
-        echoex fatal "unable to set PATH. '$file' file does not exist"
-        exit 1    
-    fi
-    # check if the line to add already exists in the ~/.bashrc file
-    if grep -Fxq "$line_to_add" $file; then
-        echoex check 'the script is already in the path'
-    else
-        echoex wait "modifying the '$file' file"
-        echo "$line_to_add" >> $file
-        echoex info "to activate the changes, run 'source ~/.bashrc' or restart your shell"
+    if [[ $element == '@output' ]]; then
+        old_directory=$(readlink "$MainDir/Output")
+        modify_storage_link "$MainDir/Output" "$directory"
+        modify_storage_link "$HOME/Output"    "$directory" "$old_directory"
     fi
 }
