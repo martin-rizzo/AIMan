@@ -13,62 +13,77 @@ feature requests, and potential pull requests.
 ## AI projects supported
 
  - [x] Stable Diffusion web UI
- - [ ] Stable Diffusion WebUI Forge
+ - [x] Stable Diffusion WebUI Forge
  - [x] ComfyUI
  - [x] InvokeAI
- 
+
 
 ## Installation
 
-To install AIMan from scratch, follow these steps:
+To install AIMan securely, follow these steps:
 
 1. Create a new user for AIMan and set a password:
+
+This creates a dedicated user account called `aiman` that will be used to run
+the AIMan script. Having a separate user account improves the security of the
+installation by limiting the access and permissions on your system.
     ```
     sudo useradd -m aiman && sudo passwd aiman
     ```
 
-2. Set appropriate permissions for the AIMan user's home directory:
-    ```
-    sudo chmod 2750 /home/aiman
-    ```
-
-3. Switch to the AIMan user:
+2. Switch to the AIMan user:
     ```
     su - aiman
     ```
 
-4. Clone the AIMan repository from GitHub:
+3. Clone the AIMan repository from GitHub:
     ```
     git clone https://github.com/martin-rizzo/AIMan.git
+    cd AIMan
     ```
 
-5. (optional) Add AIMan to the PATH and update the shell session:
+4. (optional) Add AIMan to the PATH and update the shell session:
     ```
-    AIMan/aiman add2path && source ~/.bashrc
-    ```
-
-6. (optional) Set the directory where the AI models are located:
-    ```
-    AIMan/aiman setdir @models /path/to/your/models/directory
+    ./aiman add2path && source ~/.bashrc
     ```
 
-7. (optional) Set the output directory for AIMan:
+5. (optional) Set the directory where the AI models are located:
     ```
-    AIMan/aiman setdir @output /path/to/your/output/directory
-    ```
-
-8. Install the web UI package (replace `webui` with the desired package name):
-    ```
-    AIMan/aiman install webui
+    ./aiman setdir @models /path/to/your/models/directory
     ```
 
-9. Launch the web UI (replace `webui` with the desired package name):
+6. (optional) Set the output directory for AIMan:
     ```
-    AIMan/aiman launch webui
+    ./aiman setdir @output /path/to/your/output/directory
+    ```
+
+7. Install the web UI project (replace `webui` with the desired project name):
+    ```
+    ./aiman webui.install
+    ```
+
+8. Launch the web UI (replace `webui` with the desired project name):
+    ```
+    ./aiman webui.launch
     ```
 
 Please note that these instructions assume a Linux system and may require
 additional steps or modifications based on your specific environment.
+
+
+## Launching any AI project
+
+To launch any AI project after the initial installation, follow these steps:
+
+1. Switch to the AIMan user:
+    ```
+    su - aiman
+    ```
+
+2. Launch the web UI (replace `webui` with the desired project name):
+   ```
+   ./aiman webui.launch
+   ```
 
 
 ## Contributing
@@ -79,6 +94,8 @@ welcome. If you encounter any issues or have suggestions, please open an
 issue on the GitHub repository.
 
 
-## License
+## Lincense
 
-This project is licensed under the [MIT License](LICENSE).
+Copyright (c) 2023-2024 Martin Rizzo
+This project is licensed under the MIT license.
+See the ["LICENSE"](LICENSE) file for details.
