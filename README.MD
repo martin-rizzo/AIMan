@@ -20,13 +20,12 @@ feature requests, and potential pull requests.
 
 ## Installation
 
-To install AIMan securely, follow these steps:
+To securely install AIMan, follow these straightforward steps. This process
+involves creating a dedicated user account called `aiman` that will be used
+to run the AIMan script. Having a separate user account enhances the security
+of the installation by limiting the access and permissions on your system.
 
 1. Create a new user for AIMan and set a password:
-
-This creates a dedicated user account called `aiman` that will be used to run
-the AIMan script. Having a separate user account improves the security of the
-installation by limiting the access and permissions on your system.
     ```
     sudo useradd -m aiman && sudo passwd aiman
     ```
@@ -96,6 +95,6 @@ issue on the GitHub repository.
 
 ## Lincense
 
-Copyright (c) 2023-2024 Martin Rizzo
-This project is licensed under the MIT license.
+Copyright (c) 2023-2024 Martin Rizzo  
+This project is licensed under the MIT license.  
 See the ["LICENSE"](LICENSE) file for details.
