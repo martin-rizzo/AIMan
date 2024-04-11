@@ -9,13 +9,13 @@ Experimental Prototype
 ??? sudo chmod 2750 /home/aiman2
  #  su - aiman2
  #  git clone -b proto https://github.com/martin-rizzo/AIMan.git
- o  mkdir .bashrc.d && echo umask 007 > .bashrc.d/20_umask.conf
- o  echo umask 007 >> .bashrc
+??? mkdir .bashrc.d && echo umask 007 > .bashrc.d/20_umask.conf
+ #  echo umask 007 >> .bashrc
  #  AIMan/aiman add2path && source ~/.bashrc
  #  aiman setdir @models /mnt/disk_x/marti/AI-Models/
  #  aiman setdir @output /var/tmp/aiman-output/
- #  aiman install webui
- #  aiman launch  webui
+ #  aiman webui.install
+ #  aiman webui.launch
 
 
 Old method:
@@ -69,4 +69,4 @@ Create 'proto' branch:
 Delete 'proto' branch:
   > git push origin --delete proto
   > git branch -d proto
- 
+

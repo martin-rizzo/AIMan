@@ -132,7 +132,7 @@ source "$HelpersCodeDir/misc.sh"
 source "$HelpersCodeDir/directories.sh"
 source "$HelpersCodeDir/projects_db.sh"
 change_to_main_directory
-set_projects_db "$ProjectsCodeDir/projects.csv"
+load_projects_db "$ProjectsCodeDir/projects.csv"
 
 # loop through all the script parameters
 show_help=false

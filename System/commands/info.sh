@@ -54,19 +54,23 @@ function run_command() {
     # ensure the user has provided a project name
     # if not, display the help information and exit without taking any action
     if [[ -z $ProjectName ]]; then
-        fatal_error "un nombre de proyecto es requerido" "por ejemplo ./aiman webui.$CommandName"
+        fatal_error "a project name is required" \
+                    "e.g. ./aiman webui.$CommandName"
     fi
 
-    # load the project specified by the user and display all relevant info
-    load_project "$ProjectName"
+    # load the project information requerida by the user
+    # (once the information is loaded, '@' can be used as the project name)
+    project_info "$ProjectName"
+
+    # display all relevant project information
     echo
-    print_project "Name        :" @name
-    print_project "Summary     :" @brief
-    print_project "License     :" @license
-    print_project "Directory   :" @local_dir
-    print_project "Virt.enviro :" @local_venv
-    print_project "Repository  :" @repo
-    print_project "Hash        :" @hash
-    print_project "Description :" @description
+    project_info @ "Name        : " @name
+    project_info @ "Summary     : " @brief
+    project_info @ "License     : " @license
+    project_info @ "Directory   : " @local_dir
+    project_info @ "Virt.enviro : " @local_venv
+    project_info @ "Repository  : " @repo
+    project_info @ "Hash        : " @hash
+    project_info @ "Description : " @description
     echo
 }

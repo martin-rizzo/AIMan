@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File    : helpers/projects_db.sh
-# Brief   : Functions for reading the database of available projects
+# Brief   : Functions for loading and querying the database of available projects
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Apr 10, 2024
 # Repo    : https://github.com/martin-rizzo/AIAppManager
@@ -30,103 +30,33 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-declare -a CUR_PROJECT_INFO
+
+# Holds the loaded database populated by the 'load_projects_db' function.
 PROJECTS_DB=
 
-# load_project - loads info about a project from a file called "projects.csv"
-#
-# Arguments:
-#   $1 - the name of the project to look up
-#
-# Globals:
-#   CUR_PROJECT_INFO - an array that stores info for the current loaded project
-#
-# Returns:
-#   None
-#
-# Example:
-#   load_project "webui"
-#
-function load_project() {
-    local project_to_find=$1
-    local IFS=,
-    [[ ${#CUR_PROJECT_INFO[@]} -ne 0 ]] && \
-        fatal_error "The project was loaded twice using 'load_project()', which is not fully supported."
+# Array that holds the information about the last queried project. This allows
+# the 'print_project' function to quickly retrieve the project details without
+# having to search the database again.
+declare -a CACHE_PROJECT_INFO
 
-    IFS=','; while read -r project dir repo hash license name brief description; do
-        if [[ $project == $project_to_find ]]; then
-            CUR_PROJECT_INFO[0]=$project
-            CUR_PROJECT_INFO[1]=$dir
-            CUR_PROJECT_INFO[2]=$repo
-            CUR_PROJECT_INFO[3]=$hash
-            CUR_PROJECT_INFO[4]=$license
-            CUR_PROJECT_INFO[5]=$name
-            CUR_PROJECT_INFO[6]=$brief
-            CUR_PROJECT_INFO[7]=$description
-            if [[ -z $PythonDir ]]; then
-                PythonDir="$RepoDir/${CUR_PROJECT_INFO[1]}-venv"
-            fi
-            return 0
-        fi
-    done <<< "$PROJECTS_DB"
-    CUR_PROJECT_INFO=()
-    return 1
-}
 
-# print_project - prints info about the current project based on the parameters
+# Loads the project database
 #
-# Arguments:
-#   Any number of parameters may be passed to the function, which
-#   correspond to the project information to be printed.
-#   Valid parameters are:
-#     "@local_dir"   - prints the project's local directory
-#     "@local_venv"  - prints the project's virtual python environment dir
-#     "@repo"        - prints the project's repository URL
-#     "@hash"        - prints the project's commit hash
-#     "@license"     - prints the project's license
-#     "@name"        - prints the project's name
-#     "@brief"       - prints a brief description of the project
-#     "@description" - prints a more detailed description of the project
-#     Any other parameter will be printed as-is.
+# Usage:
+#   load_projects_db <csv_db_file>
 #
-# Globals:
-#   CUR_PROJECT_INFO - an array that stores info for the current loaded project
+# Parameters:
+#   - csv_db_file: the path to the CSV file containing the project database
 #
-# Returns:
-#   None
+# This function is called only once at the beginning of the program to
+# load the project database from the CSV file. The format of each line
+# in the CSV file is:
+#     project,dir,repo,hash,license,name,brief,description
 #
-# Example:
-#   print_project @name @description @repo
-#   Output: "Project Description of the project https://github.com/user/project.git"
-#
-function print_project() {
-    # loop through each parameter passed to the function
-    for parameter in "$@"; do
-        case $parameter in
-            "@local_dir"  ) echo -n "${CUR_PROJECT_INFO[1]}" ;;
-            "@local_venv" ) echo -n "$PythonDir"          ;;
-            "@repo"       ) echo -n "${CUR_PROJECT_INFO[2]}" ;;
-            "@hash"       ) echo -n "${CUR_PROJECT_INFO[3]}" ;;
-            "@license"    ) echo -n "${CUR_PROJECT_INFO[4]}" ;;
-            "@name"       ) echo -n "${CUR_PROJECT_INFO[5]}" ;;
-            "@brief"      ) echo -n "${CUR_PROJECT_INFO[6]}" ;;
-            "@description") echo -n "${CUR_PROJECT_INFO[7]}" ;;
-            *)              echo -n "$parameter"          ;;
-        esac
-    done
-    echo
-}
-
-function is_valid_project() {
-    local project=$1
-    grep -q "^$project," <<< "$PROJECTS_DB"
-}
-
-function set_projects_db() {
+function load_projects_db() {
     local csv_db_file=$1
 
-    # recorrer cada una de las lineas del CSV para purificar un poco su
-    # contenido eliminando espacios inesesarios.
+    # iterate through each line of the CSV file and trim the content
     IFS=','; while read -r project dir repo hash license name brief description; do
         project=$(trim "$project")
         dir=$(trim "$dir")
@@ -136,7 +66,94 @@ function set_projects_db() {
         name=$(trim "$name")
         brief=$(trim "$brief")
         description=$(trim "$description")
+        # append the trimmed project information to the $PROJECTS_DB variable
         PROJECTS_DB+="$project,$dir,$repo,$hash,$license,$name,$brief,$description
 "
     done < "$csv_db_file"
 }
+
+# Checks if a project is valid in the project database
+#
+# Usage:
+#   is_valid_project <project>
+#
+# Parameters:
+#   - project: the name of the project to check
+#
+# This function checks if the given project is present in the
+# '$PROJECTS_DB' variable, which contains the project database
+# loaded by the 'load_projects_db' function.
+#
+function is_valid_project() {
+    local project=$1
+    grep -q "^$project," <<< "$PROJECTS_DB"
+}
+
+# Displays information about a project from the project database
+#
+# Usage:
+#   print_project <project_name> [param1] [param2] ... [paramN]
+#
+# Parameters:
+#   - project_name: the name of the project to retrieve information for.
+#
+#   Any number of parameters may be passed to the function, which
+#   correspond to the project information to be printed.
+#   Valid parameters are:
+#      "@local_dir"   : outputs the local directory of the project.
+#      "@local_venv"  : outputs the local virtual environment directory of the project.
+#      "@repo"        : outputs the repository URL of the project.
+#      "@hash"        : outputs the commit hash of the project.
+#      "@license"     : outputs the license of the project.
+#      "@name"        : outputs the full name of the project.
+#      "@brief"       : outputs a brief description of the project.
+#      "@description" : outputs the full description of the project.
+#      Any other parameter will be printed as-is.
+#
+# Example:
+#   print_project my_project @local_dir @name @brief
+#
+function project_info() {
+    local project_name=$1
+
+    # If the project name is not cached, then search for it in '$PROJECT_DB'
+    # (if '@' is provided as the project name, it means that the cache content should be printed)
+    if [[ $project_name != '@' && $project_name != ${CACHE_PROJECT_INFO[0]} ]]; then
+        CACHE_PROJECT_INFO=()
+        IFS=','; while read -r project local_dir repo hash license name brief description; do
+            if [[ $project == $project_name ]]; then
+                CACHE_PROJECT_INFO[0]=$project
+                CACHE_PROJECT_INFO[1]="$RepoDir/${local_dir}"
+                CACHE_PROJECT_INFO[2]="$RepoDir/${local_dir}-venv"
+                CACHE_PROJECT_INFO[3]=$repo
+                CACHE_PROJECT_INFO[4]=$hash
+                CACHE_PROJECT_INFO[5]=$license
+                CACHE_PROJECT_INFO[6]=$name
+                CACHE_PROJECT_INFO[7]=$brief
+                CACHE_PROJECT_INFO[8]=$description
+                break
+            fi
+        done <<< "$PROJECTS_DB"
+    fi
+
+    # If there are more parameters after the project_name,
+    # then loop through each of them and print what they indicate
+    if [[ $# -gt 1 ]]; then
+        shift
+        for parameter in "$@"; do
+            case "$parameter" in
+                "@local_dir"  ) echo -n "${CACHE_PROJECT_INFO[1]}" ;;
+                "@local_venv" ) echo -n "${CACHE_PROJECT_INFO[2]}" ;;
+                "@repo"       ) echo -n "${CACHE_PROJECT_INFO[3]}" ;;
+                "@hash"       ) echo -n "${CACHE_PROJECT_INFO[4]}" ;;
+                "@license"    ) echo -n "${CACHE_PROJECT_INFO[5]}" ;;
+                "@name"       ) echo -n "${CACHE_PROJECT_INFO[6]}" ;;
+                "@brief"      ) echo -n "${CACHE_PROJECT_INFO[7]}" ;;
+                "@description") echo -n "${CACHE_PROJECT_INFO[8]}" ;;
+                *)              echo -n "$parameter"          ;;
+            esac
+        done
+        echo
+    fi
+}
+
