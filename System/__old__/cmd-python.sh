@@ -8,9 +8,9 @@
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
 #        A basic package management system for AI open source projects
-#   
+#
 #     Copyright (c) 2023 Martin Rizzo
-#     
+#
 #     Permission is hereby granted, free of charge, to any person obtaining
 #     a copy of this software and associated documentation files (the
 #     "Software"), to deal in the Software without restriction, including
@@ -18,10 +18,10 @@
 #     distribute, sublicense, and/or sell copies of the Software, and to
 #     permit persons to whom the Software is furnished to do so, subject to
 #     the following conditions:
-#     
+#
 #     The above copyright notice and this permission notice shall be
 #     included in all copies or substantial portions of the Software.
-#     
+#
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 #     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 #     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -53,12 +53,12 @@ function run_command() {
         activate)
             require_virtual_python
             if is_virtual_python; then
-                #echoex check "virtual environment already activated (nothing to do)"
-                echoex check "virtual environment is already activated (no further action is necessary)"
-                echoex "$exitmsg"
+                #echox check "virtual environment already activated (nothing to do)"
+                echox check "virtual environment is already activated (no further action is necessary)"
+                echox "$exitmsg"
             else
-                echoex wait "activating virtual environment"
-                echoex "$exitmsg"
+                echox wait "activating virtual environment"
+                echox "$exitmsg"
                 /usr/bin/env bash -i -c \
                     "source '$PythonDir/bin/activate'; exec /bin/bash -i"
             fi

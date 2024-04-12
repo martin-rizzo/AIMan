@@ -66,16 +66,16 @@ function report_subdirectories() {
         done
         # report on whether the subdirectory was found or not
         if $found; then
-            echoex check "   --    /$subdir_name"
+            echox check "   --    /$subdir_name"
         else
-            echoex warn  "unknown  /$subdir_name"
+            echox warn  "unknown  /$subdir_name"
         fi
     done
     # check if any of the subdirectories were not found and report them
     for subdir in "${missing_subdirs[@]}"; do
         if [[ $subdir ]]; then
             subdir_name=$(basename "$subdir")
-            echoex error "missing  /$subdir_name"
+            echox error "missing  /$subdir_name"
         fi
     done
 }
@@ -116,10 +116,10 @@ function change_to_main_directory() {
 
 function change_to_repo_directory() {
     if [[ ! -e "$RepoDir" ]]; then
-        echoex wait "creating directory $RepoDir"
+        echox wait "creating directory $RepoDir"
         mkdir -p "$RepoDir"
     elif [[ ! -d "$RepoDir" ]]; then
-        echoex fatal "$RepoDir must be a directory"
+        echox fatal "$RepoDir must be a directory"
         exit 1
     fi
     cd "$RepoDir"
@@ -128,10 +128,10 @@ function change_to_repo_directory() {
 function require_directory() {
     local directory=$1
     if [[ ! -e $directory ]]; then
-        echoex wait "creating directory $directory"
+        echox wait "creating directory $directory"
         mkdir -p "$directory"
     elif [[ ! -d $directory ]]; then
-        echoex fatal "$directory must be a directory"
+        echox fatal "$directory must be a directory"
         exit 1
     fi
 }
@@ -154,13 +154,13 @@ function require_soft_link() {
     local link_name=$1 target=$2 force=${3:-0}
 
     if [[ -L $link_name ]]; then
-        echoex check "soft link '$link_name' already exists."
+        echox check "soft link '$link_name' already exists."
         return
     elif [[ ! -e $link_name ]]; then
-        echoex wait "creating soft link '$link_name'."
+        echox wait "creating soft link '$link_name'."
         ln -s "$target" "$link_name"
     elif [[ $force -eq 1 && -d $link_name ]]; then
-        echoex wait "converting directory in a soft link $link_name"
+        echox wait "converting directory in a soft link $link_name"
         mv "$link_name" "$link_name-old"
         ln -s "$target" "$link_name"
     else
@@ -184,7 +184,7 @@ function modify_storage_link() {
         directory="${directory::-1}"
     fi
     ln -nsf "$directory" "$link_name"
-    echoex check "$link_name -> $directory"
+    echox check "$link_name -> $directory"
 }
 
 function require_storage_directory() {

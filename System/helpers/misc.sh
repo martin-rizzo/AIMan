@@ -43,7 +43,7 @@ PADDING='   '
 # Prints messages with different formats. If the format is not specified,
 # the message will be printed like the echo command.
 #
-# Usage: echoex [format] message
+# Usage: echox [format] message
 #
 # Parameters:
 #   format - Optional format for the message. Can be one of the following:
@@ -77,14 +77,6 @@ function trim() {
     input="${input#"${input%%[![:space:]]*}"}"
     input="${input%"${input##*[![:space:]]}"}"
     echo "$input"
-}
-
-# Compatibility with legacy code
-# TODO: Remove all uses of 'echoex' from the entire codebase and replace
-#       them with 'echox'.
-#
-function echoex() {
-    echox "$@"
 }
 
 function fatal_error() {
@@ -140,12 +132,12 @@ function clone_project_to() {
 function require_system_command() {
     for cmd in "$@"; do
         if ! command -v $cmd &> /dev/null; then
-            echoex error "$cmd is not available!"
-            echoex "   you can try to install '$cmd' using the following command:"
-            echoex "   > sudo dnf install $cmd\n"
+            echox error "$cmd is not available!"
+            echox "   you can try to install '$cmd' using the following command:"
+            echox "   > sudo dnf install $cmd\n"
             exit 1
         else
-            echoex check "$cmd is installed"
+            echox check "$cmd is installed"
         fi
     done
 }
@@ -157,18 +149,18 @@ function require_system_command() {
 function require_virtual_python() {
 
     if [[ ! -d $PythonDir ]]; then
-        echoex wait 'creating python virtual environment'
+        echox wait 'creating python virtual environment'
         "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
-        echoex check 'new python virtual environment created:'
-        echoex  "     $PythonDir"
+        echox check 'new python virtual environment created:'
+        echox  "     $PythonDir"
     elif [[ ! -e "$PythonDir/bin/$CompatiblePython" ]]; then
-        echoex warn "a different version of python was selected ($CompatiblePython)"
-        echoex wait "recreating virtual environment"
+        echox warn "a different version of python was selected ($CompatiblePython)"
+        echox wait "recreating virtual environment"
         rm -Rf "$PythonDir"
         "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
-        echoex check "virtual environment recreated for $CompatiblePython"
+        echox check "virtual environment recreated for $CompatiblePython"
     else
-        echoex check 'virtual environment exists'
+        echox check 'virtual environment exists'
     fi
 }
 
@@ -198,11 +190,11 @@ function virtual_python() {
 
     # 1) ensure virtual environment is activated
     if ! is_virtual_python; then
-        echoex wait 'activating virtual environment'
+        echox wait 'activating virtual environment'
         source "$PythonDir/bin/activate"
-        echoex check 'virtual environment activated'
+        echox check 'virtual environment activated'
     else
-        echoex check "virtual environment already activated"
+        echox check "virtual environment already activated"
     fi
 
     # 2) execute command inside the virtual environment
