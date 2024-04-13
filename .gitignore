@@ -1,5 +1,11 @@
 
 #
+# TMP FILES
+#
+.kate-swp
+
+
+#
 # REPOSITORIES
 #
 /Repos/

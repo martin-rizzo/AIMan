@@ -64,11 +64,13 @@ function run_command() {
 
     # display all relevant project information
     echo
+    project_info @ "ID          : " @id
     project_info @ "Name        : " @name
     project_info @ "Summary     : " @brief
     project_info @ "License     : " @license
     project_info @ "Directory   : " @local_dir
     project_info @ "Virt.enviro : " @local_venv
+    project_info @ "Script      : " @script
     project_info @ "Repository  : " @repo
     project_info @ "Hash        : " @hash
     project_info @ "Description : " @description

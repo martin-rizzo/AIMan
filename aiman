@@ -100,6 +100,7 @@ ModelsScunetDir="$ModelsDir/ScuNET"
 ModelsStableDiffusionDir="$ModelsDir/Stable-diffusion"
 ModelsSwinirDir="$ModelsDir/SwinIR"
 ModelsVaeDir="$ModelsDir/VAE"
+ModelsControlnetDir="$ModelsDir/ControlNet"
 
 
 # Compatible version of Python to be used in the virtual environment.
@@ -132,7 +133,7 @@ source "$HelpersCodeDir/misc.sh"
 source "$HelpersCodeDir/directories.sh"
 source "$HelpersCodeDir/projects_db.sh"
 change_to_main_directory
-load_projects_db "$ProjectsCodeDir/projects.csv"
+load_projects_db "$ProjectsCodeDir/list.csv"
 
 # loop through all the script parameters
 show_help=false
@@ -203,9 +204,14 @@ if [[ $has_parameters == false ]]; then
     fi
 fi
 
-# if no project name is provided,
-# attempt to use the first parameter as the project name
-if [[ -z "$ProjectName" ]]; then
+# If the user provided a project name, ensure that it is a valid name
+if [[ "$ProjectName" ]]; then
+    if ! is_valid_project "$ProjectName"; then
+        fatal_error "Project '$ProjectName' is not recognized" \
+            "To see a list of available projects, use: ./aiman list"
+    fi
+# If no project name is provided, use the first parameter as the project name
+else
     if is_valid_project "${CommandParams[0]}"; then
         ProjectName=${CommandParams[0]}
         CommandParams=( "${CommandParams[@]:1}" )
@@ -216,5 +222,4 @@ fi
 run_command "${CommandParams[@]}"
 exit $?
 
-#require_storage_directory
 

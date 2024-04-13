@@ -30,6 +30,16 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+#
+# FUNCTIONS:
+#   - echox()                  : Prints messages with different formats.
+#   - fatal_error()            : ???
+#   - error_unrecognized_arg() : Displays error message for unrecognized argument.
+#   - trim()                   : ???
+#   - clone_repository()       : Clones a Git repository.
+#   - require_system_command() : Checks whether a given command is available in the system.
+#
+#-----------------------------------------------------------------------------
 
 RED='\e[1;31m'
 GREEN='\e[1;32m'
@@ -72,13 +82,6 @@ function echox() {
     echo -e    "$suffix"
 }
 
-function trim() {
-    local input=$1
-    input="${input#"${input%%[![:space:]]*}"}"
-    input="${input%"${input##*[![:space:]]}"}"
-    echo "$input"
-}
-
 function fatal_error() {
     local fatal_message=$1 comment=$2
     echo
@@ -90,38 +93,48 @@ function fatal_error() {
 
 # Function to display an error message for unrecognized arguments
 # $@ - all the arguments that were not recognized
-error_unrecognized_arguments() {
+function error_unrecognized_arguments() {
   echo "Error: Unrecognized argument(s): $@"
   exit 1
 }
 
+function trim() {
+    local input=$1
+    input="${input#"${input%%[![:space:]]*}"}"
+    input="${input%"${input##*[![:space:]]}"}"
+    echo "$input"
+}
 
-#---------------------------------- GIT ------------------------------------#
-
-function clone_project_to() {
-    local directory=$1 hash_or_tag=$2 repo=$3
+# Clones a Git repository
+#
+# Usage:
+#   clone_repository <repository_url> <commit_hash> <directory>
+#
+# Parameters:
+#   - repository_url : the URL of the Git repository to be cloned.
+#   - commit_hash    : the commit hash or tag to check out.
+#                      (if '-' then the HEAD of the main branch will be used)
+#   - directory      : the directory where the repository will be cloned.
+#
+# Example:
+#   clone_repository "https://github.com/example/my-project.git" "abcd1234" "/path/to/my-project"
+#
+function clone_repository() {
+    local repo=$1 hash=$2 directory=$3
     local previous_dir=$(pwd)
 
-    if [[ -z $directory ]]; then
-        fatal_error 'clone_project_to() requires the "directory" parameter.' \
-                    'Usage: clone_project_to <directory> [repo] [hash]'
+    if [[ $repo == '' || $hash == '' || $directory == '' ]]; then
+        fatal_error "Missing required parameters in clone_repository() function." \
+                    "This is an internal error likely caused by a mistake in the code"
     fi
-    if [[ -z $repo ]]; then
-        repo=$(print_project @repo)
-    fi
-    if [[ -z $hash_or_tag ]]; then
-        hash_or_tag=$(print_project @hash)
-    fi
+
     git clone "$repo" "$directory"
-    if [[ $hash_or_tag != '-' ]]; then
+    if [[ $hash != '' && $hash != '-' ]]; then
         cd "$directory"
-        git reset --hard "$hash_or_tag"
+        git reset --hard "$hash"
     fi
     cd "$previous_dir" &> /dev/null
 }
-
-
-#--------------------------------- SYSTEM ----------------------------------#
 
 # Function that checks whether a given command is available in the system
 # and prints an error message with installation instructions if it is not.
@@ -140,86 +153,6 @@ function require_system_command() {
             echox check "$cmd is installed"
         fi
     done
-}
-
-
-#----------------------- PYTHON VIRTUAL ENVIRONMENT ------------------------#
-
-
-function require_virtual_python() {
-
-    if [[ ! -d $PythonDir ]]; then
-        echox wait 'creating python virtual environment'
-        "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
-        echox check 'new python virtual environment created:'
-        echox  "     $PythonDir"
-    elif [[ ! -e "$PythonDir/bin/$CompatiblePython" ]]; then
-        echox warn "a different version of python was selected ($CompatiblePython)"
-        echox wait "recreating virtual environment"
-        rm -Rf "$PythonDir"
-        "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
-        echox check "virtual environment recreated for $CompatiblePython"
-    else
-        echox check 'virtual environment exists'
-    fi
-}
-
-# Function that checks whether a virtual environment exists, and creates
-# a new one if it doesn't.
-# Usage: ensure_virt_env <venv_dir> <python>
-# Arguments:
-#   - venv_dir: the path of the virtual environment dir to be checked.
-#   - python  : the Python interpreter that will create the v. environment.
-#
-function is_virtual_python() {
-    local current_virtual_dir=$VIRTUAL_ENV
-    if [[ -z $current_virtual_dir ]]; then
-        return 1
-    fi
-    if [[ $current_virtual_dir == '~'* ]]; then
-        current_virtual_dir="${current_virtual_dir/\~\//}"
-    fi
-    if [[ "$PythonDir" == *"$current_virtual_dir" ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-function virtual_python() {
-
-    # 1) ensure virtual environment is activated
-    if ! is_virtual_python; then
-        echox wait 'activating virtual environment'
-        source "$PythonDir/bin/activate"
-        echox check 'virtual environment activated'
-    else
-        echox check "virtual environment already activated"
-    fi
-
-    # 2) execute command inside the virtual environment
-    if [[ "$1" == "!"* ]]; then
-        # remove the '!' character from the beginning of the first param
-        # and execute that command with the rest of the arguments
-        local command_name=${1:1}
-        shift
-        "$command_name" "$@"
-    else
-        python $@
-    fi
-}
-
-function activate_python_env() {
-    local mode=$1
-    local venv_prompt="aiman-$CompatiblePython"
-    ensure_python_env
-
-    if [[ $mode == 'subshell' ]]; then
-        /usr/bin/env bash -i -c "source '$PythonDir/bin/activate'; exec /bin/bash -i"
-        exit 0
-    else
-        source "$PythonDir/bin/activate"
-    fi
 }
 
 

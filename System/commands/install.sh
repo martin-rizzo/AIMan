@@ -8,9 +8,9 @@
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
 #        A basic package management system for AI open source projects
-#   
+#
 #     Copyright (c) 2023 Martin Rizzo
-#     
+#
 #     Permission is hereby granted, free of charge, to any person obtaining
 #     a copy of this software and associated documentation files (the
 #     "Software"), to deal in the Software without restriction, including
@@ -18,10 +18,10 @@
 #     distribute, sublicense, and/or sell copies of the Software, and to
 #     permit persons to whom the Software is furnished to do so, subject to
 #     the following conditions:
-#     
+#
 #     The above copyright notice and this permission notice shall be
 #     included in all copies or substantial portions of the Software.
-#     
+#
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 #     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 #     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -31,43 +31,48 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName install PROJECT [version]
+Usage: $ScriptName PROJECT.install [version]
 
-install a project on the aiman directory
+  install a project on the aiman directory
 
 Options:
     -h, --help     show command help
     -V, --version  show $ScriptName version and exit
 
 Examples:
-    $ScriptName install invoke
+    $ScriptName webui.install v1.8.0
 "
-CommandMode=projects
 
 function run_command() {
-    local options=$1 projects=$2
-    local version parts project_script
+    local version=$1
 
-    if [[ -n $options ]]; then
-      error_unrecognized_arguments $options
-      exit 1
+    # ensure the $ProjectName variable is not empty
+    if [[ -z $ProjectName ]]; then
+        fatal_error "The install command requires a project name to be provided" \
+            "If the project is 'webui', you can run: ./aiman webui.install" \
+            "To see a list of available projects, use: ./aiman list"
     fi
-    
-    for project in $projects; do
-        IFS=':' read -ra parts <<< "$project"
-        project=${parts[0]}
-        version=${parts[1]}
-        project_script="$CodeDir/project-$project.sh"
-        
-        # check if the project exists
-        if [[ ! -f "$project_script" ]]; then
-            fatal_error "Unknown project: $project"
-        fi
 
-        # execute the project
-        source "$CodeDir/project-$project.sh"
-        load_project $project
-        install $version
-    done
-    
+    # retrieve project information
+    project_info "$ProjectName"
+    local project_id=$(project_info @ @id)
+    local project_dir=$(project_info @ @local_dir)
+    local venv=$(project_info @ @local_venv)
+    local repo=$(project_info @ @repo)
+    local hash=$(project_info @ @hash)
+    local script=$(project_info @ @script)
+
+    # ensure the project script file exists
+    if [[ ! -f $script ]]; then
+        fatal_error "AIMan does not have a script for the '$project_id' project" \
+            "This is an internal error likely caused by a mistake in the code"
+    fi
+
+    # if the user provided a version, use it to override the hash
+    if [[ $version ]]; then
+        hash=$version
+    fi
+
+    source "$script"
+    install "$venv" "$project_dir" "$repo" "$hash"
 }

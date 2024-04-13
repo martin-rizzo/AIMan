@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File    : helpers/directories.sh
-# Brief   : Helper functions to handle aiman directories
+# Brief   : Helper functions to handle directories and soft links
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 6, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
@@ -30,6 +30,18 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+#
+# FUNCTIONS:
+#   - report_subdirectories() : Reports on the existence of a list of subdirs.
+#   - print_short_dir()       : Prints the shortened version of a path.
+#   - require_directory()     : Ensures the existence of a directory.
+#   - require_symlink()       : Ensures the existence of a symbolic link.
+#   - require_storage_dir()   :
+#   - modify_storage_link()   :
+#   - change_to_main_directory()
+#   - change_to_repo_directory()
+#
+#-----------------------------------------------------------------------------
 
 
 # Reports on the existence of a list of subdirs within a given directory.
@@ -109,22 +121,17 @@ function print_short_dir() {
     fi
 }
 
-
-function change_to_main_directory() {
-    cd "$MainDir" &> /dev/null
-}
-
-function change_to_repo_directory() {
-    if [[ ! -e "$RepoDir" ]]; then
-        echox wait "creating directory $RepoDir"
-        mkdir -p "$RepoDir"
-    elif [[ ! -d "$RepoDir" ]]; then
-        echox fatal "$RepoDir must be a directory"
-        exit 1
-    fi
-    cd "$RepoDir"
-}
-
+# Ensures the existence of a directory.
+#
+# Usage:
+#   require_directory <directory>
+#
+# Parameters:
+#   - directory: the path of the directory to be created if it does not exist.
+#
+# Example:
+#   require_directory "/opt/myapp/data"
+#
 function require_directory() {
     local directory=$1
     if [[ ! -e $directory ]]; then
@@ -136,35 +143,84 @@ function require_directory() {
     fi
 }
 
+
 # Ensures the existence of a symbolic link
 #
 # Usage:
-#   require_soft_link <link_name> <target> [force]
+#   require_symlink <link_name> <target> [mode]
 #
 # Parameters:
-#   - link_name: The name of the symbolic link to be checked or created.
-#   - target   : The target path that the symbolic link should point to.
-#   - force (optional): If set to 1, it can convert a dir to a symbolic link.
-#
+#   - link_name : The name of the symbolic link to be checked or created.
+#   - target    : The target path that the symbolic link should point to.
+#   - mode      : The mode of operation, can be one of the following
+#      '--safe'       : This is the default mode, where the function will
+#                       not modify any existing files or directories.
+#      '--convert-dir': If the link_name already exists as a directory,
+#                       the function will convert it to a symbolic link.
+#      '--move-dir'   : If the link_name already exists as a directory,
+#                       the function will move the contents of the directory
+#                       into the new symbolic link.
 # Example:
-#   require_soft_link ~/mylink ~/target_folder
-#   (ensure sym-link named 'mylink' exists, pointing to 'target_folder')
+#   require_symlink ~/mylink ~/target_folder
+#   (ensures a symbolic link named 'mylink' exists, pointing to 'target_folder')
 #
-function require_soft_link() {
-    local link_name=$1 target=$2 force=${3:-0}
+function require_symlink() {
+    local link_name=$1 target=$2 mode=${3:---safe}
+    local convert_dir=false move_dir=false
 
-    if [[ -L $link_name ]]; then
-        echox check "soft link '$link_name' already exists."
-        return
-    elif [[ ! -e $link_name ]]; then
-        echox wait "creating soft link '$link_name'."
+    # set different flags depending on the 'mode' parameter
+    case "$mode" in
+        --safe)
+            ;;
+        --convert-dir)
+            convert_dir=true
+            ;;
+        --move-dir)
+            move_dir=true
+            ;;
+        *)
+            fatal_error \
+                "Unknown mode parameter in require_soft_link(): '$mode'"  \
+                "This is an internal error likely caused by a mistake in the code"
+            ;;
+    esac
+
+    if [[ ! -e $link_name ]]; then
+        echox wait "creating symlink '$link_name'."
         ln -s "$target" "$link_name"
-    elif [[ $force -eq 1 && -d $link_name ]]; then
-        echox wait "converting directory in a soft link $link_name"
-        mv "$link_name" "$link_name-old"
+
+    elif [[ -L $link_name ]]; then
+        echox check "symlink '$link_name' already exists."
+
+    elif [[ $convert_dir == true && -d $link_name ]]; then
+        echox wait "converting directory '$link_name' to a symlink."
+        mv "$link_name" "$link_name-olddir"
         ln -s "$target" "$link_name"
+
+    elif [[ $move_dir == true && -d $link_name ]]; then
+        echox wait "converting '$link_name' to a symlink and moving its contents inside."
+        local temp_dir=$(mktemp -d)
+        mv "$link_name"/* "$temp_dir"
+        rm -rf "$link_name"
+        ln -s "$target" "$link_name"
+        mv "$temp_dir"/* "$link_name"
+        rm -rf "$temp_dir"
+
     else
-        fatal_error "'$link_name' must be a soft link."
+        fatal_error "Unable to create symlink because a file or directory with the same name already exists ($link_name)." \
+                    "You may try deleting it if you consider it disposable."
+    fi
+}
+
+function require_storage_dir() {
+    require_directory "$StorageDir"
+    require_directory "$StorageDir/Models"
+    require_directory "$StorageDir/Output"
+    require_symlink   "$MainDir/Models" "$StorageDir/Models"
+    require_symlink   "$MainDir/Output" "$StorageDir/Output"
+    if [[ $USER = 'aiman' ]]; then
+        require_symlink "$HOME/Models" "$StorageDir/Models"
+        require_symlink "$HOME/Output" "$StorageDir/Output"
     fi
 }
 
@@ -187,16 +243,21 @@ function modify_storage_link() {
     echox check "$link_name -> $directory"
 }
 
-function require_storage_directory() {
-    require_directory "$StorageDir"
-    require_directory "$StorageDir/Models"
-    require_directory "$StorageDir/Output"
-    require_soft_link "$MainDir/Models" "$StorageDir/Models"
-    require_soft_link "$MainDir/Output" "$StorageDir/Output"
-    if [[ $USER = 'aiman' ]]; then
-        require_soft_link "$HOME/Models" "$StorageDir/Models"
-        require_soft_link "$HOME/Output" "$StorageDir/Output"
-    fi
+
+function change_to_main_directory() {
+    cd "$MainDir" &> /dev/null
 }
+
+function change_to_repo_directory() {
+    if [[ ! -e "$RepoDir" ]]; then
+        echox wait "creating directory $RepoDir"
+        mkdir -p "$RepoDir"
+    elif [[ ! -d "$RepoDir" ]]; then
+        echox fatal "$RepoDir must be a directory"
+        exit 1
+    fi
+    cd "$RepoDir"
+}
+
 
 

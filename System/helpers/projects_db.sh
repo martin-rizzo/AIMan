@@ -30,6 +30,13 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+#
+# FUNCTIONS:
+#   - load_projects_db() : Loads the project database.
+#   - is_valid_project() : Checks if a project is valid.
+#   - project_info()     : Displays information about a project.
+#
+#-----------------------------------------------------------------------------
 
 # Holds the loaded database populated by the 'load_projects_db' function.
 PROJECTS_DB=
@@ -100,14 +107,15 @@ function is_valid_project() {
 #   Any number of parameters may be passed to the function, which
 #   correspond to the project information to be printed.
 #   Valid parameters are:
-#      "@local_dir"   : outputs the local directory of the project.
-#      "@local_venv"  : outputs the local virtual environment directory of the project.
-#      "@repo"        : outputs the repository URL of the project.
-#      "@hash"        : outputs the commit hash of the project.
-#      "@license"     : outputs the license of the project.
-#      "@name"        : outputs the full name of the project.
-#      "@brief"       : outputs a brief description of the project.
-#      "@description" : outputs the full description of the project.
+#      "@local_dir"   : Outputs the local directory of the project.
+#      "@local_venv"  : Outputs the local virtual environment directory of the project.
+#      "@script"      : Outputs the path of the AIMan script responsible for managing the project.
+#      "@repo"        : Outputs the repository URL of the project.
+#      "@hash"        : Outputs the commit hash of the project.
+#      "@license"     : Outputs the license of the project.
+#      "@name"        : Outputs the full name of the project.
+#      "@brief"       : Outputs a brief description of the project.
+#      "@description" : Outputs the full description of the project.
 #      Any other parameter will be printed as-is.
 #
 # Example:
@@ -125,12 +133,13 @@ function project_info() {
                 CACHE_PROJECT_INFO[0]=$project
                 CACHE_PROJECT_INFO[1]="$RepoDir/${local_dir}"
                 CACHE_PROJECT_INFO[2]="$RepoDir/${local_dir}-venv"
-                CACHE_PROJECT_INFO[3]=$repo
-                CACHE_PROJECT_INFO[4]=$hash
-                CACHE_PROJECT_INFO[5]=$license
-                CACHE_PROJECT_INFO[6]=$name
-                CACHE_PROJECT_INFO[7]=$brief
-                CACHE_PROJECT_INFO[8]=$description
+                CACHE_PROJECT_INFO[3]="$ProjectsCodeDir/project-$project.sh"
+                CACHE_PROJECT_INFO[4]=$repo
+                CACHE_PROJECT_INFO[5]=$hash
+                CACHE_PROJECT_INFO[6]=$license
+                CACHE_PROJECT_INFO[7]=$name
+                CACHE_PROJECT_INFO[8]=$brief
+                CACHE_PROJECT_INFO[9]=$description
                 break
             fi
         done <<< "$PROJECTS_DB"
@@ -142,14 +151,16 @@ function project_info() {
         shift
         for parameter in "$@"; do
             case "$parameter" in
+                "@id"         ) echo -n "${CACHE_PROJECT_INFO[0]}" ;;
                 "@local_dir"  ) echo -n "${CACHE_PROJECT_INFO[1]}" ;;
                 "@local_venv" ) echo -n "${CACHE_PROJECT_INFO[2]}" ;;
-                "@repo"       ) echo -n "${CACHE_PROJECT_INFO[3]}" ;;
-                "@hash"       ) echo -n "${CACHE_PROJECT_INFO[4]}" ;;
-                "@license"    ) echo -n "${CACHE_PROJECT_INFO[5]}" ;;
-                "@name"       ) echo -n "${CACHE_PROJECT_INFO[6]}" ;;
-                "@brief"      ) echo -n "${CACHE_PROJECT_INFO[7]}" ;;
-                "@description") echo -n "${CACHE_PROJECT_INFO[8]}" ;;
+                "@script"     ) echo -n "${CACHE_PROJECT_INFO[3]}" ;;
+                "@repo"       ) echo -n "${CACHE_PROJECT_INFO[4]}" ;;
+                "@hash"       ) echo -n "${CACHE_PROJECT_INFO[5]}" ;;
+                "@license"    ) echo -n "${CACHE_PROJECT_INFO[6]}" ;;
+                "@name"       ) echo -n "${CACHE_PROJECT_INFO[7]}" ;;
+                "@brief"      ) echo -n "${CACHE_PROJECT_INFO[8]}" ;;
+                "@description") echo -n "${CACHE_PROJECT_INFO[9]}" ;;
                 *)              echo -n "$parameter"          ;;
             esac
         done
