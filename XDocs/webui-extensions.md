@@ -22,5 +22,5 @@ Generates an entire prompt from scratch in a random yet controlled manner, allow
 - __'sd-forge-couple'__:
 Enables targeted conditioning at different regions of the image, avoiding the issue of mixed features.
 
-
-
+- __'sd-perturbed-attention'__ or __'sd-webui-incantations'__:
+Implementation of "Self-Rectifying Diffusion Sampling with Perturbed-Attention Guidance"

@@ -31,7 +31,7 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName [PROJECT.]info
+Usage: $ScriptName PROJECT.info
 
   display details about a project
 
@@ -44,19 +44,8 @@ Examples:
 "
 
 function run_command() {
+    enforce_constraints --project --no-params "$@"
     local first_param=$1
-
-    # this command does not support any parameters
-    if [[ -n $first_param ]]; then
-        error_unrecognized_arguments $first_param
-    fi
-
-    # ensure the user has provided a project name
-    # if not, display the help information and exit without taking any action
-    if [[ -z $ProjectName ]]; then
-        fatal_error "A project name is required" \
-                    "Please provide a project name. For example, you could run: ./$ScriptName webui.$CommandName"
-    fi
 
     # load the project information requerida by the user
     # (once the information is loaded, '@' can be used as the project name)
@@ -64,15 +53,15 @@ function run_command() {
 
     # display all relevant project information
     echo
-    project_info @ "ID          : " @id
-    project_info @ "Name        : " @name
-    project_info @ "Summary     : " @brief
-    project_info @ "License     : " @license
-    project_info @ "Directory   : " @local_dir
-    project_info @ "Virt.enviro : " @local_venv
-    project_info @ "Script      : " @script
-    project_info @ "Repository  : " @repo
-    project_info @ "Hash        : " @hash
-    project_info @ "Description : " @description
+    project_info @ " ID          : " @id
+    project_info @ " Name        : " @name
+    project_info @ " Summary     : " @brief
+    project_info @ " License     : " @license
+    project_info @ " Repository  : " @repo
+    project_info @ " Hash/Tag    : " @hash
+    project_info @ " Directory   : " @local_dir
+    project_info @ " Virt.enviro : " @local_venv
+    project_info @ " Script      : " @script
+    project_info @ " Description : " @description
     echo
 }

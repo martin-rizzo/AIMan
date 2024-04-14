@@ -32,14 +32,16 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #
 # FUNCTIONS:
-#   - load_projects_db() : Loads the project database.
-#   - is_valid_project() : Checks if a project is valid.
-#   - project_info()     : Displays information about a project.
+#   - load_projects_db()     : Loads the project database.
+#   - project_info()         : Displays information about a project.
+#   - is_valid_project()     : Checks if a project is valid.
+#   - is_project_installed() :
 #
 #-----------------------------------------------------------------------------
 
 # Holds the loaded database populated by the 'load_projects_db' function.
 PROJECTS_DB=
+PROJECTS_LIST=
 
 # Array that holds the information about the last queried project. This allows
 # the 'print_project' function to quickly retrieve the project details without
@@ -74,32 +76,16 @@ function load_projects_db() {
         brief=$(trim "$brief")
         description=$(trim "$description")
         # append the trimmed project information to the $PROJECTS_DB variable
+        PROJECTS_LIST+="$project "
         PROJECTS_DB+="$project,$dir,$repo,$hash,$license,$name,$brief,$description
 "
     done < "$csv_db_file"
 }
 
-# Checks if a project is valid in the project database
-#
-# Usage:
-#   is_valid_project <project>
-#
-# Parameters:
-#   - project: the name of the project to check
-#
-# This function checks if the given project is present in the
-# '$PROJECTS_DB' variable, which contains the project database
-# loaded by the 'load_projects_db' function.
-#
-function is_valid_project() {
-    local project=$1
-    grep -q "^$project," <<< "$PROJECTS_DB"
-}
-
 # Displays information about a project from the project database
 #
 # Usage:
-#   print_project <project_name> [param1] [param2] ... [paramN]
+#   project_info <project_name> [param1] [param2] ... [paramN]
 #
 # Parameters:
 #   - project_name: the name of the project to retrieve information for.
@@ -119,12 +105,20 @@ function is_valid_project() {
 #      Any other parameter will be printed as-is.
 #
 # Example:
-#   print_project my_project @local_dir @name @brief
+#   project_info my_project @local_dir @name @brief
+#   project_info all
 #
 function project_info() {
     local project_name=$1
 
-    # If the project name is not cached, then search for it in '$PROJECT_DB'
+    # en el caso aparte de que el nombre del proyecto sea "all"
+    # se hace output de los IDs de TODOS los proyectos (separados por espacio)
+    if [[ $project_name == "all" ]]; then
+        echo -n "$PROJECTS_LIST"
+        return
+    fi
+
+    # if the project name is not cached, then search for it in '$PROJECT_DB'
     # (if '@' is provided as the project name, it means that the cache content should be printed)
     if [[ $project_name != '@' && $project_name != ${CACHE_PROJECT_INFO[0]} ]]; then
         CACHE_PROJECT_INFO=()
@@ -145,7 +139,7 @@ function project_info() {
         done <<< "$PROJECTS_DB"
     fi
 
-    # If there are more parameters after the project_name,
+    # if there are more parameters after the project_name,
     # then loop through each of them and print what they indicate
     if [[ $# -gt 1 ]]; then
         shift
@@ -166,5 +160,28 @@ function project_info() {
         done
         echo
     fi
+}
+
+# Checks if a project is valid in the project database
+#
+# Usage:
+#   is_valid_project <project>
+#
+# Parameters:
+#   - project: the name of the project to check
+#
+# This function checks if the given project is present in the
+# '$PROJECTS_DB' variable, which contains the project database
+# loaded by the 'load_projects_db' function.
+#
+function is_valid_project() {
+    local project=$1
+    grep -q "^$project," <<< "$PROJECTS_DB"
+}
+
+function is_project_installed() {
+    local project=$1
+    local project_dir=$(project_info "$project" @local_dir)
+    [[ -n "$project_dir" &&  -e "$project_dir" ]]
 }
 

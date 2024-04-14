@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# File    : cmd-add2path.sh
-# Brief   : Command to add the aiman script to the system's PATH
+# File    : commands/list.sh
+# Brief   : Command to list available projects
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 5, 2023
+# Date    : Apr 14, 2024
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,33 +31,28 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName add2path
+Usage: $ScriptName $CommandName
 
-  add $ScriptName script to the system's PATH, allowing you to run it from any directory.
+  list all available projects
 
 Options:
     -h, --help     show command help
     -V, --version  show $ScriptName version and exit
 
 Examples:
-    $ScriptName add2path
+    $ScriptName $CommandName
 "
 
 function run_command() {
     enforce_constraints --no-project --no-params "$@"
-    local file=~/.bashrc
-    local line_to_add='export PATH=$PATH'":$MainDir"
+    local projects=$(project_info all)
+    local brief mark
 
-    # check if the ~/.bashrc file exists
-    if [[ ! -e $file ]]; then
-        fatal_error "Unable to set PATH. '$file' file does not exist"
-    fi
-    # check if the line to add already exists in the ~/.bashrc file
-    if grep -Fxq "$line_to_add" "$file"; then
-        echox check "the script is already in the path"
-    else
-        echox wait "modifying the '$file' file"
-        echo "$line_to_add" >> "$file"
-        echox info "to activate the changes, run 'source $file' or restart your shell"
-    fi
+    echo
+    IFS=' '; for project in $projects; do
+        is_project_installed "$project" && mark='>' || mark=' '
+        brief=$(project_info "$project" @brief)
+        printf "  %s %-8s : %s\n" "$mark" "$project" "$brief"
+    done
+    echo
 }

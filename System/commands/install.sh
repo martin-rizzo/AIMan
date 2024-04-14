@@ -44,14 +44,8 @@ Examples:
 "
 
 function run_command() {
+    enforce_constraints --project "$@"
     local version=$1
-
-    # ensure the $ProjectName variable is not empty
-    if [[ -z $ProjectName ]]; then
-        fatal_error "The install command requires a project name to be provided" \
-            "If the project is 'webui', you can run: ./aiman webui.install" \
-            "To see a list of available projects, use: ./aiman list"
-    fi
 
     # retrieve project information
     project_info "$ProjectName"

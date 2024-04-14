@@ -49,6 +49,7 @@ Examples:
 "
 
 function run_command() {
+    enforce_constraints --no-project "$@"
     local element=$1 directory=$2
     local old_directory
 

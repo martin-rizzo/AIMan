@@ -33,10 +33,12 @@
 #
 # FUNCTIONS:
 #   - echox()                  : Prints messages with different formats.
+#   - bug_report()             : ???
 #   - fatal_error()            : ???
 #   - error_unrecognized_arg() : Displays error message for unrecognized argument.
 #   - trim()                   : ???
 #   - clone_repository()       : Clones a Git repository.
+#   - enforce_constraints()    : Enforce command constraints
 #   - require_system_command() : Checks whether a given command is available in the system.
 #
 #-----------------------------------------------------------------------------
@@ -80,6 +82,15 @@ function echox() {
     echo -e -n "$prefix"
     echo    -n "$@"
     echo -e    "$suffix"
+}
+
+function bug_report() {
+    local bug_message=$1
+    echo
+    echox error "$bug_message"
+    echox info  "This is likely caused by a bug in the code. Please report this issue to a developer so he or she can investigate and fix it."
+    echo
+    exit 1
 }
 
 function fatal_error() {
@@ -134,6 +145,57 @@ function clone_repository() {
         git reset --hard "$hash"
     fi
     cd "$previous_dir" &> /dev/null
+}
+
+# Enforces command constraints and exits script with a fatal error if not met.
+#
+# Usage:
+#   enforce_constraints [--project] [--no-project] [--no-params] "$@"
+#
+# Options:
+#   --project    : Indicates that a project name must be provided.
+#   --no-project : Indicates that no project name should be provided.
+#   --no-params  : Indicates that no additional parameters should be provided.
+#   "$@" = The arguments that were passed to the command.
+#
+# Example:
+#   enforce_constraints --no-project --no-params "$@"
+#
+function enforce_constraints() {
+    local no_project=false no_params=false
+
+    # process the options passed to the function
+    while true; do
+        case "$1" in
+            --project)     project=true    ;;
+            --no-project)  no_project=true ;;
+            --no-params)   no_params=true  ;;
+            --*)
+                bug_report "Unknown option passed to the enforce_constraints() function: $1"
+                ;;
+            *)
+                break
+                ;;
+        esac
+        shift
+    done
+
+    # validate if a project name must be provided
+    if [[ $project == true && -z $ProjectName ]]; then
+        fatal_error "The '$CommandName' command requires a project name to be provided" \
+            "If the project is 'webui', you can run: ./$ScriptName webui.$CommandName" \
+            "To see a list of available projects, use: ./$ScriptName list"
+    fi
+    # validate if a project name must NOT be provided
+    if [[ $no_project == true && -n $ProjectName ]]; then
+        fatal_error "The '$CommandName' command cannot be applied to any project" \
+            "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
+    fi
+    # validate if no additional parameters must be provided
+    if [[ $no_params == true && -n "$*" ]]; then
+       fatal_error "The parameter $1 is unknown" \
+            "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
+    fi
 }
 
 # Function that checks whether a given command is available in the system

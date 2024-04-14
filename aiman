@@ -43,14 +43,9 @@ Usage: $ScriptName [PROJECT.]COMMAND [param1] [param2] ... [paramN]
 Commands:
     install         Install projects on the aiman directory.
     remove          Remove installed projects.
-    launch          Launch a project.
     info            Display details about a project or group of projects.
     list            List projects.
-    help            Display help information.
-    reinstall       Reinstall a project.
     setdir          Change directories used by the AI applications.
-    python          Manage the python virtual envionment.
-    verify          Verify directories, repos and other aiman elements.
 
 Run '$ScriptName COMMAND --help' for more information on a command.
 
@@ -59,11 +54,16 @@ Options:
     -V, --version   Show $ScriptName version and exit
 
 Examples:
-    $ScriptName info
+    $ScriptName list
     $ScriptName webui.info
     $ScriptName webui.console pip upgrade
     $ScriptName launch --help
 "
+#    launch          Launch a project.
+#    help            Display help information.
+#    reinstall       Reinstall a project.
+#    python          Manage the python virtual envionment.
+#    verify          Verify directories, repos and other aiman elements.
 
 # Determine the main directory containing the script
 MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
