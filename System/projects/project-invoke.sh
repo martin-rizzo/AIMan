@@ -45,19 +45,19 @@ function install() {
     # export INVOKEAI_ROOT=$project_dir
 
     # NVIDIA GPU
-    #virtual_python "$venv" !pip install -e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117
+    #virtual_python "$venv" pip install -e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117
 
     ## AMD GPU
-    #virtual_python "$venv" !pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2
+    #virtual_python "$venv" pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2
 
     ## CPU
-    #virtual_python "$venv" !pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu
+    #virtual_python "$venv" pip install -e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu
 
     ## configure / downloads models
-    #virtual_python "$venv" !invokeai-configure --root_dir "$project_dir"
+    #virtual_python "$venv" invokeai-configure --root_dir "$project_dir"
 
     ## launch
-    #virtual_python "$venv" !invokeai --web --root_dir "$project_dir"
+    #virtual_python "$venv" invokeai --web --root_dir "$project_dir"
 
 }
 

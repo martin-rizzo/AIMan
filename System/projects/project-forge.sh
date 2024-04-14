@@ -41,7 +41,7 @@ function install() {
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"
     require_symlink output "$OutputDir" --convert-dir
-    #virtual_python launch.py --no-download-sd-model --exit
+    #virtual_python !launch.py --no-download-sd-model --exit
 }
 
 # function launch() {
@@ -98,7 +98,7 @@ function install() {
 #     change_to_repo_directory
 #     cd "$project_dir"
 #     require_soft_link 'output' '../../Output' 1
-#     virtual_python launch.py "${options[@]}" "${directories[@]}"
+#     virtual_python !launch.py "${options[@]}" "${directories[@]}"
 # }
 #
 # function update() {

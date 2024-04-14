@@ -1,30 +1,32 @@
 
-#
-# TMP FILES
+#-----------------------------
+# System and temporary files
 #
 .kate-swp
+.DS_Store
+.profile
+Thumbs.db
 
 
-#
+#-----------------------------
 # REPOSITORIES
 #
 /Repos/
 
+#-----------------------------
+# Python virtual environment
 #
+/VEnv/
+
+#-----------------------------
 # STORAGE
 #
 /Storage/
 /Models
 /Output
 
-#
-# Python virtual environment
-#
-/System/venv/
 
-
-# Ignore system and user-specific files
-.DS_Store
-.profile
-Thumbs.db
+#-----------------------------
+# User-specific files
+#
 README-PERSONAL.MD

@@ -132,7 +132,7 @@ function project_info() {
             if [[ $project == $project_name ]]; then
                 CACHE_PROJECT_INFO[0]=$project
                 CACHE_PROJECT_INFO[1]="$RepoDir/${local_dir}"
-                CACHE_PROJECT_INFO[2]="$RepoDir/${local_dir}-venv"
+                CACHE_PROJECT_INFO[2]="$VEnvDir/$project-venv"
                 CACHE_PROJECT_INFO[3]="$ProjectsCodeDir/project-$project.sh"
                 CACHE_PROJECT_INFO[4]=$repo
                 CACHE_PROJECT_INFO[5]=$hash

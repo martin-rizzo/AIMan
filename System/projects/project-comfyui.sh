@@ -62,10 +62,10 @@ function install() {
     #-----------------------
 
     ## NVIDIA GPU
-    #virtual_python "$venv" !pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+    #virtual_python "$venv" pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 
     ## Dependencies
-    #virtual_python "$venv" !pip install -r requirements.txt
+    #virtual_python "$venv" pip install -r requirements.txt
 
 }
 
@@ -75,5 +75,5 @@ function install() {
 #
 #     change_to_repo_directory
 #     cd "$project_dir"
-#     virtual_python "$venv" main.py "${options[@]}"
+#     virtual_python "$venv" !main.py "${options[@]}"
 # }

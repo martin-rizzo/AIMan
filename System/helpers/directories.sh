@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File    : helpers/directories.sh
-# Brief   : Helper functions to handle directories and soft links
+# Brief   : Utilities for managing directories and symbolic links
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 6, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
@@ -180,7 +180,7 @@ function require_symlink() {
             ;;
         *)
             fatal_error \
-                "Unknown mode parameter in require_soft_link(): '$mode'"  \
+                "Unknown mode parameter in require_symlink(): '$mode'"  \
                 "This is an internal error likely caused by a mistake in the code"
             ;;
     esac

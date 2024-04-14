@@ -74,6 +74,7 @@ OutputDir="$MainDir/Output"
 RepoDir="$MainDir/Repos"
 StorageDir="$MainDir/Storage"
 SystemDir="$MainDir/System"
+VEnvDir="$MainDir/VEnv"
 CodeDir="$SystemDir/code"
 
 CommandsCodeDir="$SystemDir/commands"
@@ -132,6 +133,7 @@ function is_valid_command() {
 source "$HelpersCodeDir/misc.sh"
 source "$HelpersCodeDir/directories.sh"
 source "$HelpersCodeDir/projects_db.sh"
+source "$HelpersCodeDir/virtual_env.sh"
 change_to_main_directory
 load_projects_db "$ProjectsCodeDir/list.csv"
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # File    : helpers/virtual_env.sh
-# Brief   : Functions para el manejo de entornos virtuales de python
+# Brief   : Utilities for managing Python virtual environments
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Apr 11, 2024
 # Repo    : https://github.com/martin-rizzo/AIAppManager
@@ -32,92 +32,158 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #
 # FUNCTIONS:
-#  - require_virtual_python() :
-#  - is_virtual_python()      :
-#  - virtual_python()         :
-#  - activate_python_env()    :
+#  - is_venv_active()             : Checks if the virtual environment is active.
+#  - ensure_venv_is_initialized() : Ensures that a virtual environment is created and initialized.
+#  - ensure_venv_is_active()      : Ensures that a virtual environment is active.
+#  - virtual_python()             : Runs a command or Python script within the specified virtual environment.
 #
 #-----------------------------------------------------------------------------
 
-function require_virtual_python() {
 
-    if [[ ! -d $PythonDir ]]; then
+# Checks if the Python virtual environment is active.
+#
+# Usage:
+#   is_venv_active <venv>
+#
+# Parameters:
+#   - venv: the path to the virtual environment to check.
+#
+# Returns:
+#   - 0 if the specified virtual environment is active
+#   - 1 if no virtual environment is active
+#   - 2 if a different virtual environment is active
+#
+# Example:
+#   is_venv_active "/path/to/my-venv"
+#
+function is_venv_active() {
+    local venv=$1
+    if [[ -z $VIRTUAL_ENV ]]; then
+        return 1 # NO ACTIVE #
+    fi
+    if [[ "$venv" != *"${VIRTUAL_ENV#\~}" ]]; then
+        return 2 # NO ACTIVE (otro venv esta activo) #
+    fi
+    return 0 # ACTIVE! #
+}
+
+# Ensures that the Python virtual environment is created and initialized.
+#
+# Usage:
+#   ensure_venv_is_initialized <venv>
+#
+# Parameters:
+#   - venv: the path to the virtual environment to be initialized.
+#
+# Example:
+#   ensure_venv_is_initialized "/path/to/my-venv"
+#
+function ensure_venv_is_initialized() {
+    local venv=$1
+    local venv_prompt="venv"
+
+    # verify that the 'venv' parameter is a subdirectory of $VEnvDir
+    if [[ "$venv" != "$VEnvDir"* ]]; then
+        fatal_error \
+            "'ensure_venv_is_initialized()' failed, the provided venv '$venv' is not a subdir of \$VEnvDir."
+            "This is an internal error likely caused by a mistake in the code."
+    fi
+
+    local venv_prompt=dir_name=$(basename "$venv")
+    venv_prompt=${venv_prompt%-venv}
+
+    # if the venv does not exist, then create it
+    if [[ ! -d $venv ]]; then
         echox wait 'creating python virtual environment'
-        "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
+        "$CompatiblePython" -m venv "$venv" --prompt "$venv_prompt"
         echox check 'new python virtual environment created:'
-        echox  "     $PythonDir"
-    elif [[ ! -e "$PythonDir/bin/$CompatiblePython" ]]; then
+        echox  "     $venv"
+
+    # if the venv already exists but contains a different version of Python,
+    # then try to delete it and recreate it with the compatible version
+    elif [[ ! -e "$venv/bin/$CompatiblePython" ]]; then
         echox warn "a different version of python was selected ($CompatiblePython)"
         echox wait "recreating virtual environment"
-        rm -Rf "$PythonDir"
-        "$CompatiblePython" -m venv "$PythonDir" --prompt "$PythonPrompt"
+        rm -Rf "$venv"
+        "$CompatiblePython" -m venv "$venv" --prompt "$venv_prompt"
         echox check "virtual environment recreated for $CompatiblePython"
+
+    # if the venv exists and has the correct version of Python, do nothing!
     else
         echox check 'virtual environment exists'
     fi
 }
 
-# Function that checks whether a virtual environment exists, and creates
-# a new one if it doesn't.
-# Usage: ensure_virt_env <venv_dir> <python>
-# Arguments:
-#   - venv_dir: the path of the virtual environment dir to be checked.
-#   - python  : the Python interpreter that will create the v. environment.
+# Ensures the specified Python virtual environment is active.
 #
-function is_virtual_python() {
-    local current_virtual_dir=$VIRTUAL_ENV
-    if [[ -z $current_virtual_dir ]]; then
-        return 1
-    fi
-    if [[ $current_virtual_dir == '~'* ]]; then
-        current_virtual_dir="${current_virtual_dir/\~\//}"
-    fi
-    if [[ "$PythonDir" == *"$current_virtual_dir" ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
+# Usage:
+#   ensure_venv_is_active <venv>
+#
+# Parameters:
+#   - venv: the path to the Python virtual environment to be activated.
+#
+# Example:
+#   ensure_venv_is_active "/path/to/my-venv"
+#
+function ensure_venv_is_active() {
+    local venv=$1
 
-
-# virtual_python <venv_dir> <python_script.py> [params...]
-# virtual_python <venv_dir> !<command> [params...]
-# virtual_python <venv_dir> 'CONSOLE'
-
-function virtual_python() {
-
-    # 1) ensure virtual environment is activated
-    if ! is_virtual_python; then
-        echox wait 'activating virtual environment'
-        source "$PythonDir/bin/activate"
-        echox check 'virtual environment activated'
-    else
+    if is_venv_active "$venv"; then
         echox check "virtual environment already activated"
+        return
     fi
 
-    # 2) execute command inside the virtual environment
-    if [[ "$1" == "!"* ]]; then
-        # remove the '!' character from the beginning of the first param
-        # and execute that command with the rest of the arguments
-        local command_name=${1:1}
-        shift
-        "$command_name" "$@"
-    else
-        python $@
+    if [[ $? -eq 2 ]]; then
+        fatal_error \
+            "function ensure_venv_is_active() is unable to switch between virtual environments" \
+            "This is an internal error likely caused by a mistake in the code"
     fi
+
+    echox wait 'activating virtual environment'
+    source "$venv/bin/activate"
+    echox check 'virtual environment activated'
 }
 
-function activate_python_env() {
-    local mode=$1
-    local venv_prompt="aiman-$CompatiblePython"
-    ensure_python_env
+# Runs a command or Python script within the specified virtual environment.
+#
+# Usage:
+#   virtual_python <venv> <command> [args...]
+#
+# Parameters:
+#   - venv: the path to the Python virtual environment to use.
+#   - command:
+#      - CONSOLE: Opens an interactive shell in the virtual environment.
+#      - filename starting with "!": Runs the specified Python script.
+#      - otherwise: runs the specified command with any additional arguments.
+#   - args...: additional arguments to pass to the command or Python script.
+#
+# Returns:
+#   The exit status of the executed command or Python script.
+#
+# Examples:
+#   virtual_python "/path/to/my-venv" CONSOLE
+#   virtual_python "/path/to/my-venv" !my_script.py arg1 arg2
+#   virtual_python "/path/to/my-venv" pip install numpy
+#
+function virtual_python() {
+    local venv=$1 command=$2
+    shift 2
 
-    if [[ $mode == 'subshell' ]]; then
-        /usr/bin/env bash -i -c "source '$PythonDir/bin/activate'; exec /bin/bash -i"
+    ensure_venv_is_initialized "$venv"
+
+    if [[ $command == 'CONSOLE' ]]; then
+        /usr/bin/env bash -i -c "source '$venv/bin/activate'; exec /bin/bash -i"
         exit 0
+    fi
+
+    ensure_venv_is_active "$venv"
+
+    # si el comando empieza con '!' entonces es script python
+    # de lo contrario es un comando normal de linux
+    if [[ "$command" == "!"* ]]; then
+        python "${command:1}" "$@"
     else
-        source "$PythonDir/bin/activate"
+        "$command" "$@"
     fi
 }
-
 
