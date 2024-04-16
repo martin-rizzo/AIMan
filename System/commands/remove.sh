@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# File    : commands/install.sh
-# Brief   : Command to install projects on the aiman directory
+# File    : commands/remove.sh
+# Brief   : Command to remove projects from the aiman directory
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 6, 2023
+# Date    : Apr 14, 2024
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,42 +31,54 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName PROJECT.install [version]
+Usage: $ScriptName PROJECT.$CommandName
 
-  install a project on the aiman directory
+  remove a project from the aiman directory
 
 Options:
     -h, --help     show command help
     -V, --version  show $ScriptName version and exit
 
 Examples:
-    $ScriptName webui.install v1.8.0
+    $ScriptName comfyui.$CommandName
 "
 
 function run_command() {
     enforce_constraints --project "$@"
-    local version=$1
 
-    # retrieve project information
+    # get project information
     project_info "$ProjectName"
-    local project_id=$(project_info @ @id)
     local project_dir=$(project_info @ @local_dir)
     local venv=$(project_info @ @local_venv)
-    local repo=$(project_info @ @repo)
-    local hash=$(project_info @ @hash)
-    local script=$(project_info @ @script)
 
-    # ensure the project script file exists
-    if [[ ! -f $script ]]; then
-        fatal_error "AIMan does not have a script for the '$project_id' project" \
-            "This is an internal error likely caused by a mistake in the code"
+    # ensure the project is installed before attempting to remove it
+    if ! is_project_installed "$ProjectName"; then
+        fatal_error "The project '$ProjectName' is not installed" \
+            "To check which projects are installed, use: ./$ScriptName list" \
+            "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
     fi
 
-    # if the user provided a version, use it to override the hash
-    if [[ $version ]]; then
-        hash=$version
-    fi
+    # verify that the internal state is correct
+    [[ -n "$RepoDir" && -n "$VEnvDir" ]] \
+      || bug_report "Something is not right, \$RepoDir or \$VEnvDir appear to be empty"
 
-    source "$script"
-    install "$venv" "$project_dir" "$repo" "$hash"
+    # ensure the directories are valid
+    [[ "$project_dir" == "$RepoDir/"* ]] \
+      || bug_report "\$project_dir seems to contain an invalid path: $project_dir"
+    [[ "$venv" == "$VEnvDir/"* ]] \
+      || bug_report "\$venv seems to contain an invalid path: $venv"
+
+    # ask for user confirmation before removing the project
+    if ask_confirmation \
+          "Are you sure you want to remove the project '$ProjectName'?" \
+          "While AIMan always tries to keep the models and data isolated and protected from each installation, it's possible that application-specific extensions or configurations may be removed."
+    then
+        # if the user confirmed, proceed to remove the project
+        echox wait "Removing project '$ProjectName'"
+        rm -rf "$project_dir" "$venv"
+        echox check "Project '$ProjectName' has been removed."
+    else
+        # if the user cancelled, do nothing
+        echox "Project removal cancelled."
+    fi
 }

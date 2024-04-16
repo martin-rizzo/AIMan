@@ -40,6 +40,7 @@
 #   - clone_repository()       : Clones a Git repository.
 #   - enforce_constraints()    : Enforce command constraints
 #   - require_system_command() : Checks whether a given command is available in the system.
+#   - ask_confirmation()       : Prompts the user for confirmation.
 #
 #-----------------------------------------------------------------------------
 
@@ -49,7 +50,7 @@ YELLOW='\e[1;33m'
 BLUE='\e[1;34m'
 CYAN='\e[1;36m'
 DEFAULT_COLOR='\e[0m'
-PADDING='   '
+PADDING='  '
 
 
 # Prints messages with different formats. If the format is not specified,
@@ -73,9 +74,10 @@ function echox() {
     local prefix suffix
     case "$format" in
         check) prefix="${PADDING}${GREEN}\xE2\x9C\x94${DEFAULT_COLOR} " ; suffix="${DEFAULT_COLOR}" ; shift ;;
-        wait ) prefix="\033[33m - " ; suffix="...${DEFAULT_COLOR}" ; shift ;;
-        info ) prefix="${CYAN}\xE2\x93\x98  " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        wait ) prefix="${PADDING}${YELLOW}- " ; suffix="...${DEFAULT_COLOR}" ; shift ;;
+        info ) prefix="${PADDING}${CYAN}\xE2\x93\x98  " ; suffix="${DEFAULT_COLOR}" ; shift ;;
         warn ) prefix="${PADDING}${YELLOW}! " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        alert) prefix="${CYAN}[${YELLOW}WARNING${CYAN}]${DEFAULT_COLOR}: " ; suffix="${DEFAULT_COLOR}" ; shift ;;
         error) prefix="${CYAN}[${RED}ERROR${CYAN}]${DEFAULT_COLOR}: " ; suffix="${DEFAULT_COLOR}" ; shift ;;
         #fatal) prefix='\033[7;31m \xE2\x9C\x96\xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
     esac
@@ -94,10 +96,13 @@ function bug_report() {
 }
 
 function fatal_error() {
-    local fatal_message=$1 comment=$2
+    local fatal_message=$1
     echo
-    [[ -n $fatal_message ]] && echox error "$fatal_message"
-    [[ -n $comment       ]] && echox info  "$comment"
+    echox error "$fatal_message"
+    shift
+    for comment in "$@"; do
+        echox info  "$comment"
+    done
     echo
     exit 1
 }
@@ -217,4 +222,33 @@ function require_system_command() {
     done
 }
 
+# Prompts the user for confirmation and returns a boolean value.
+#
+# Usage:
+#   ask_confirmation <message> [<warning>]
+#
+# Parameters:
+#   - message: the confirmation message to be displayed to the user.
+#   - warning (optional): a warning message to be displayed before the confirmation prompt.
+#
+# Returns:
+#   - true (0) if the user confirms, false (1) otherwise.
+#
+# Example:
+#   if ask_confirmation "Do you want to continue?"; then
+#       echo "Proceeding with operation."
+#   else
+#       echo "Operation cancelled."
+#   fi
+#
+function ask_confirmation() {
+    local message=$1 alert=$2
 
+    if [[ $alert ]]; then
+        echox
+        echox alert "$alert"
+    fi
+    echox
+    read -p " - $message (y/n): " -n 1 -r ; echo ; echo
+    [[ $REPLY =~ ^[Yy]$ ]]
+}
