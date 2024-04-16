@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# File    : cmd-add2path.sh
-# Brief   : Command to add the aiman script to the system's PATH
+# File    : commands/console.sh
+# Brief   : Execute commands within the Python virtual environment
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 5, 2023
+# Date    : Apr 14, 2024
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,33 +31,48 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName add2path
+Usage: $ScriptName PROJECT.$CommandName [COMMAND] [CMD_PARAMS...]
 
-  add $ScriptName script to the user's PATH, allowing you to run it from any directory.
+  execute commands within the Python virtual environment of the specified project.
+  if no command is provided, it will open an interactive console to enter commands.
+
+Arguments:
+    [COMMAND]        The command to execute within the project's virtual environment
+    [CMD_PARAMS...]  Any parameters to pass to the specified command
 
 Options:
-    -h, --help     show command help
-    -V, --version  show $ScriptName version and exit
+    -h, --help        show this help
+    -V, --version     show $ScriptName version and exit
 
 Examples:
-    $ScriptName add2path
+    aiman webui console
+      Open an interactive console for the 'webui' project
+
+    aiman webui pip upgrade
+      Run the 'pip upgrade' command within the 'webui' project's virtual environment
 "
 
 function run_command() {
-    enforce_constraints --no-project --no-params "$@"
-    local file=~/.bashrc
-    local line_to_add='export PATH=$PATH'":$MainDir"
+    enforce_constraints --project --installed "$@"
+    local command=$1
+    shift
 
-    # check if the ~/.bashrc file exists
-    if [[ ! -e $file ]]; then
-        fatal_error "Unable to set PATH. '$file' file does not exist"
-    fi
-    # check if the line to add already exists in the ~/.bashrc file
-    if grep -Fxq "$line_to_add" "$file"; then
-        echox check "the script is already in the path"
+    # get project information
+    project_info "$ProjectName"
+    local project_dir=$(project_info @ @local_dir)
+    local venv=$(project_info @ @local_venv)
+
+    # ensure the virtual environment directory is valid
+    [[ -n "$venv" && "$venv" == "$VEnvDir/"* ]] \
+      || bug_report "\$venv seems to contain an invalid path: '$venv'"
+
+
+    # execute the command provided by the user
+    # (if the command is empty, open the interactive console)
+    if [[ $command ]]; then
+        virtual_python "$venv" "$command" "$@"
     else
-        echox wait "modifying the '$file' file"
-        echo "$line_to_add" >> "$file"
-        echox info "to activate the changes, run 'source $file' or restart your shell"
+        cd "$project_dir"
+        virtual_python "$venv" CONSOLE
     fi
 }

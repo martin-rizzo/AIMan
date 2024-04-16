@@ -158,49 +158,55 @@ function clone_repository() {
 #   enforce_constraints [--project] [--no-project] [--no-params] "$@"
 #
 # Options:
-#   --project    : Indicates that a project name must be provided.
-#   --no-project : Indicates that no project name should be provided.
 #   --no-params  : Indicates that no additional parameters should be provided.
+#   --no-project : Indicates that no project name should be provided.
+#   --project    : Indicates that a project name must be provided.
+#   --installed  : Indicates that the provided project must be installed.
 #   "$@" = The arguments that were passed to the command.
 #
 # Example:
 #   enforce_constraints --no-project --no-params "$@"
 #
 function enforce_constraints() {
-    local no_project=false no_params=false
-
-    # process the options passed to the function
     while true; do
-        case "$1" in
-            --project)     project=true    ;;
-            --no-project)  no_project=true ;;
-            --no-params)   no_params=true  ;;
-            --*)
-                bug_report "Unknown option passed to the enforce_constraints() function: $1"
-                ;;
-            *)
-                break
-                ;;
-        esac
-        shift
-    done
+      case "$1" in
 
-    # validate if a project name must be provided
-    if [[ $project == true && -z $ProjectName ]]; then
-        fatal_error "The '$CommandName' command requires a project name to be provided" \
-            "If the project is 'webui', you can run: ./$ScriptName webui.$CommandName" \
-            "To see a list of available projects, use: ./$ScriptName list"
-    fi
-    # validate if a project name must NOT be provided
-    if [[ $no_project == true && -n $ProjectName ]]; then
-        fatal_error "The '$CommandName' command cannot be applied to any project" \
-            "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
-    fi
-    # validate if no additional parameters must be provided
-    if [[ $no_params == true && -n "$*" ]]; then
-       fatal_error "The parameter $1 is unknown" \
-            "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
-    fi
+        # validate if a project name must be provided
+        --project)
+            [[ $ProjectName ]] \
+             || fatal_error "The '$CommandName' command requires a project name to be provided" \
+                "If the project is 'webui', you can run: ./$ScriptName webui.$CommandName" \
+                "To see a list of available projects, use: ./$ScriptName list"
+            ;;
+        # validate if a project name must NOT be provided
+        --no-project)
+            [[ -z $ProjectName ]] \
+             || fatal_error "The '$CommandName' command cannot be applied to any project" \
+                "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
+            ;;
+        # validate if the project should already be installed
+        --installed)
+            is_project_installed "$ProjectName" \
+             || fatal_error "The project '$ProjectName' is not installed" \
+                "To check which projects are installed, use: ./$ScriptName list" \
+                "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
+            ;;
+        # validate if NO additional parameters must be provided
+        --no-params)
+            [[ -n "$*" ]] \
+             || fatal_error "The parameter $1 is unknown" \
+                "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
+            ;;
+        # any other type of option is unknown
+        --*)
+            bug_report "Unknown option passed to the enforce_constraints() function: $1"
+            ;;
+        *)
+            break
+            ;;
+      esac
+      shift
+    done
 }
 
 # Function that checks whether a given command is available in the system

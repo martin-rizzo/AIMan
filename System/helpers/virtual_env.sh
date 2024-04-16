@@ -89,12 +89,13 @@ function ensure_venv_is_initialized() {
             "This is an internal error likely caused by a mistake in the code."
     fi
 
-    local venv_prompt=dir_name=$(basename "$venv")
-    venv_prompt=${venv_prompt%-venv}
+    local venv_prompt=$(basename "$venv")
+    venv_prompt="${venv_prompt%-venv} venv"
 
     # if the venv does not exist, then create it
     if [[ ! -d $venv ]]; then
         echox wait 'creating python virtual environment'
+        echo "#### '$CompatiblePython' -m venv '$venv' --prompt '$venv_prompt'"
         "$CompatiblePython" -m venv "$venv" --prompt "$venv_prompt"
         echox check 'new python virtual environment created:'
         echox  "     $venv"
@@ -172,7 +173,8 @@ function virtual_python() {
     ensure_venv_is_initialized "$venv"
 
     if [[ $command == 'CONSOLE' ]]; then
-        /usr/bin/env bash -i -c "source '$venv/bin/activate'; exec /bin/bash -i"
+        source "$venv/bin/activate"
+        exec /bin/bash --norc -i
         exit 0
     fi
 

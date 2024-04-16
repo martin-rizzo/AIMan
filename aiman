@@ -41,11 +41,13 @@ Usage: $ScriptName [PROJECT.]COMMAND [param1] [param2] ... [paramN]
   A command-line package manager for AI open source projects.
 
 Commands:
-    install         Install projects on the aiman directory.
-    remove          Remove installed projects.
-    info            Display details about a project or group of projects.
-    list            List projects.
-    setdir          Change directories used by the AI applications.
+    install    Install projects on the aiman directory.
+    remove     Remove installed projects.
+    list       List projects.
+    info       Display details about a project or group of projects.
+    console    Execute commands within the python virtual environment.
+    setdir     Change directories used by the AI applications.
+    add2path   Add aiman to the user's PATH.
 
 Run '$ScriptName COMMAND --help' for more information on a command.
 
