@@ -31,24 +31,24 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName PROJECT.$CommandName [COMMAND] [CMD_PARAMS...]
+Usage: $ScriptName PROJECT.$CommandName [COMMAND] [PARAMETERS...]
 
-  execute commands within the Python virtual environment of the specified project.
-  if no command is provided, it will open an interactive console to enter commands.
+  Execute commands within the Python virtual environment of the specified project.
+  If no command is provided, it will open an interactive console to enter commands.
 
 Arguments:
-    [COMMAND]        The command to execute within the project's virtual environment
-    [CMD_PARAMS...]  Any parameters to pass to the specified command
+  COMMAND      The command to execute within the project's virtual environment
+  [PARAMETERS  Any parameters to pass to the specified command
 
 Options:
-    -h, --help        show this help
-    -V, --version     show $ScriptName version and exit
+  -h, --help        show this help
+  -V, --version     show $ScriptName version and exit
 
 Examples:
-    aiman webui console
+  $ScriptName webui.$CommandName
       Open an interactive console for the 'webui' project
 
-    aiman webui pip upgrade
+  $ScriptName webui.$CommandName pip upgrade
       Run the 'pip upgrade' command within the 'webui' project's virtual environment
 "
 

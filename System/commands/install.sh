@@ -31,16 +31,29 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName PROJECT.install [version]
+Usage: $ScriptName PROJECT.$CommandName [VERSION]
 
-  install a project on the aiman directory
+  Install a project on the local directory.
+
+Arguments:
+  PROJECT  The name of the project to install
+  VERSION  The version of the project to install (optional)
 
 Options:
-    -h, --help     show command help
-    -V, --version  show $ScriptName version and exit
+  -h, --help     show command help
+  -V, --version  show $ScriptName version and exit
+
+Description:
+  The '$CommandName' command downloads the specified project from GitHub and
+  sets it up on your local system. If no version is provided, the version
+  that has been tested as the most stable release will be installed.
+
+  Once the installation is complete, you can use the 'launch' command to
+  start the project.
 
 Examples:
-    $ScriptName webui.install v1.8.0
+    $ScriptName forge.$CommandName
+    $ScriptName webui.$CommandName v1.8.0
 "
 
 function run_command() {
@@ -49,7 +62,6 @@ function run_command() {
 
     # retrieve project information
     project_info "$ProjectName"
-    local project_id=$(project_info @ @id)
     local project_dir=$(project_info @ @local_dir)
     local venv=$(project_info @ @local_venv)
     local repo=$(project_info @ @repo)
@@ -57,10 +69,8 @@ function run_command() {
     local script=$(project_info @ @script)
 
     # ensure the project script file exists
-    if [[ ! -f $script ]]; then
-        fatal_error "AIMan does not have a script for the '$project_id' project" \
-            "This is an internal error likely caused by a mistake in the code"
-    fi
+    [[ -f $script ]] \
+     || bug_report "AIMan does not have a script for the '$ProjectName' project"
 
     # if the user provided a version, use it to override the hash
     if [[ $version ]]; then

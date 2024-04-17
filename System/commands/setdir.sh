@@ -33,19 +33,19 @@
 Help="
 Usage: $ScriptName setdir <ELEMENT> <DIRECTORY>
 
-  Change the directories used for input and output by the AI applications.
+  Change the directories used for input and output by the AI projects.
 
 ELEMENT specifies which directory to change:
-    @models   The directory where the AI models are stored.
-    @output   The directory where generated files are stored.
+  @models   The directory where the AI models are stored.
+  @output   The directory where generated files are stored.
 
 Options:
-    -h, --help     Show this help message and exit.
-    -V, --version  Print version information and exit.
+  -h, --help     Show this help message and exit.
+  -V, --version  Print version information and exit.
 
 Examples:
-    $ScriptName setdir @models /mnt/the-ai-disk/models
-    $ScriptName setdir @output /var/output
+  $ScriptName setdir @models /mnt/the-ai-disk/models
+  $ScriptName setdir @output /var/output
 "
 
 function run_command() {

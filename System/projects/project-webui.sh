@@ -34,60 +34,59 @@
 
 function install() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
+    shift 4
 
     require_system_command git wget
     require_storage_dir
 
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"
-    require_symlink output "$OutputDir" --convert-dir
-    virtual_python "$venv" pip --version
-    # virtual_python "$venv" !launch.py --no-download-sd-model --exit
+    require_symlink 'output' "$OutputDir" --convert-dir
+    virtual_python "$venv" !launch.py --no-download-sd-model --exit
 }
 
-# function launch() {
-#     local project_dir=$(print_project @local_dir)
-#     local options=("$@")
-#     local directories=()
-#
-#     #-- ENABLE OPTIMIZATIONS --#
-#     options+=(--opt-sdp-attention)         # non-deterministic, can be faster but uses more VRAM than xFormers
-#     #options+=(--opt-sdp-no-mem-attention) # deterministic, can be faster but uses more VRAM than xFormers
-#     #options+=(--xformers)                 # possibly no longer necessary with Torch 2
-#
-#     #-- CONFIGURE USER SETTINGS --#
-#     options+=(--listen)      # disable browser launch and allows connection from LAN
-#     options+=(--theme dark)  # start in dark mode
-#     #options+=(--autolaunch) # force browser launch even when --listen is enabled
-#
-#     #-- REDIRECT DIRECTORIES FOR AIMAN --#
-#     directories+=(--codeformer-models-path "$ModelsCodeformerDir")
-#     directories+=(--embeddings-dir "$ModelsEmbeddingsDir")
-#     directories+=(--esrgan-models-path "$ModelsEsrganDir")
-#     directories+=(--gfpgan-models-path "$ModelsGfpganDir")
-#     directories+=(--hypernetwork-dir "$ModelsHypernetworkDir")
-#     directories+=(--ldsr-models-path "$ModelsLdsrDir")
-#     directories+=(--lora-dir "$ModelsLoraDir")
-#     directories+=(--realesrgan-models-path "$ModelsRealesrganDir")
-#     directories+=(--scunet-models-path "$ModelsScunetDir")
-#     directories+=(--ckpt-dir "$ModelsStableDiffusionDir")
-#     directories+=(--swinir-models-path "$ModelsSwinirDir")
-#     directories+=(--vae-dir "$ModelsVaeDir")
-#
-#     change_to_repo_directory
-#     cd "$project_dir"
-#     require_soft_link 'output' '../../Output' 1
-#     virtual_python !launch.py "${options[@]}" "${directories[@]}"
-# }
-#
+
+function launch() {
+    local venv=$1 project_dir=$2 repo=$3 hash=$4
+    shift 4
+
+    #========== ENABLE OPTIMIZATIONS ==========#
+    local options=()
+    options+=(--opt-sdp-attention)         # non-deterministic, can be faster but uses more VRAM than xFormers
+    #options+=(--opt-sdp-no-mem-attention) # deterministic, can be faster but uses more VRAM than xFormers
+    #options+=(--xformers)                 # possibly no longer necessary with Torch 2
+
+    #========= CONFIGURE USER SETTINGS =========#
+    options+=(--listen)      # disable browser launch and allows connection from LAN
+    options+=(--theme dark)  # start in dark mode
+    #options+=(--autolaunch) # force browser launch even when --listen is enabled
+
+    #====== REDIRECT DIRECTORIES TO AIMAN ======#
+    local directories=()
+    directories+=( --codeformer-models-path "$ModelsCodeformerDir"      )
+    directories+=( --embeddings-dir         "$ModelsEmbeddingsDir"      )
+    directories+=( --esrgan-models-path     "$ModelsEsrganDir"          )
+    directories+=( --gfpgan-models-path     "$ModelsGfpganDir"          )
+    directories+=( --hypernetwork-dir       "$ModelsHypernetworkDir"    )
+    directories+=( --ldsr-models-path       "$ModelsLdsrDir"            )
+    directories+=( --lora-dir               "$ModelsLoraDir"            )
+    directories+=( --realesrgan-models-path "$ModelsRealesrganDir"      )
+    directories+=( --scunet-models-path     "$ModelsScunetDir"          )
+    directories+=( --ckpt-dir               "$ModelsStableDiffusionDir" )
+    directories+=( --swinir-models-path     "$ModelsSwinirDir"          )
+    directories+=( --vae-dir                "$ModelsVaeDir"             )
+
+    cd "$project_dir"
+    virtual_python "$venv" !launch.py "${options[@]}" "${directories[@]}" "$@"
+}
+
+
 # function update() {
 #     git pull
 # }
-#
 # function revert() {
 #     local hash=$(print_project @hash)
 #     if [[ -n "$hash" ]]; then
 #         git reset --hard "$hash"
 #     fi
 # }
-#

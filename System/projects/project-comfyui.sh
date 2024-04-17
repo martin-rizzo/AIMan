@@ -32,9 +32,9 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 
-
 function install() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
+    shift 4
 
     require_system_command git
     require_storage_dir
@@ -62,18 +62,18 @@ function install() {
     #-----------------------
 
     ## NVIDIA GPU
-    #virtual_python "$venv" pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+    virtual_python "$venv" pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 
     ## Dependencies
-    #virtual_python "$venv" pip install -r requirements.txt
-
+    virtual_python "$venv" pip install -r requirements.txt
 }
 
-# function launch() {
-#     local project_dir=$(print_project @local_dir)
-#     local options=("$@")
-#
-#     change_to_repo_directory
-#     cd "$project_dir"
-#     virtual_python "$venv" !main.py "${options[@]}"
-# }
+
+function launch() {
+    local venv=$1 project_dir=$2 repo=$3 hash=$4
+    shift 4
+
+    cd "$project_dir"
+    virtual_python "$venv" !main.py "$@"
+}
+

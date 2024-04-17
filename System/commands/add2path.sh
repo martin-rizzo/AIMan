@@ -33,14 +33,14 @@
 Help="
 Usage: $ScriptName add2path
 
-  add $ScriptName script to the user's PATH, allowing you to run it from any directory.
+  Add $ScriptName script to the user's PATH, allowing you to run it from any directory.
 
 Options:
-    -h, --help     show command help
-    -V, --version  show $ScriptName version and exit
+  -h, --help     show command help
+  -V, --version  show $ScriptName version and exit
 
 Examples:
-    $ScriptName add2path
+  $ScriptName add2path
 "
 
 function run_command() {

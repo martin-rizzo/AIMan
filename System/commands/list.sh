@@ -33,14 +33,14 @@
 Help="
 Usage: $ScriptName $CommandName
 
-  list all available projects
+  List all available projects.
 
 Options:
-    -h, --help     show command help
-    -V, --version  show $ScriptName version and exit
+  -h, --help     show command help
+  -V, --version  show $ScriptName version and exit
 
 Examples:
-    $ScriptName $CommandName
+  $ScriptName $CommandName
 "
 
 function run_command() {

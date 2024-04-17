@@ -64,7 +64,6 @@ Examples:
 #    launch          Launch a project.
 #    help            Display help information.
 #    reinstall       Reinstall a project.
-#    python          Manage the python virtual envionment.
 #    verify          Verify directories, repos and other aiman elements.
 
 # Determine the main directory containing the script

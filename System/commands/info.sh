@@ -31,16 +31,16 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName PROJECT.info
+Usage: $ScriptName PROJECT.$CommandName
 
-  display details about a project
+  Display details about a project.
 
 Options:
-    -h, --help     show command help
-    -V, --version  show $ScriptName version and exit
+  -h, --help     show command help
+  -V, --version  show $ScriptName version and exit
 
 Examples:
-    $ScriptName webui.info
+  $ScriptName webui.$CommandName
 "
 
 function run_command() {

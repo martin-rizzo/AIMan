@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# File    : commands/remove.sh
-# Brief   : Command to remove projects from the aiman directory
+# File    : commands/launch.sh
+# Brief   : Command to launch projects that have been previously installed
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : Apr 14, 2024
+# Date    : May 11, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,54 +31,51 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 Help="
-Usage: $ScriptName PROJECT.$CommandName
+Usage: $ScriptName PROJECT.$CommandName [PARAMETERS...]
 
-  Remove a project from the aiman directory.
+  Launch a project that has been previously installed.
+
+Arguments:
+  PROJECT     The name of the project to launch
+  PARAMETERS  Extra parameters to pass to the project (optional)
 
 Options:
   -h, --help     show command help
   -V, --version  show $ScriptName version and exit
 
+Description:
+  The '$CommandName' command starts the specified project on your local system.
+  Any extra parameters you provide will be passed directly to the project's
+  launch script or executable.
+
+  If the project requires any additional setup or configuration, you should
+  refer to the project's documentation for instructions on how to do that
+  before launching the project.
+
+  The project will run in the current terminal session until you stop it.
+  You can access it through the appropriate URL or interface, as described
+  in the project's documentation.
+
 Examples:
-  $ScriptName comfyui.$CommandName
+  $ScriptName forge.$CommandName
+  $ScriptName webui.$CommandName
 "
 
 function run_command() {
-    enforce_constraints --project "$@"
+    enforce_constraints --project --installed "$@"
 
-    # get project information
+    # retrieve project information
     project_info "$ProjectName"
     local project_dir=$(project_info @ @local_dir)
     local venv=$(project_info @ @local_venv)
+    local repo=$(project_info @ @repo)
+    local hash=$(project_info @ @hash)
+    local script=$(project_info @ @script)
 
-    # ensure the project is installed before attempting to remove it
-    if ! is_project_installed "$ProjectName"; then
-        fatal_error "The project '$ProjectName' is not installed" \
-            "To check which projects are installed, use: ./$ScriptName list" \
-            "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
-    fi
+    # ensure the project script file exists
+    [[ -f $script ]] \
+     || bug_report "AIMan does not have a script for the '$ProjectName' project"
 
-    # verify that the internal state is correct
-    [[ -n "$RepoDir" && -n "$VEnvDir" ]] \
-      || bug_report "Something is not right, \$RepoDir or \$VEnvDir appear to be empty"
-
-    # ensure the directories are valid
-    [[ "$project_dir" == "$RepoDir/"* ]] \
-      || bug_report "\$project_dir seems to contain an invalid path: $project_dir"
-    [[ "$venv" == "$VEnvDir/"* ]] \
-      || bug_report "\$venv seems to contain an invalid path: $venv"
-
-    # ask for user confirmation before removing the project
-    if ask_confirmation \
-          "Are you sure you want to remove the project '$ProjectName'?" \
-          "While AIMan always tries to keep the models and data isolated and protected from each installation, it's possible that application-specific extensions or configurations may be removed."
-    then
-        # if the user confirmed, proceed to remove the project
-        echox wait "Removing project '$ProjectName'"
-        rm -rf "$project_dir" "$venv"
-        echox check "Project '$ProjectName' has been removed."
-    else
-        # if the user cancelled, do nothing
-        echox "Project removal cancelled."
-    fi
+    source "$script"
+    launch "$venv" "$project_dir" "$repo" "$hash" "$@"
 }

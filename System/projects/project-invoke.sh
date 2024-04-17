@@ -35,6 +35,7 @@
 
 function install() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
+    shift 4
 
     require_system_command git
     require_storage_dir
