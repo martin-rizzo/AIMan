@@ -218,7 +218,7 @@ function require_storage_dir() {
     require_directory "$StorageDir/Output"
     require_symlink   "$MainDir/Models" "$StorageDir/Models"
     require_symlink   "$MainDir/Output" "$StorageDir/Output"
-    if [[ $USER = 'aiman' ]]; then
+    if [[ $USER =~ ^aiman[0-9]?$ ]]; then
         require_symlink "$HOME/Models" "$StorageDir/Models"
         require_symlink "$HOME/Output" "$StorageDir/Output"
     fi
