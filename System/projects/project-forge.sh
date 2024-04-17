@@ -42,7 +42,7 @@ function install() {
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"
     require_symlink 'output' "$OutputDir" --convert-dir
-    virtual_python !launch.py --no-download-sd-model --exit
+    virtual_python "$venv" !launch.py --no-download-sd-model --exit
 }
 
 function launch() {
