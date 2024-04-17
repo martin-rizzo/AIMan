@@ -212,6 +212,11 @@ function require_symlink() {
     fi
 }
 
+# TODO:
+#  - require_storage
+#  - update_storage_symlink 'Models' <DIRECTORY>
+#  - update_storage_symlink 'Output' <DIRECTORY>
+
 function require_storage_dir() {
     require_directory "$StorageDir"
     require_directory "$StorageDir/Models"

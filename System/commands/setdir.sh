@@ -53,6 +53,7 @@ function run_command() {
     local element=$1 directory=$2
     local old_directory
 
+    require_storage_dir
     if [[ $element == '@models' ]]; then
         old_directory=$(readlink "$MainDir/Models")
         modify_storage_link "$MainDir/Models" "$directory"
