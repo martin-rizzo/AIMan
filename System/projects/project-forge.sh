@@ -41,13 +41,15 @@ function install() {
 
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"
-    require_symlink 'output' "$OutputDir" --convert-dir
+    require_symlink 'outputs' "$OutputDir" --convert-dir
     virtual_python "$venv" !launch.py --no-download-sd-model --exit
 }
+
 
 function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
+    local port_message=''
 
     #====== ENABLE OPTIMIZATIONS ======#
     local options=()
@@ -77,8 +79,12 @@ function launch() {
 
 
     #====== CONFIGURE USER SETTINGS ======#
-    options+=(--theme dark)  # start in dark mode
-    #options+=(--listen)     # disable browser launch and allows connection from LAN
+    options+=( --theme dark ) # start in dark mode
+    options+=( --listen     ) # disable browser launch and allows connection from LAN
+    if [[ $ProjectPort ]]; then
+        options+=( --port $ProjectPort )
+        port_message="on port $ProjectPort"
+    fi
     #options+=(--autolaunch) # force browser launch even when --listen is enabled
 
 
@@ -98,6 +104,8 @@ function launch() {
     directories+=( --vae-dir                "$ModelsVaeDir"             )
 
     cd "$project_dir"
+    echox check "changed working directory to $PWD"
+    echox wait  "launching SD WebUI Forge application $port_message"
     virtual_python "$venv" !launch.py "${options[@]}" "${directories[@]}" "$@"
 }
 

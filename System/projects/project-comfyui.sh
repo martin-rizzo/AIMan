@@ -72,8 +72,18 @@ function install() {
 function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
+    local port_message=''
 
+    #============= COMFYUI OPTIONS =============#
+    local options=()
+    if [[ $ProjectPort ]]; then
+        options+=( --port $ProjectPort )
+        port_message="on port $ProjectPort"
+    fi
+
+    #================ LAUNCHING ================#
     cd "$project_dir"
-    virtual_python "$venv" !main.py "$@"
+    echox check "changed working directory to $PWD"
+    echox wait  "launching ComfyUI application $port_message"
+    virtual_python "$venv" !main.py "${options[@]}" "$@"
 }
-

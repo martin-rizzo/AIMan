@@ -95,7 +95,7 @@ function ensure_venv_is_initialized() {
     # if the venv does not exist, then create it
     if [[ ! -d $venv ]]; then
         echox wait 'creating python virtual environment'
-        echo "#### '$CompatiblePython' -m venv '$venv' --prompt '$venv_prompt'"
+        echox "      > '$CompatiblePython' -m venv '$venv' --prompt '$venv_prompt'"
         "$CompatiblePython" -m venv "$venv" --prompt "$venv_prompt"
         echox check 'new python virtual environment created:'
         echox  "     $venv"

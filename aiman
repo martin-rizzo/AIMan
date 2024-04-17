@@ -32,21 +32,22 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ScriptName=${BASH_SOURCE[0]##*/}
 ScriptVer=0.2      # script version
-ProjectName=       # el nombre del proyecto sobre el cual ejecutar el comando
-CommandName=       # the name of the command to execute
-CommandParams=()   # the command parameters
+ProjectName=       # name of the project on which the command will be executed
+CommandName=       # name of the command to be executed
+CommandParams=()   # parameters for the command
 Help="
 Usage: $ScriptName [PROJECT.]COMMAND [param1] [param2] ... [paramN]
 
   A command-line package manager for AI open source projects.
 
 Commands:
-    install    Install projects on the aiman directory.
+    install    Install projects on the local directory.
+    launch     Launch projects that have been previously installed.
     remove     Remove installed projects.
-    list       List projects.
-    info       Display details about a project or group of projects.
+    list       List all available projects.
+    info       Display details about a project.
     console    Execute commands within the python virtual environment.
-    setdir     Change directories used by the AI applications.
+    setdir     Change the directories used for input and output.
     add2path   Add aiman to the user's PATH.
 
 Run '$ScriptName COMMAND --help' for more information on a command.
@@ -61,10 +62,6 @@ Examples:
     $ScriptName webui.console pip upgrade
     $ScriptName launch --help
 "
-#    launch          Launch a project.
-#    help            Display help information.
-#    reinstall       Reinstall a project.
-#    verify          Verify directories, repos and other aiman elements.
 
 # Determine the main directory containing the script
 MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
@@ -76,18 +73,12 @@ RepoDir="$MainDir/Repos"
 StorageDir="$MainDir/Storage"
 SystemDir="$MainDir/System"
 VEnvDir="$MainDir/VEnv"
-CodeDir="$SystemDir/code"
 
+# Code directories
+CodeDir="$SystemDir/code"
 CommandsCodeDir="$SystemDir/commands"
 HelpersCodeDir="$SystemDir/helpers"
 ProjectsCodeDir="$SystemDir/projects"
-
-
-
-# Each project typically requires its own virtual environment (venv) for Python.
-# If this variable is left empty, the script will dynamically configure it based
-# on the selected project by the user, which is the recommended approach.
-PythonDir=
 
 # Models directories
 ModelsCodeformerDir="$ModelsDir/Codeformer"
@@ -109,13 +100,14 @@ ModelsControlnetDir="$ModelsDir/ControlNet"
 # ATTENTION: The version must be 3.10 or lower!
 CompatiblePython='python3.10'
 
-# Prompt to be displayed when the virtual Python environment is activated
-PythonPrompt="aiman-$CompatiblePython"
+# The project port (leave empty to use default port)
+# Requires root rights for ports < 1024
+ProjectPort=8086
 
-# Subdirectories of /Modules (a string with space-separated names)
-ValidModelsSubdirs='
-BLIP Codeformer deepbooru embeddings ESRGAN GFPGAN hypernetworks karlo
-LDSR Lora RealESRGAN ScuNET Stable-diffusion SwinIR VAE VAE-approx'
+## Subdirectories of /Modules (a string with space-separated names)
+#ValidModelsSubdirs='
+#BLIP Codeformer deepbooru embeddings ESRGAN GFPGAN hypernetworks karlo
+#LDSR Lora RealESRGAN ScuNET Stable-diffusion SwinIR VAE VAE-approx'
 
 
 function is_valid_command() {
