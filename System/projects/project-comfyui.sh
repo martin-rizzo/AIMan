@@ -64,21 +64,6 @@ function install() {
     cd "$project_dir"
     require_symlink 'output'      "$OutputDir"                --convert-dir
 
-    #-------------- CUSTOM NODES ---------------#
-    cd "$project_dir/custom_nodes"
-
-    # Advanced CLIP Text Encode
-    # nodes that allows for more control over the way prompt weighting should be interpreted
-    git clone https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb.git
-
-    # ComfyUI Noise
-    # nodes that allows for more control and flexibility over noise to do
-    git clone https://github.com/BlenderNeko/ComfyUI_Noise.git
-
-    # Extra Models for ComfyUI
-    # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
-    git clone https://github.com/city96/ComfyUI_ExtraModels.git
-
     #--------------- INSTALLING ----------------#
     cd "$project_dir"
 
@@ -87,6 +72,22 @@ function install() {
 
     ## Dependencies
     virtual_python "$venv" pip install -r requirements.txt
+
+    #------------ ADD CUSTOM NODES -------------#
+    cd "$project_dir/custom_nodes"
+
+    ## Advanced CLIP Text Encode
+    # nodes that allows for more control over the way prompt weighting should be interpreted
+    git clone https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb
+
+    ## ComfyUI Noise
+    # nodes that allows for more control and flexibility over noise to do
+    git clone https://github.com/BlenderNeko/ComfyUI_Noise
+
+    ## Extra Models for ComfyUI
+    # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
+    git clone https://github.com/city96/ComfyUI_ExtraModels
+    virtual_python "$venv" pip install -r ComfyUI_ExtraModels/requirements.txt
 }
 
 #============================================================================
