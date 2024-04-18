@@ -67,6 +67,8 @@ function install() {
     git clone https://github.com/AIrjen/OneButtonPrompt > /dev/null
     echox wait "installing 'Test my prompt!' extension"
     git clone https://github.com/Extraltodeus/test_my_prompt > /dev/null
+    echox wait "installing 'Incantations' extension"
+    git clone https://github.com/v0xie/sd-webui-incantations.git > /dev/null
 
     #---------- DEFAULT CONFIGURATION ----------#
     echox wait "generating default configuration"
@@ -84,13 +86,25 @@ function install() {
     virtual_python "$venv" !launch.py --no-download-sd-model --exit
 }
 
-
+#============================================================================
+# Launches the project application in the specified environment.
+#
+# Parameters:
+#   - venv        : the path to the Python virtual environment to use
+#   - project_dir : the path to the local project directory
+#   - repo        : the URL of the project's Git repository
+#   - hash        : the Git commit hash or tag to use
+#
+# Globals:
+#   - ProjectName : the short name of the project, e.g. "webui"
+#   - ProjectPort : the port where the app should listen, empty = default
+#
 function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
     local port_message=''
 
-    #========= CONFIGURE USER SETTINGS =========#
+    #--------- CONFIGURE USER SETTINGS ---------#
     local options=()
     options+=( --theme dark  )   # start in dark mode
 
@@ -100,13 +114,13 @@ function launch() {
         port_message="on port $ProjectPort"
     fi
 
-    #============== OPTIMIZATIONS ==============#
+    #-------------- OPTIMIZATIONS --------------#
     local optimizations=()
-    optimizations+=(--opt-sdp-attention)         # non-deterministic, can be faster but uses more VRAM than xFormers
-    #optimizations+=(--opt-sdp-no-mem-attention) # deterministic, can be faster but uses more VRAM than xFormers
-    #optimizations+=(--xformers)                 # possibly no longer necessary with Torch 2
+    optimizations+=( --opt-sdp-attention        ) # non-deterministic, can be faster but uses more VRAM than xFormers
+   #optimizations+=( --opt-sdp-no-mem-attention ) # deterministic, can be faster but uses more VRAM than xFormers
+   #optimizations+=( --xformers                 ) # possibly no longer necessary with Torch 2
 
-    #====== REDIRECT DIRECTORIES TO AIMAN ======#
+    #------ REDIRECT DIRECTORIES TO AIMAN ------#
     local directories=()
     directories+=( --codeformer-models-path "$ModelsCodeformerDir"      )
     directories+=( --embeddings-dir         "$ModelsEmbeddingsDir"      )
@@ -127,13 +141,3 @@ function launch() {
     virtual_python "$venv" !launch.py "${options[@]}" "${optimizations[@]}" "${directories[@]}" "$@"
 }
 
-
-# function update() {
-#     git pull
-# }
-# function revert() {
-#     local hash=$(print_project @hash)
-#     if [[ -n "$hash" ]]; then
-#         git reset --hard "$hash"
-#     fi
-# }

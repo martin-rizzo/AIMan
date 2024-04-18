@@ -82,6 +82,7 @@ ProjectsCodeDir="$SystemDir/projects"
 
 # Models directories
 ModelsCodeformerDir="$ModelsDir/Codeformer"
+ModelsControlnetDir="$ModelsDir/ControlNet"
 ModelsEmbeddingsDir="$ModelsDir/embeddings"
 ModelsEsrganDir="$ModelsDir/ESRGAN"
 ModelsGfpganDir="$ModelsDir/GFPGAN"
@@ -94,7 +95,6 @@ ModelsStableDiffusionDir="$ModelsDir/Stable-diffusion"
 ModelsStylesDir="$ModelsDir/styles"
 ModelsSwinirDir="$ModelsDir/SwinIR"
 ModelsVaeDir="$ModelsDir/VAE"
-ModelsControlnetDir="$ModelsDir/ControlNet"
 
 
 # Compatible version of Python to be used in the virtual environment.

@@ -32,6 +32,19 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 
+#============================================================================
+# Installs the project in the specified environment.
+#
+# Parameters:
+#   - venv        : the path to the Python virtual environment to use
+#   - project_dir : the path to the local project directory
+#   - repo        : the URL of the project's Git repository
+#   - hash        : the Git commit hash or tag to use
+#
+# Globals:
+#   - ProjectName : the short name of the project, e.g. "webui"
+#   - ProjectPort : the port where the app should listen, empty = default
+#
 function install() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
@@ -42,12 +55,15 @@ function install() {
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"
     require_symlink 'models/checkpoints' "$ModelsStableDiffusionDir" --convert-dir
-    require_symlink 'models/vae'         "$ModelsVaeDir"             --convert-dir
-    require_symlink 'models/loras'       "$ModelsLoraDir"            --convert-dir
     require_symlink 'models/controlnet'  "$ModelsControlnetDir"      --convert-dir
+    require_symlink 'models/embeddings'  "$ModelsEmbeddingsDir"      --convert-dir
+    require_symlink 'models/hypernetworks' "$ModelsHypernetworkDir"  --convert-dir
+    require_symlink 'models/loras'       "$ModelsLoraDir"            --convert-dir
+    require_symlink 'models/t5'          "$ModelsDir/t5"             --convert-dir
+    require_symlink 'models/vae'         "$ModelsVaeDir"             --convert-dir
     require_symlink 'output'             "$OutputDir"                --convert-dir
 
-    #--- custom nodes ----
+    #-------------- CUSTOM NODES ---------------#
     cd "$project_dir/custom_nodes"
 
     # Advanced CLIP Text Encode
@@ -62,8 +78,8 @@ function install() {
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
     git clone https://github.com/city96/ComfyUI_ExtraModels.git
 
-    cd ..
-    #-----------------------
+    #--------------- INSTALLING ----------------#
+    cd "$project_dir"
 
     ## NVIDIA GPU
     virtual_python "$venv" pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
@@ -72,22 +88,35 @@ function install() {
     virtual_python "$venv" pip install -r requirements.txt
 }
 
-
+#============================================================================
+# Launches the project application in the specified environment.
+#
+# Parameters:
+#   - venv        : the path to the Python virtual environment to use
+#   - project_dir : the path to the local project directory
+#   - repo        : the URL of the project's Git repository
+#   - hash        : the Git commit hash or tag to use
+#
+# Globals:
+#   - ProjectName : the short name of the project, e.g. "webui"
+#   - ProjectPort : the port where the app should listen, empty = default
+#
 function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
     local port_message=''
 
-    #============= COMFYUI OPTIONS =============#
+    #------------- COMFYUI OPTIONS -------------#
     local options=()
     if [[ $ProjectPort ]]; then
         options+=( --port $ProjectPort )
         port_message="on port $ProjectPort"
     fi
 
-    #================ LAUNCHING ================#
+    #---------------- LAUNCHING ----------------#
     cd "$project_dir"
     echox check "changed working directory to $PWD"
     echox wait  "launching ComfyUI application $port_message"
     virtual_python "$venv" !main.py "${options[@]}" "$@"
 }
+
