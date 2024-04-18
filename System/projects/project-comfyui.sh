@@ -53,15 +53,16 @@ function install() {
     require_storage_dir
 
     clone_repository "$repo" "$hash" "$project_dir"
+    cd "$project_dir/models"
+    require_symlink 'checkpoints' "$ModelsStableDiffusionDir" --convert-dir
+    require_symlink 'controlnet'  "$ModelsControlnetDir"      --convert-dir
+    require_symlink 'embeddings'  "$ModelsEmbeddingsDir"      --convert-dir
+    require_symlink 'hypernetworks' "$ModelsHypernetworkDir"  --convert-dir
+    require_symlink 'loras'       "$ModelsLoraDir"            --convert-dir
+    require_symlink 't5'          "$ModelsDir/t5"             --convert-dir
+    require_symlink 'vae'         "$ModelsVaeDir"             --convert-dir
     cd "$project_dir"
-    require_symlink 'models/checkpoints' "$ModelsStableDiffusionDir" --convert-dir
-    require_symlink 'models/controlnet'  "$ModelsControlnetDir"      --convert-dir
-    require_symlink 'models/embeddings'  "$ModelsEmbeddingsDir"      --convert-dir
-    require_symlink 'models/hypernetworks' "$ModelsHypernetworkDir"  --convert-dir
-    require_symlink 'models/loras'       "$ModelsLoraDir"            --convert-dir
-    require_symlink 'models/t5'          "$ModelsDir/t5"             --convert-dir
-    require_symlink 'models/vae'         "$ModelsVaeDir"             --convert-dir
-    require_symlink 'output'             "$OutputDir"                --convert-dir
+    require_symlink 'output'      "$OutputDir"                --convert-dir
 
     #-------------- CUSTOM NODES ---------------#
     cd "$project_dir/custom_nodes"

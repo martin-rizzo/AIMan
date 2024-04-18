@@ -171,6 +171,13 @@ function require_symlink() {
     local link_name=$1 target=$2 mode=${3:---safe}
     local convert_dir=false move_dir=false move_file=false
 
+    # 'link_name' should be a symbolic link name
+    # it cannot be a path that includes directories or subdirectories !!
+    link_name=${link_name#./}
+    link_name=${link_name#/}
+    [[ $link_name == *"/"* ]] \
+     && bug_report "The 'require_symlink()' function does not support 'link_name' to be a path: '$link_name'"
+
     # set different flags depending on the 'mode' parameter
     case "$mode" in
         '--safe')
@@ -237,15 +244,19 @@ function require_symlink() {
 #  - update_storage_symlink 'Output' <DIRECTORY>
 
 function require_storage_dir() {
+    pushd . > /dev/null
     require_directory "$StorageDir"
     require_directory "$StorageDir/Models"
     require_directory "$StorageDir/Output"
-    require_symlink   "$MainDir/Models" "$StorageDir/Models"
-    require_symlink   "$MainDir/Output" "$StorageDir/Output"
+    cd "$MainDir"
+    require_symlink 'Models' "$StorageDir/Models"
+    require_symlink 'Output' "$StorageDir/Output"
     if [[ $USER =~ ^aiman[0-9]?$ ]]; then
-        require_symlink "$HOME/Models" "$StorageDir/Models"
-        require_symlink "$HOME/Output" "$StorageDir/Output"
+        cd "$HOME"
+        require_symlink 'Models' "$StorageDir/Models"
+        require_symlink 'Output' "$StorageDir/Output"
     fi
+    popd > /dev/null
 }
 
 function modify_storage_link() {
