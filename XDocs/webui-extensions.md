@@ -24,3 +24,7 @@ Enables targeted conditioning at different regions of the image, avoiding the is
 
 - __'sd-perturbed-attention'__ or __'sd-webui-incantations'__:
 Implementation of "Self-Rectifying Diffusion Sampling with Perturbed-Attention Guidance"
+
+### Developing Extensions
+
+https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Developing-extensions

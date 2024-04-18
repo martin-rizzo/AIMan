@@ -1,72 +1,54 @@
 
 =============================================================================
 
-Experimental Prototype
-----------------------
+ Experimental Prototype
+ ----------------------
 
- #  sudo useradd -m aiman2 && sudo passwd aiman2
- #  sudo usermod aiman2 -aG aiman
-??? sudo chmod 2750 /home/aiman2
- #  su - aiman2
- #  git clone -b proto https://github.com/martin-rizzo/AIMan.git
-??? mkdir .bashrc.d && echo umask 007 > .bashrc.d/20_umask.conf
- #  echo umask 007 >> .bashrc
- #  AIMan/aiman add2path && source ~/.bashrc
- #  aiman setdir @models /mnt/disk_x/marti/AI-Models/
- #  aiman setdir @output /var/tmp/aiman-output/
- #  aiman webui.install
- #  aiman webui.launch
-
-
-Old method:
-> sudo useradd aimantest
-> sudo passwd  aimantest
-> sudo usermod aimantest -aG aiman
-> sudo chmod 2750 /home/aimantest
-> su - aimantest
-> mkdir .bashrc.d
-> echo umask 007 > .bashrc.d/20_umask.conf
-> git clone -b proto https://github.com/martin-rizzo/AIMan.git
-> AIMan/aiman add2path
-> source ~/.bashrc
-> aiman setdir @models /mnt/disk_x/marti/AI-Models/
-> aiman setdir @output /var/tmp/aiman-output/
-> aiman install comfyui
-> aiman launch  comfyui
+  >  sudo useradd -m aiman2
+  >  sudo passwd aiman2      #<- enter the desired password for the user #
+  >  sudo usermod aiman2 -aG aiman
+  >  su - aiman2
+  >  git clone -b proto https://github.com/martin-rizzo/AIMan.git
+  >  echo umask 007 >> .bashrc
+  >  AIMan/aiman add2path && source ~/.bashrc
+  >  aiman setdir @models /mnt/disk_x/marti/AI-Models/
+  >  aiman setdir @output /var/tmp/aiman-output/
+  >  aiman webui.install
+  >  aiman webui.launch
 
 =============================================================================
 
-Master
-------
+ Master
+ ------
 
- #  sudo useradd -m aiman && sudo passwd aiman
-??? sudo chmod 2750 /home/aiman
-??? sudo chmod 775 /tmp/gradio
-??? sudo chown aiman:aiman /tmp/gradio
- #  su - aiman
- #  git clone https://github.com/martin-rizzo/AIMan.git
- o  echo umask 007 > .bashrc.d/20_umask.conf
- #  AIMan/aiman add2path && source ~/.bashrc
- #  aiman setdir @models /mnt/disk_x/marti/AI-Models
- #  aiman setdir @output /var/tmp/aiman-output
- #  aiman install webui
- #  aiman launch  webui
-
+  >  sudo useradd -m aiman
+  >  sudo passwd aiman       #<- enter the desired password for the user #
+  >  su - aiman
+  >  git clone https://github.com/martin-rizzo/AIMan.git
+  >  echo umask 007 >> .bashrc
+  >  AIMan/aiman add2path && source ~/.bashrc
+  >  aiman setdir @models /mnt/disk_x/marti/AI-Models/
+  >  aiman setdir @output /var/tmp/aiman-output/
+  >  aiman webui.install
+  >  aiman webui.launch
 
 =============================================================================
 
-Other commands
---------------
+ Other commands
+ --------------
 
-Delete user with their home directory and files:
-  > sudo userdel -r aiman2
+ Delete user with their home directory and files:
+   > sudo userdel -r aiman2
+   > sudo chown aiman:aiman /tmp/gradio
 
-Create 'proto' branch:
-  > git checkout -b proto
-  > git push -u origin proto
+ Fix gradio temp directory:
+   > sudo chmod 775 /tmp/gradio
 
+ Create 'proto' branch:
+   > git checkout -b proto
+   > git push -u origin proto
 
-Delete 'proto' branch:
-  > git push origin --delete proto
-  > git branch -d proto
+ Delete 'proto' branch:
+   > git push origin --delete proto
+   > git branch -d proto
 
