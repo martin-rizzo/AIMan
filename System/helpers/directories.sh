@@ -213,7 +213,7 @@ function require_symlink() {
 
     elif [[ $convert_dir == true && -d $link_name ]]; then
         echox wait "converting directory '$link_name' to a symlink."
-        mv "$link_name" "$link_name-olddir"
+        mv "$link_name" "_0LD_-$link_name"
         ln -s "$target" "$link_name"
 
     elif [[ $move_dir == true && -d $link_name ]]; then
