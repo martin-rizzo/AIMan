@@ -160,23 +160,42 @@ function require_directory() {
 #      '--move-dir'   : If the link_name already exists as a directory,
 #                       the function will move the contents of the directory
 #                       into the new symbolic link.
+#      '--move-file'  : If the link_name already exists as a file,
+#                       the function will move the contents of the file
+#                       into the new symbolic link.
 # Example:
 #   require_symlink ~/mylink ~/target_folder
 #   (ensures a symbolic link named 'mylink' exists, pointing to 'target_folder')
 #
 function require_symlink() {
     local link_name=$1 target=$2 mode=${3:---safe}
-    local convert_dir=false move_dir=false
+    local convert_dir=false move_dir=false move_file=false
 
     # set different flags depending on the 'mode' parameter
     case "$mode" in
-        --safe)
+        '--safe')
             ;;
-        --convert-dir)
+        '--convert-dir')
             convert_dir=true
             ;;
-        --move-dir)
+        '--move-dir')
             move_dir=true
+            ;;
+        "--move-file")
+            # if the target file doesn't exist,
+            # try to generate it from the original file
+            if [[ ! -e $target ]]; then
+                if [[ -f $link_name ]]; then
+                    # copy the original file to the target
+                    # (cp+rm ensures the target file has the correct permissions)
+                    cp "$link_name" "$target"
+                    rm "$link_name"
+                else
+                    # create a new empty file in the target
+                    touch "$target"
+                fi
+            fi
+            move_file=true
             ;;
         *)
             fatal_error \

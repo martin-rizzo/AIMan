@@ -41,7 +41,8 @@ function install() {
 
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"
-    require_symlink 'outputs' "$OutputDir" --convert-dir
+    require_symlink 'outputs'    "$OutputDir"                  --convert-dir
+    require_symlink 'styles.csv' "$ModelsStylesDir/styles.csv" --move-file
     virtual_python "$venv" !launch.py --no-download-sd-model --exit
 }
 
