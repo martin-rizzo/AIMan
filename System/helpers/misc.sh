@@ -31,6 +31,9 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #
+# TODO: reajustar lso formatos de 'echox' para igualarlos a otros proyectos
+# TODO: completar el resumen de cada funcion en la lista de abajo
+#
 # FUNCTIONS:
 #   - echox()                  : Prints messages with different formats.
 #   - bug_report()             : ???

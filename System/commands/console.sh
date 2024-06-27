@@ -70,7 +70,7 @@ function run_command() {
     # execute the command provided by the user
     # (if the command is empty, open the interactive console)
     if [[ $command ]]; then
-        virtual_python "$venv" "$command" "$@"
+        virtual_python "$venv" "!$command" "$@"
     else
         cd "$project_dir"
         virtual_python "$venv" CONSOLE

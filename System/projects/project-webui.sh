@@ -83,7 +83,7 @@ function install() {
     #--------------- INSTALLING ----------------#
     cd "$project_dir"
     echox wait "installing 'Stable Diffusion WebUI'"
-    virtual_python "$venv" !launch.py --no-download-sd-model --exit
+    virtual_python "$venv" launch.py --no-download-sd-model --exit
 }
 
 #============================================================================
@@ -138,6 +138,6 @@ function launch() {
     cd "$project_dir"
     echox check "changed working directory to $PWD"
     echox wait  "launching AUTO1111 WebUI application $port_message"
-    virtual_python "$venv" !launch.py "${options[@]}" "${optimizations[@]}" "${directories[@]}" "$@"
+    virtual_python "$venv" launch.py "${options[@]}" "${optimizations[@]}" "${directories[@]}" "$@"
 }
 

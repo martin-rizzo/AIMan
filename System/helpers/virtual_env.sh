@@ -154,8 +154,8 @@ function ensure_venv_is_active() {
 #   - venv: the path to the Python virtual environment to use.
 #   - command:
 #      - CONSOLE: Opens an interactive shell in the virtual environment.
-#      - filename starting with "!": Runs the specified Python script.
-#      - otherwise: runs the specified command with any additional arguments.
+#      - command starting with "!": Runs the specified system command.
+#      - otherwise                : Runs the specified Python script.
 #   - args...: additional arguments to pass to the command or Python script.
 #
 # Returns:
@@ -163,8 +163,8 @@ function ensure_venv_is_active() {
 #
 # Examples:
 #   virtual_python "/path/to/my-venv" CONSOLE
-#   virtual_python "/path/to/my-venv" !my_script.py arg1 arg2
-#   virtual_python "/path/to/my-venv" pip install numpy
+#   virtual_python "/path/to/my-venv" my_script.py arg1 arg2
+#   virtual_python "/path/to/my-venv" !pip install numpy
 #
 function virtual_python() {
     local venv=$1 command=$2
@@ -183,9 +183,9 @@ function virtual_python() {
     # si el comando empieza con '!' entonces es script python
     # de lo contrario es un comando normal de linux
     if [[ "$command" == "!"* ]]; then
-        python "${command:1}" "$@"
+        "${command:1}" "$@"
     else
-        "$command" "$@"
+        python "$command" "$@"
     fi
 }
 

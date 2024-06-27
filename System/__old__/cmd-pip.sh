@@ -49,6 +49,6 @@ Examples:
 function run_command() {
 
     require_virtual_python
-    virtual_python pip "${CommandParams[@]}"
+    virtual_python !pip "${CommandParams[@]}"
 
 }

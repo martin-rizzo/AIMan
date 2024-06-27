@@ -68,10 +68,11 @@ function install() {
     cd "$project_dir"
 
     ## NVIDIA GPU
-    virtual_python "$venv" pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+    virtual_python "$venv" !pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 
     ## Dependencies
-    virtual_python "$venv" pip install -r requirements.txt
+    virtual_python "$venv" !pip install -r requirements.txt
+    #virtual_python "$venv" !pip install accelerate
 
     #------------ ADD CUSTOM NODES -------------#
     cd "$project_dir/custom_nodes"
@@ -87,7 +88,7 @@ function install() {
     ## Extra Models for ComfyUI
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
     git clone https://github.com/city96/ComfyUI_ExtraModels
-    virtual_python "$venv" pip install -r ComfyUI_ExtraModels/requirements.txt
+    virtual_python "$venv" !pip install -r ComfyUI_ExtraModels/requirements.txt
 }
 
 #============================================================================
@@ -119,6 +120,6 @@ function launch() {
     cd "$project_dir"
     echox check "changed working directory to $PWD"
     echox wait  "launching ComfyUI application $port_message"
-    virtual_python "$venv" !main.py "${options[@]}" "$@"
+    virtual_python "$venv" main.py "${options[@]}" "$@"
 }
 
