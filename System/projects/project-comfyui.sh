@@ -86,6 +86,11 @@ function install() {
     # nodes that allows for more control and flexibility over noise to do
     #git clone https://github.com/BlenderNeko/ComfyUI_Noise
 
+    ## A Powerful Set of Tools
+    # include performance graphs below the queue prompt
+    git clone https://github.com/crystian/ComfyUI-Crystools
+    virtual_python "$venv" !pip install -r ComfyUI-Crystools/requirements.txt
+
     ## Extra Models for ComfyUI
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
     git clone https://github.com/city96/ComfyUI_ExtraModels
