@@ -54,15 +54,16 @@ function install() {
 
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir/models"
-    require_symlink 'checkpoints' "$ModelsStableDiffusionDir" --convert-dir
-    require_symlink 'controlnet'  "$ModelsControlnetDir"      --convert-dir
-    require_symlink 'embeddings'  "$ModelsEmbeddingsDir"      --convert-dir
-    require_symlink 'hypernetworks' "$ModelsHypernetworkDir"  --convert-dir
-    require_symlink 'loras'       "$ModelsLoraDir"            --convert-dir
-    require_symlink 't5'          "$ModelsDir/t5"             --convert-dir
-    require_symlink 'vae'         "$ModelsVaeDir"             --convert-dir
+    require_symlink 'checkpoints'   "$ModelsStableDiffusionDir" --convert-dir
+    require_symlink 'controlnet'    "$ModelsControlnetDir"      --convert-dir
+    require_symlink 'embeddings'    "$ModelsEmbeddingsDir"      --convert-dir
+    require_symlink 'hypernetworks' "$ModelsHypernetworkDir"    --convert-dir
+    require_symlink 'loras'         "$ModelsLoraDir"            --convert-dir
+    require_symlink 'pixart'        "$ModelsDir/PixArt"         --convert-dir
+    require_symlink 't5'            "$ModelsDir/t5"             --convert-dir
+    require_symlink 'vae'           "$ModelsVaeDir"             --convert-dir
     cd "$project_dir"
-    require_symlink 'output'      "$OutputDir"                --convert-dir
+    require_symlink 'output'        "$OutputDir"                --convert-dir
 
     #--------------- INSTALLING ----------------#
     cd "$project_dir"
@@ -79,11 +80,11 @@ function install() {
 
     ## Advanced CLIP Text Encode
     # nodes that allows for more control over the way prompt weighting should be interpreted
-    git clone https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb
+    #git clone https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb
 
     ## ComfyUI Noise
     # nodes that allows for more control and flexibility over noise to do
-    git clone https://github.com/BlenderNeko/ComfyUI_Noise
+    #git clone https://github.com/BlenderNeko/ComfyUI_Noise
 
     ## Extra Models for ComfyUI
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
