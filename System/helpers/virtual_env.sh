@@ -39,6 +39,10 @@
 #
 #-----------------------------------------------------------------------------
 
+# Stores the path to the last used virtual environment.
+# This variable is used by the `virtual_python()` function.
+HLP__LAST_VENV=
+
 
 # Checks if the Python virtual environment is active.
 #
@@ -56,7 +60,7 @@
 # Example:
 #   is_venv_active "/path/to/my-venv"
 #
-function is_venv_active() {
+is_venv_active() {
     local venv=$1
     if [[ -z $VIRTUAL_ENV ]]; then
         return 1 # NO ACTIVE #
@@ -78,7 +82,7 @@ function is_venv_active() {
 # Example:
 #   ensure_venv_is_initialized "/path/to/my-venv"
 #
-function ensure_venv_is_initialized() {
+ensure_venv_is_initialized() {
     local venv=$1
     local venv_prompt="venv"
 
@@ -126,7 +130,7 @@ function ensure_venv_is_initialized() {
 # Example:
 #   ensure_venv_is_active "/path/to/my-venv"
 #
-function ensure_venv_is_active() {
+ensure_venv_is_active() {
     local venv=$1
 
     if is_venv_active "$venv"; then
@@ -148,42 +152,73 @@ function ensure_venv_is_active() {
 # Runs a command or Python script within the specified virtual environment.
 #
 # Usage:
-#   virtual_python <venv> <command> [args...]
+#   virtual_python [<venv>] <command> [args...]
 #
 # Parameters:
-#   - venv: the path to the Python virtual environment to use.
+#   - venv (optional):
+#      The path to the Python virtual environment to use.
+#      If not provided, the function will use the last used virtual environment.
 #   - command:
-#      - CONSOLE: Opens an interactive shell in the virtual environment.
-#      - command starting with "!": Runs the specified system command.
-#      - otherwise                : Runs the specified Python script.
-#   - args...: additional arguments to pass to the command or Python script.
+#      - "CONSOLE": Opens an interactive shell in the virtual environment.
+#      - Command starting with "!": Runs the specified System command.
+#      - Otherwise                : Runs the specified Python script.
+#   - args...:
+#      Additional arguments to pass to the command or Python script.
 #
 # Returns:
 #   The exit status of the executed command or Python script.
 #
 # Examples:
-#   virtual_python "/path/to/my-venv" CONSOLE
-#   virtual_python "/path/to/my-venv" my_script.py arg1 arg2
-#   virtual_python "/path/to/my-venv" !pip install numpy
+#   virtual_python "/path/to/my_venv" CONSOLE
+#   virtual_python "/path/to/my_venv" my_script.py arg1 arg2
+#   virtual_python "/path/to/my_venv" "!pip install numpy"
+#   virtual_python my_script.py  # Uses the last used virtual environment
 #
-function virtual_python() {
-    local venv=$1 command=$2
-    shift 2
+virtual_python() {
+    local venv command
 
-    ensure_venv_is_initialized "$venv"
-
-    if [[ $command == 'CONSOLE' ]]; then
-        source "$venv/bin/activate"
-        exec /bin/bash --norc -i
-        exit 0
+    # determine if the first argument is a valid virtual environment directory
+    if [[ $1 =~ ^\.?/ ]] || [[ -d "$1" ]]; then
+        venv=$1
+        command=$2
+        shift 2
+    else
+        venv=$HLP__LAST_VENV
+        command=$1
+        shift 1
     fi
 
-    ensure_venv_is_active "$venv"
+    [[ -z "$venv" ]] && \
+    fatal_error "The venv parameter is not previously defined"
 
-    # si el comando empieza con '!' entonces es script python
-    # de lo contrario es un comando normal de linux
-    if [[ "$command" == "!"* ]]; then
+    # ensure that the virtual environment is initialized
+    ensure_venv_is_initialized "$venv"
+
+    # handle the CONSOLE command
+    if [[ $command == 'CONSOLE' ]]; then
+        # shellcheck source=/dev/null
+        source "$venv/bin/activate" || return 1
+        exec /bin/bash --norc -i
+        # the exec command replaces the current shell, so the
+        # following line is unreachable, it's included for clarity
+        return $?
+    fi
+
+    # ensure that the virtual environment is activated and ready,
+    # and store it as the last one used for future reference
+    ensure_venv_is_active "$venv"
+    HLP__LAST_VENV=$venv
+
+    # if no command was provided, there is nothing to execute
+    # (the function was simply used to activate the virtual environment)
+    if [[ -z "$command" ]]; then
+        return 0
+
+    # if the command starts with "!", execute it as a python script
+    elif  [[ "$command" == "!"* ]]; then
         "${command:1}" "$@"
+
+    # otherwise, execute it as a normal linux command
     else
         python "$command" "$@"
     fi

@@ -65,18 +65,26 @@ function install() {
     cd "$project_dir"
     require_symlink 'output'        "$OutputDir"                --convert-dir
 
+
+    # iniciar la secuencia de comandos dentro del entorno virtual
+    virtual_python "$venv"
+
     #--------------- INSTALLING ----------------#
-    cd "$project_dir"
+    cd "$project_dir" || \
+    fatal_error "The project directory '$project_dir' should exist and be accessible" \
+                "This is an internal error likely caused by a mistake in the code"
 
     ## NVIDIA GPU
-    virtual_python "$venv" !pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+    virtual_python !pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 
     ## Dependencies
-    virtual_python "$venv" !pip install -r requirements.txt
-    #virtual_python "$venv" !pip install accelerate
+    virtual_python !pip install -r requirements.txt
+   #virtual_python !pip install accelerate
 
     #------------ ADD CUSTOM NODES -------------#
-    cd "$project_dir/custom_nodes"
+    cd "$project_dir/custom_nodes" || \
+    fatal_error "The directory '$project_dir/custom_nodes' should exist and be accessible" \
+                "This is an internal error likely caused by a mistake in the code"
 
     ## Advanced CLIP Text Encode
     # nodes that allows for more control over the way prompt weighting should be interpreted
@@ -89,12 +97,17 @@ function install() {
     ## A Powerful Set of Tools
     # include performance graphs below the queue prompt
     git clone https://github.com/crystian/ComfyUI-Crystools
-    virtual_python "$venv" !pip install -r ComfyUI-Crystools/requirements.txt
+    virtual_python !pip install -r ComfyUI-Crystools/requirements.txt
+
+    ## Another Powerful Set of Tools
+    # provides various extension nodes for enhancing the functionality of ComfyUI
+    git clone https://github.com/ltdrdata/ComfyUI-Inspire-Pack
+    virtual_python !pip install -r ComfyUI-Inspire-Pack/requirements.txt
 
     ## Extra Models for ComfyUI
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
     git clone https://github.com/city96/ComfyUI_ExtraModels
-    virtual_python "$venv" !pip install -r ComfyUI_ExtraModels/requirements.txt
+    virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
 }
 
 #============================================================================
