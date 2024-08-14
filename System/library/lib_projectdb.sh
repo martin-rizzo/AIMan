@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# File    : helpers/projects_db.sh
+# File    : library/lib_projectdb.sh
 # Brief   : Functions for loading and querying the database of available projects
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Apr 10, 2024
@@ -32,7 +32,7 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #
 # FUNCTIONS:
-#   - load_projects_db()     : Loads the project database.
+#   - load_project_db()     : Loads the project database.
 #   - project_info()         : Displays information about a project.
 #   - is_valid_project()     : Checks if a project is valid.
 #   - is_project_installed() :
@@ -62,7 +62,7 @@ declare -a CACHE_PROJECT_INFO
 # in the CSV file is:
 #     project,dir,repo,hash,license,name,brief,description
 #
-function load_projects_db() {
+function load_project_db() {
     local csv_db_file=$1
 
     # iterate through each line of the CSV file and trim the content
@@ -127,7 +127,7 @@ function project_info() {
                 CACHE_PROJECT_INFO[0]=$project
                 CACHE_PROJECT_INFO[1]="$RepoDir/${local_dir}"
                 CACHE_PROJECT_INFO[2]="$VEnvDir/$project-venv"
-                CACHE_PROJECT_INFO[3]="$ProjectsCodeDir/project-$project.sh"
+                CACHE_PROJECT_INFO[3]="$HandlersDir/$project-handler.sh"
                 CACHE_PROJECT_INFO[4]=$repo
                 CACHE_PROJECT_INFO[5]=$hash
                 CACHE_PROJECT_INFO[6]=$license

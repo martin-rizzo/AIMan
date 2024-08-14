@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# File    : helpers/directories.sh
+# File    : library/lib_directories.sh
 # Brief   : Utilities for managing directories and symbolic links
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 6, 2023
@@ -38,8 +38,6 @@
 #   - require_symlink()       : Ensures the existence of a symbolic link.
 #   - require_storage_dir()   :
 #   - modify_storage_link()   :
-#   - change_to_main_directory()
-#   - change_to_repo_directory()
 #
 #-----------------------------------------------------------------------------
 
@@ -277,22 +275,5 @@ function modify_storage_link() {
     ln -nsf "$directory" "$link_name"
     echox check "$link_name -> $directory"
 }
-
-
-function change_to_main_directory() {
-    cd "$MainDir" &> /dev/null
-}
-
-function change_to_repo_directory() {
-    if [[ ! -e "$RepoDir" ]]; then
-        echox wait "creating directory $RepoDir"
-        mkdir -p "$RepoDir"
-    elif [[ ! -d "$RepoDir" ]]; then
-        echox fatal "$RepoDir must be a directory"
-        exit 1
-    fi
-    cd "$RepoDir"
-}
-
 
 

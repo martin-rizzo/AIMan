@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# File    : helpers/misc.sh
+# File    : library/lib_misc.sh
 # Brief   : Contains helper functions, e.g: printing status, checking cmds..
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 5, 2023

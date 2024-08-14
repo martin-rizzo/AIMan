@@ -8,10 +8,6 @@
 
 
  -------
-    750 ~
-    770 ~/Models        -> ~/aiman/Storage/Models
-    770 ~/Output        -> ~/aiman/Storage/Output
- -------
     770 ~/aiman/Models  -> Storage/Models
     770 ~/aiman/Output  -> Storage/Output
     750 ~/aiman/Repos
@@ -20,8 +16,8 @@
           +- Output
     750 ~/aiman/System
           +- commands
-          +- helpers
-          +- projects
+          +- handlers
+          +- library
     750 ~/aiman
 
 

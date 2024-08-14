@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#shellcheck disable=SC2034 # disable warning for unused variables, as they are used in other scripts.
 # File    : aiman
 # Brief   : Main script
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
@@ -64,7 +65,7 @@ Examples:
 "
 
 # Determine the main directory containing the script
-MainDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+MainDir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
 # Define directory paths relative to the main directory
 ModelsDir="$MainDir/Models"
@@ -75,10 +76,8 @@ SystemDir="$MainDir/System"
 VEnvDir="$MainDir/VEnv"
 
 # Code directories
-CodeDir="$SystemDir/code"
-CommandsCodeDir="$SystemDir/commands"
-HelpersCodeDir="$SystemDir/helpers"
-ProjectsCodeDir="$SystemDir/projects"
+CommandsDir="$SystemDir/commands"
+HandlersDir="$SystemDir/handlers"
 
 # Models directories
 ModelsCodeformerDir="$ModelsDir/Codeformer"
@@ -113,23 +112,23 @@ ProjectPort=8086
 
 function is_valid_command() {
     local command_name=$1
-    [[ -f "$CommandsCodeDir/$command_name.sh" ]]
-    #----------------------------------------------------------
-    ## allowed commands (a string with space-separated values)
-    #local ValidCommands='install remove launch info setdir python pip verify add2path'
-    #[[ " $ValidCommands " == *" $command "* ]]
-    #----------------------------------------------------------
+    [[ -f "$CommandsDir/$command_name.sh" ]]
 }
 
-#================================== START ==================================#
+#===========================================================================#
+# ///////////////////////////////// MAIN ////////////////////////////////// #
+#===========================================================================#
+
+# change to the main directory
+cd "$MainDir" &> /dev/null ||
+    fatal_error "Unable to change directory to $MainDir"
 
 # load helper functions
-source "$HelpersCodeDir/misc.sh"
-source "$HelpersCodeDir/directories.sh"
-source "$HelpersCodeDir/projects_db.sh"
-source "$HelpersCodeDir/virtual_env.sh"
-change_to_main_directory
-load_projects_db "$ProjectsCodeDir/list.csv"
+source 'System/library/lib_directories.sh'
+source 'System/library/lib_misc.sh'
+source 'System/library/lib_projectdb.sh'
+source 'System/library/lib_venv.sh'
+load_project_db "$HandlersDir/00_database.csv"
 
 # loop through all the script parameters
 show_help=false
@@ -137,7 +136,6 @@ show_version=false
 has_parameters=false
 while [ $# -gt 0 ]; do
     param=$1
-    CommandParams+=( "$param" )
     case "$param" in
         -h | --help)
             show_help=true
@@ -148,20 +146,21 @@ while [ $# -gt 0 ]; do
         -*)
             ;;
         *)
-            if [[ -z $CommandName ]]; then
+            # if the command name todavia no fue seteado,
+            # set it to the current parameter
+            if [[ ! $CommandName ]]; then
                 CommandName=$param
-                length=${#CommandParams[@]}
-                unset 'CommandParams[length-1]'
-            else
-                has_parameters=true
+                continue
             fi
+            has_parameters=true
             ;;
     esac
+    CommandParams+=( "$param" )
     shift
 done
 
-# try to extract the project name from the command name
-# (the user can use the dot to enter both, e.g., "webui.install").
+# if the user uses the dot format (e.g., "webui.install"),
+# extract the project name and command name from the command string
 if [[ "$CommandName" == *'.'* ]]; then
     ProjectName=${CommandName%%.*}
     CommandName=${CommandName#*.}
@@ -171,47 +170,45 @@ if [[ "$CommandName" == *'.'* ]]; then
         ProjectName=$CommandName
         CommandName=$temp
     fi
+# if the user does not use the dot format,
+# then the first parameter of the command is the project name
+else
+    ProjectName=${CommandParams[0]}
+    CommandParams=( "${CommandParams[@]:1}" )
 fi
 
-# if the user did not provide any command, then force the help to be displayed.
-# if the user provided a command but it is invalid, then print an error and exit.
+# if the user did not enter any command, show the general help and exit
 if [[ -z "$CommandName" ]]; then
-    show_help=true
-elif ! is_valid_command "$CommandName"; then
+    echo "$Help"
+    exit 0
+fi
+
+# validate the command name
+if ! is_valid_command "$CommandName" ; then
     fatal_error "Invalid command - $CommandName" \
                 "To view the available commands, please run: ./$ScriptName --help"
-    exit 1
 fi
 
+# validate the project name
+if [[ "$ProjectName" ]] && ! is_valid_project "$ProjectName"; then
+    fatal_error "Project '$ProjectName' is not recognized" \
+                "To see a list of available projects, use: ./$ScriptName list"
+fi
+
+#----------------------------------------------------------------------------
 # load the selected command's code
-if [[ -n "$CommandName" ]]; then
-    source "$CommandsCodeDir/$CommandName.sh"
-fi
+#shellcheck disable=1090
+source "$CommandsDir/$CommandName.sh"
 
-# if the user did not provide any parameters
-# then check if it's necessary to print help or version
-if [[ $has_parameters == false ]]; then
-    if [[ $show_version == true ]]; then
-        echo $ScriptVer
-        exit 0
-    elif [[ $show_help == true ]]; then
-        echo "$Help"
-        exit 0
-    fi
+# check if the user requested help or version for the loaded command.
+# both '--help' and '--version' must have been entered without any extra params
+if [[ $show_help == true && $has_parameters == false ]]; then
+    echo "$Help"
+    exit 0
 fi
-
-# If the user provided a project name, ensure that it is a valid name
-if [[ "$ProjectName" ]]; then
-    if ! is_valid_project "$ProjectName"; then
-        fatal_error "Project '$ProjectName' is not recognized" \
-            "To see a list of available projects, use: ./aiman list"
-    fi
-# If no project name is provided, use the first parameter as the project name
-else
-    if is_valid_project "${CommandParams[0]}"; then
-        ProjectName=${CommandParams[0]}
-        CommandParams=( "${CommandParams[@]:1}" )
-    fi
+if [[ $show_version == true && $has_parameters == false ]]; then
+    echo $ScriptVer
+    exit 0
 fi
 
 # run the command code

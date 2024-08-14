@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# File    : helpers/virtual_env.sh
+# File    : library/lib_venv.sh
 # Brief   : Utilities for managing Python virtual environments
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Apr 11, 2024
