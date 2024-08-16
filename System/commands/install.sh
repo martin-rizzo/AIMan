@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#shellcheck disable=SC2154 source=/dev/null
 # File    : commands/install.sh
 # Brief   : Command to install projects on the aiman directory
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
@@ -60,23 +61,35 @@ function run_command() {
     enforce_constraints --project "$@"
     local version=$1
 
-    # retrieve project information
+    # select the project to extract information from,
+    # it will be referenced with '@' from now on
     project_info "$ProjectName"
-    local project_dir=$(project_info @ @local_dir)
-    local venv=$(project_info @ @local_venv)
-    local repo=$(project_info @ @repo)
-    local hash=$(project_info @ @hash)
-    local script=$(project_info @ @script)
+
+    # if the project is already installed,
+    # terminate with an error and display information to the user
+    if is_project_installed @; then
+      fatal_error "Project '$ProjectName' is already installed." \
+        "If $ProjectName is incorrectly installed, you can try uninstalling it with '$ScriptName $ProjectName.remove' and installing it again."
+    fi
+
+    # extract project information.
+    local project_dir venv repo hash handler
+    project_dir=$(project_info @ @local_dir)
+    venv=$(project_info @ @local_venv)
+    repo=$(project_info @ @repo)
+    hash=$(project_info @ @hash)
+    handler=$(project_info @ @script)
 
     # ensure the project script file exists
-    [[ -f $script ]] \
-     || bug_report "AIMan does not have a script for the '$ProjectName' project"
+    [[ -f $handler ]] \
+     || bug_report "AIMan does not have a handler for the '$ProjectName' project"
 
     # if the user provided a version, use it to override the hash
     if [[ $version ]]; then
         hash=$version
     fi
 
-    source "$script"
+    # execute the install command from the project handler
+    source "$handler"
     install "$venv" "$project_dir" "$repo" "$hash"
 }

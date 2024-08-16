@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+#shellcheck disable=SC2154
 # File    : library/lib_projectdb.sh
 # Brief   : Functions for loading and querying the database of available projects
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Apr 10, 2024
-# Repo    : https://github.com/martin-rizzo/AIAppManager
+# Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
@@ -32,10 +33,10 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #
 # FUNCTIONS:
-#   - load_project_db()     : Loads the project database.
-#   - project_info()         : Displays information about a project.
-#   - is_valid_project()     : Checks if a project is valid.
-#   - is_project_installed() :
+#   - load_project_db()      : Loads the project database
+#   - project_info()         : Displays information about a project
+#   - is_valid_project()     : Checks if a project is valid
+#   - is_project_installed() : Checks if a project is installed locally
 #
 #-----------------------------------------------------------------------------
 
@@ -62,7 +63,7 @@ declare -a CACHE_PROJECT_INFO
 # in the CSV file is:
 #     project,dir,repo,hash,license,name,brief,description
 #
-function load_project_db() {
+load_project_db() {
     local csv_db_file=$1
 
     # iterate through each line of the CSV file and trim the content
@@ -108,7 +109,7 @@ function load_project_db() {
 #   project_info my_project @local_dir @name @brief
 #   project_info all
 #
-function project_info() {
+project_info() {
     local project_name=$1
 
     # en el caso aparte de que el nombre del proyecto sea "all"
@@ -120,10 +121,10 @@ function project_info() {
 
     # if the project name is not cached, then search for it in '$PROJECT_DB'
     # (if '@' is provided as the project name, it means that the cache content should be printed)
-    if [[ $project_name != '@' && $project_name != ${CACHE_PROJECT_INFO[0]} ]]; then
+    if [[ $project_name != '@' && $project_name != "${CACHE_PROJECT_INFO[0]}" ]]; then
         CACHE_PROJECT_INFO=()
         IFS=','; while read -r project local_dir repo hash license name brief description; do
-            if [[ $project == $project_name ]]; then
+            if [[ $project == "$project_name" ]]; then
                 CACHE_PROJECT_INFO[0]=$project
                 CACHE_PROJECT_INFO[1]="$RepoDir/${local_dir}"
                 CACHE_PROJECT_INFO[2]="$VEnvDir/$project-venv"
@@ -174,14 +175,26 @@ function project_info() {
 # '$PROJECTS_DB' variable, which contains the project database
 # loaded by the 'load_projects_db' function.
 #
-function is_valid_project() {
+is_valid_project() {
     local project=$1
     grep -q "^$project," <<< "$PROJECTS_DB"
 }
 
-function is_project_installed() {
+# Checks if a project is installed locally
+#
+# Usage:
+#   is_project_installed <project>
+#
+# Parameters:
+#   - project: the name of the project to check
+#
+# This function checks if the given project is installed by
+# verifying that its local directory exists.
+#
+is_project_installed() {
     local project=$1
-    local project_dir=$(project_info "$project" @local_dir)
-    [[ -n "$project_dir" &&  -e "$project_dir" ]]
+    local project_dir
+    project_dir=$(project_info "$project" @local_dir)
+    [[ -n "$project_dir" &&  -d "$project_dir" ]]
 }
 
