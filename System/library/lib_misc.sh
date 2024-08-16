@@ -3,7 +3,7 @@
 # Brief   : Contains helper functions, e.g: printing status, checking cmds..
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : May 5, 2023
-# Repo    : https://github.com/martin-rizzo/AIAppManager
+# Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
@@ -53,7 +53,9 @@ YELLOW='\e[1;33m'
 BLUE='\e[1;34m'
 CYAN='\e[1;36m'
 DEFAULT_COLOR='\e[0m'
-PADDING='  '
+
+# GLOBAL INTERNAL VAR
+LIB_LOG_PADDING='   '
 
 
 # Prints messages with different formats. If the format is not specified,
@@ -72,24 +74,24 @@ PADDING='  '
 #
 #   message - The message to be printed.
 #
-function echox() {
+echox() {
     local format=$1
     local prefix suffix
     case "$format" in
-        check) prefix="${PADDING}${GREEN}\xE2\x9C\x94${DEFAULT_COLOR} " ; suffix="${DEFAULT_COLOR}" ; shift ;;
-        wait ) prefix="${PADDING}${YELLOW}- " ; suffix="...${DEFAULT_COLOR}" ; shift ;;
-        info ) prefix="${PADDING}${CYAN}\xE2\x93\x98  " ; suffix="${DEFAULT_COLOR}" ; shift ;;
-        warn ) prefix="${PADDING}${YELLOW}! " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        check) prefix="${LIB_LOG_PADDING}${GREEN}\xE2\x9C\x94${DEFAULT_COLOR} " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        wait ) prefix="${LIB_LOG_PADDING}${YELLOW}- " ; suffix="...${DEFAULT_COLOR}" ; shift ;;
+        info ) prefix="${LIB_LOG_PADDING}${CYAN}\xE2\x93\x98  " ; suffix="${DEFAULT_COLOR}" ; shift ;;
+        warn ) prefix="${LIB_LOG_PADDING}${YELLOW}! " ; suffix="${DEFAULT_COLOR}" ; shift ;;
         alert) prefix="${CYAN}[${YELLOW}WARNING${CYAN}]${DEFAULT_COLOR}: " ; suffix="${DEFAULT_COLOR}" ; shift ;;
         error) prefix="${CYAN}[${RED}ERROR${CYAN}]${DEFAULT_COLOR}: " ; suffix="${DEFAULT_COLOR}" ; shift ;;
         #fatal) prefix='\033[7;31m \xE2\x9C\x96\xE2\x9C\x96 ' ; suffix='\033[0m' ; shift ;;
     esac
-    echo -e -n "$prefix"
-    echo    -n "$@"
-    echo -e    "$suffix"
+    echo -e -n "$prefix" >&2
+    echo    -n "$@"      >&2
+    echo -e    "$suffix" >&2
 }
 
-function bug_report() {
+bug_report() {
     local bug_message=$1
     echo
     echox error "$bug_message"
@@ -98,26 +100,45 @@ function bug_report() {
     exit 1
 }
 
-function fatal_error() {
-    local fatal_message=$1
-    echo
-    echox error "$fatal_message"
+# Display a regular message
+message() {
+    local message=$1
+    if [[ "$message" ]]; then
+        echo -e "${LIB_LOG_PADDING}${GREEN}>${DEFAULT_COLOR} $message" >&2
+    else
+        echo >&2
+    fi
+}
+
+# Display an error message
+error() {
+    local message=$1
+    echo -e "${CYAN}[${RED}ERROR${CYAN}]${RED} $message${DEFAULT_COLOR}" >&2
+}
+
+# Displays a fatal error message and exits the script with status code 1
+fatal_error() {
+    local error_message=$1
+    error "$error_message"
     shift
-    for comment in "$@"; do
-        echox info  "$comment"
+
+    # print informational messages, if any were provided
+    while [[ $# -gt 0 ]]; do
+        local info_message=$1
+        echo -e " ${CYAN}\xF0\x9F\x9B\x88 $info_message${DEFAULT_COLOR}" >&2
+        shift
     done
-    echo
     exit 1
 }
 
 # Function to display an error message for unrecognized arguments
 # $@ - all the arguments that were not recognized
-function error_unrecognized_arguments() {
+error_unrecognized_arguments() {
   echo "Error: Unrecognized argument(s): $@"
   exit 1
 }
 
-function trim() {
+trim() {
     local input=$1
     input="${input#"${input%%[![:space:]]*}"}"
     input="${input%"${input##*[![:space:]]}"}"
@@ -138,7 +159,7 @@ function trim() {
 # Example:
 #   clone_repository "https://github.com/example/my-project.git" "abcd1234" "/path/to/my-project"
 #
-function clone_repository() {
+clone_repository() {
     local repo=$1 hash=$2 directory=$3
     local previous_dir=$(pwd)
 
@@ -170,7 +191,7 @@ function clone_repository() {
 # Example:
 #   enforce_constraints --no-project --no-params "$@"
 #
-function enforce_constraints() {
+enforce_constraints() {
     while true; do
       case "$1" in
 
@@ -218,7 +239,7 @@ function enforce_constraints() {
 # Arguments:
 #   - command: the name of the command to be checked.
 #
-function require_system_command() {
+require_system_command() {
     for cmd in "$@"; do
         if ! command -v $cmd &> /dev/null; then
             echox error "$cmd is not available!"
@@ -250,7 +271,7 @@ function require_system_command() {
 #       echo "Operation cancelled."
 #   fi
 #
-function ask_confirmation() {
+ask_confirmation() {
     local message=$1 alert=$2
 
     if [[ $alert ]]; then
