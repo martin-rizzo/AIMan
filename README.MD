@@ -1,13 +1,23 @@
+<h1 align="center">AIMan</h1>
+<p align="center">A simple package manager for open-source AI projects.</p>
+<p align="center">
+<img alt="Platform" src="https://img.shields.io/badge/platform-Fedora 40-33F">
+<img alt="Language" src="https://img.shields.io/badge/language-bash script-22E">
+<img alt="License"  src="https://img.shields.io/github/license/martin-rizzo/AIMan?color=11D">
+<img alt="Last"     src="https://img.shields.io/github/last-commit/martin-rizzo/AIMan">
+<img alt="Version"  src="https://img.shields.io/github/v/tag/martin-rizzo/AIMan?label=version">
+</p>
+
+<!--
+# QuickSambaServer
+-->
+
 # AIMan
 
-AIMan is a basic package management system for open source AI projects. It is
-entirely programmed in bash scripts and designed to be easily installed on any
-Linux system without the need for additional languages or dependencies.
-
-Please note that this project is currently in its early stages and may not be
-actively maintained for a long time. It is primarily developed as a personal
-tool but is also published on GitHub for source control, bug reporting,
-feature requests, and potential pull requests.
+**AIMan** is a simple package manager designed for managing open-source AI
+projects. It’s implemented entirely with Bash scripts, making it easy to set
+up. Although it was developed for personal use, the code is available on GitHub
+in case someone else finds it useful.
 
 
 ## AI projects supported
@@ -87,10 +97,10 @@ To launch any AI project after the initial installation, follow these steps:
 
 ## Contributing
 
-As mentioned earlier, this project is experimental and primarily developed
-for personal use. However, contributions, bug reports, and pull requests are
-welcome. If you encounter any issues or have suggestions, please open an
-issue on the GitHub repository.
+This project was developed solely for personal needs. While contributions, bug
+reports, and pull requests are welcome, please note that AIMan has only been
+tested on Fedora 40. It may not be compatible with other systems or suitable
+for production environments.
 
 
 ## Lincense

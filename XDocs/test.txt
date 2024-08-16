@@ -12,7 +12,7 @@
   >  echo umask 007 >> .bashrc
   >  AIMan/aiman add2path && source ~/.bashrc
   >  aiman setdir @models /mnt/disk_x/marti/AI-Models/
-  >  aiman setdir @output /var/tmp/aiman-output/
+  >  aiman setdir @output /var/tmp/aiman_output/
   >  aiman webui.install
   >  aiman webui.launch
 
@@ -28,7 +28,7 @@
   >  echo umask 007 >> .bashrc
   >  AIMan/aiman add2path && source ~/.bashrc
   >  aiman setdir @models /mnt/disk_x/marti/AI-Models/
-  >  aiman setdir @output /var/tmp/aiman-output/
+  >  aiman setdir @output /var/tmp/aiman_output/
   >  aiman webui.install
   >  aiman webui.launch
 
