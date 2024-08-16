@@ -9,10 +9,8 @@
 </p>
 
 <!--
-# QuickSambaServer
--->
-
 # AIMan
+-->
 
 **AIMan** is a simple package manager designed for managing open-source AI
 projects. It’s implemented entirely with Bash scripts, making it easy to set
