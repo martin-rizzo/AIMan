@@ -3,7 +3,7 @@
 # Brief   : Utilities for managing Python virtual environments
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Apr 11, 2024
-# Repo    : https://github.com/martin-rizzo/AIAppManager
+# Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #                                    AIMan
@@ -189,7 +189,7 @@ virtual_python() {
     fi
 
     [[ -z "$venv" ]] && \
-    fatal_error "The venv parameter is not previously defined"
+        fatal_error "The venv parameter is not previously defined"
 
     # ensure that the virtual environment is initialized
     ensure_venv_is_initialized "$venv"

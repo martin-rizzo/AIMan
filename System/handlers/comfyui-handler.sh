@@ -71,8 +71,8 @@ function install() {
 
     #--------------- INSTALLING ----------------#
     cd "$project_dir" || \
-    fatal_error "The project directory '$project_dir' should exist and be accessible" \
-                "This is an internal error likely caused by a mistake in the code"
+        fatal_error "The project directory '$project_dir' should exist and be accessible" \
+                    "This is an internal error likely caused by a mistake in the code"
 
     ## NVIDIA GPU
     virtual_python !pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
@@ -83,8 +83,8 @@ function install() {
 
     #------------ ADD CUSTOM NODES -------------#
     cd "$project_dir/custom_nodes" || \
-    fatal_error "The directory '$project_dir/custom_nodes' should exist and be accessible" \
-                "This is an internal error likely caused by a mistake in the code"
+        fatal_error "The directory '$project_dir/custom_nodes' should exist and be accessible" \
+                    "This is an internal error likely caused by a mistake in the code"
 
     ## Advanced CLIP Text Encode
     # nodes that allows for more control over the way prompt weighting should be interpreted

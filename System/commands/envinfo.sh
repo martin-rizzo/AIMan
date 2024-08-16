@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #shellcheck disable=SC2154
-# File    : commands/info.sh
+# File    : commands/envinfo.sh
 # Brief   : Command to display details about each project
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : May 5, 2023
+# Date    : Aug 16, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -45,31 +45,56 @@ Examples:
   $ScriptName webui.$CommandName
 "
 
+# Función para obtener la versión de un paquete
+get_version() {
+    local packages=$1 package_name=$2
+    local version
+    version=$(grep "$package_name" <<< "$packages" | awk '{print $2}')
+    if [[ ! "$version" ]]; then
+        echo "--"
+        return 1
+    else
+        version=$(echo "$version" | sed -E 's/^(.*\..*)\..*$/\1/')
+        echo "$version"
+        return 0
+    fi
+}
+
+
 function run_command() {
     enforce_constraints --project --no-params "$@"
+    local venv python_ver
 
     # load the project information requerida by the user
     # (once the information is loaded, '@' can be used as the project name)
     project_info "$ProjectName"
 
-    # display all relevant project information
-    echo
-    project_info @ " ID          : " @id
-    project_info @ " Name        : " @name
-    project_info @ " Summary     : " @brief
-    project_info @ " License     : " @license
-    project_info @ " Repository  : " @repo
-    project_info @ " Hash/Tag    : " @hash
-    project_info @ " Directory   : " @local_dir
-    project_info @ " Virt.enviro : " @local_venv
-    project_info @ " Script      : " @script
-    project_info @ " Description : " @description
-    echo
-
-    if is_project_installed @; then
-        LIB_LOG_PADDING=' '
-        message "The project is already installed."
-        message "Run '$ScriptName $ProjectName.envinfo' to get details on the versions of python libraries used."
-        message
+    # solamente puede mostrar informacion del entorno virtual
+    # de aquellos proyectos que ya se encuentran instalados
+    if ! is_project_installed @; then
+        fatal_error "El proyecto '$ProjectName' no esta instalado." \
+                    "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
     fi
+
+    # activando el entorno virtual
+    venv=$(project_info @ @local_venv)
+    virtual_python "$venv"
+
+    # extrayendo versiones de cada paquete
+    packages=$(virtual_python !pip list)
+    python_ver=$(virtual_python --version)
+    python_ver=$(get_version "$python_ver" Python)
+    cuda_ver=$(get_version "$packages" cuda-runtime)
+    torch_ver=$(get_version "$packages" '^torch[^a-zA-Z0-9]')
+    bab_ver=$(get_version "$packages" '^bitsandbytes[^a-zA-Z0-9]')
+
+    LIB_LOG_PADDING=' '
+    message
+    message "venv dir.    : $venv"
+    message "Python       : $python_ver"
+    message "Cuda         : $cuda_ver"
+    message "Torch        : $torch_ver"
+    message "Bitsandbytes : $bab_ver"
+    message
+    #echo "$packages"
 }

@@ -46,7 +46,8 @@ Commands:
     launch     Launch projects that have been previously installed.
     remove     Remove installed projects.
     list       List all available projects.
-    info       Display details about a project.
+    info       Display details about the project.
+    envinfo    Display current python library versions for the project.
     console    Execute commands within the python virtual environment.
     setdir     Change the directories used for input and output.
     add2path   Add aiman to the user's PATH.
