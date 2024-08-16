@@ -1,7 +1,7 @@
 
 
-    770 ~/aiman/Models  -> ./Storage/Models
-    770 ~/aiman/Output  -> ./Storage/Output
+    770 ~/aiman/Models  -> ./Storage/Models    /mnt/disk_x/marti/AI-Models/
+    770 ~/aiman/Output  -> ./Storage/Output    /var/tmp/aiman_output/
     750 ~/aiman/Repos
     770 ~/aiman/Storage
           +- Models

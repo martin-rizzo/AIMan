@@ -150,6 +150,7 @@ while [ $# -gt 0 ]; do
             # set it to the current parameter
             if [[ ! $CommandName ]]; then
                 CommandName=$param
+                shift
                 continue
             fi
             has_parameters=true
@@ -172,7 +173,7 @@ if [[ "$CommandName" == *'.'* ]]; then
     fi
 # if the user does not use the dot format,
 # then the first parameter of the command is the project name
-else
+elif is_valid_project "${CommandParams[0]}"; then
     ProjectName=${CommandParams[0]}
     CommandParams=( "${CommandParams[@]:1}" )
 fi
