@@ -69,7 +69,7 @@ function run_command() {
     if is_project_installed @; then
         LIB_LOG_PADDING=' '
         message "The project is already installed."
-        message "Run '$ScriptName $ProjectName.envinfo' to get details on the versions of python libraries used."
+        message "Run '$ScriptName $ProjectName.venv' to get details on the versions of python libraries used."
         message
     fi
 }

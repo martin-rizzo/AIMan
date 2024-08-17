@@ -47,7 +47,7 @@ Commands:
     remove     Remove installed projects.
     list       List all available projects.
     info       Display details about the project.
-    envinfo    Display current python library versions for the project.
+    venv       Display environment info and library versions for the project.
     console    Execute commands within the python virtual environment.
     setdir     Change the directories used for input and output.
     add2path   Add aiman to the user's PATH.
@@ -74,7 +74,7 @@ OutputDir="$MainDir/Output"
 RepoDir="$MainDir/Repos"
 StorageDir="$MainDir/Storage"
 SystemDir="$MainDir/System"
-VEnvDir="$MainDir/VEnv"
+VENV_DIR="$MainDir/VEnv"
 
 # Code directories
 CommandsDir="$SystemDir/commands"
@@ -99,7 +99,7 @@ ModelsVaeDir="$ModelsDir/VAE"
 
 # Compatible version of Python to be used in the virtual environment.
 # ATTENTION: The version must be 3.10 or lower!
-CompatiblePython='python3.10'
+COMPATIBLE_PYTHON='python3.10'
 
 # The project port (leave empty to use default port)
 # Requires root rights for ports < 1024

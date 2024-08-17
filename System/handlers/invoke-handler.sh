@@ -39,6 +39,7 @@ function install() {
 
     require_system_command git
     require_storage_dir
+    require_venv "$venv"
 
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"

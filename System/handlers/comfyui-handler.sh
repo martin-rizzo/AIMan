@@ -51,6 +51,7 @@ function install() {
 
     require_system_command git
     require_storage_dir
+    require_venv "$venv"
 
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir/models"
@@ -66,8 +67,6 @@ function install() {
     require_symlink 'output'        "$OutputDir"                --convert-dir
 
 
-    # iniciar la secuencia de comandos dentro del entorno virtual
-    virtual_python "$venv"
 
     #--------------- INSTALLING ----------------#
     cd "$project_dir" || \
@@ -128,6 +127,8 @@ function launch() {
     shift 4
     local port_message=''
 
+    require_venv "$venv"
+
     #------------- COMFYUI OPTIONS -------------#
     local options=()
     if [[ $ProjectPort ]]; then
@@ -139,6 +140,6 @@ function launch() {
     cd "$project_dir"
     echox check "changed working directory to $PWD"
     echox wait  "launching ComfyUI application $port_message"
-    virtual_python "$venv" main.py "${options[@]}" "$@"
+    virtual_python main.py "${options[@]}" "$@"
 }
 

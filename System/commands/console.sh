@@ -63,7 +63,7 @@ function run_command() {
     local venv=$(project_info @ @local_venv)
 
     # ensure the virtual environment directory is valid
-    [[ -n "$venv" && "$venv" == "$VEnvDir/"* ]] \
+    [[ -n "$venv" && "$venv" == "$VENV_DIR/"* ]] \
       || bug_report "\$venv seems to contain an invalid path: '$venv'"
 
 

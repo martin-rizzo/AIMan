@@ -59,13 +59,13 @@ function run_command() {
     fi
 
     # verify that the internal state is correct
-    [[ -n "$RepoDir" && -n "$VEnvDir" ]] \
-      || bug_report "Something is not right, \$RepoDir or \$VEnvDir appear to be empty"
+    [[ -n "$RepoDir" && -n "$VENV_DIR" ]] \
+      || bug_report "Something is not right, \$RepoDir or \$VENV_DIR appear to be empty"
 
     # ensure the directories are valid
     [[ "$project_dir" == "$RepoDir/"* ]] \
       || bug_report "\$project_dir seems to contain an invalid path: $project_dir"
-    [[ "$venv" == "$VEnvDir/"* ]] \
+    [[ "$venv" == "$VENV_DIR/"* ]] \
       || bug_report "\$venv seems to contain an invalid path: $venv"
 
     # ask for user confirmation before removing the project

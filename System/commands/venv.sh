@@ -31,7 +31,7 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-#shellcheck disable=SC2034 # '$Help' es utilizado por el script principal
+#shellcheck disable=SC2034 # '$Help' is used by the main script
 Help="
 Usage: $ScriptName PROJECT.$CommandName
 
@@ -45,22 +45,6 @@ Examples:
   $ScriptName webui.$CommandName
 "
 
-# Función para obtener la versión de un paquete
-get_version() {
-    local packages=$1 package_name=$2
-    local version
-    version=$(grep "$package_name" <<< "$packages" | awk '{print $2}')
-    if [[ ! "$version" ]]; then
-        echo "--"
-        return 1
-    else
-        version=$(echo "$version" | sed -E 's/^(.*\..*)\..*$/\1/')
-        echo "$version"
-        return 0
-    fi
-}
-
-
 function run_command() {
     enforce_constraints --project --no-params "$@"
     local venv python_ver
@@ -69,18 +53,18 @@ function run_command() {
     # (once the information is loaded, '@' can be used as the project name)
     project_info "$ProjectName"
 
-    # solamente puede mostrar informacion del entorno virtual
-    # de aquellos proyectos que ya se encuentran instalados
+    # only display information about the virtual environment
+    # of projects that are already installed
     if ! is_project_installed @; then
         fatal_error "El proyecto '$ProjectName' no esta instalado." \
                     "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
     fi
 
-    # activando el entorno virtual
+    # activate the virtual environment
     venv=$(project_info @ @local_venv)
-    virtual_python "$venv"
+    require_venv "$venv" quiet
 
-    # extrayendo versiones de cada paquete
+    # extract versions of each package
     packages=$(virtual_python !pip list)
     python_ver=$(virtual_python --version)
     python_ver=$(get_version "$python_ver" Python)
@@ -90,11 +74,46 @@ function run_command() {
 
     LIB_LOG_PADDING=' '
     message
-    message "venv dir.    : $venv"
-    message "Python       : $python_ver"
-    message "Cuda         : $cuda_ver"
-    message "Torch        : $torch_ver"
-    message "Bitsandbytes : $bab_ver"
+    message "VENV Directory: $venv"
+    message "Python        : $python_ver"
+    message "Cuda          : $cuda_ver"
+    message "Torch         : $torch_ver"
+    message "Bitsandbytes  : $bab_ver"
     message
     #echo "$packages"
+}
+
+
+#-------------------------------- HELPERS ----------------------------------#
+
+# Gets the version of a package
+#
+# Usage:
+#   get_version <packages> <package_name>
+#
+# Parameters:
+#   - packages: a string containing the output of `pip list`.
+#   - package_name: the name of the package to get the version for.
+#
+# Returns:
+#   - The version of the package if found, otherwise "--".
+#   - The exit status is 0 if the package is found, otherwise 1.
+#
+# Example:
+#   packages=$(virtual_python !pip list)
+#   python_ver=$(get_version "$packages" Python)
+#
+get_version() {
+    local packages=$1 package_name=$2
+    local version
+    version=$(grep "$package_name" <<< "$packages" | awk '{print $2}')
+    if [[ ! "$version" ]]; then
+        echo "--"
+        return 1
+    else
+        # extract the major and minor version numbers
+        version=$(echo "$version" | sed -E 's/^(.*\..*)\..*$/\1/')
+        echo "$version"
+        return 0
+    fi
 }
