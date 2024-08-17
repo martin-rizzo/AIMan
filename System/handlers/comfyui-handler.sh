@@ -68,7 +68,8 @@ function install() {
 
 
 
-    #--------------- INSTALLING ----------------#
+    #-------------------- INSTALLING ---------------------#
+
     cd "$project_dir" || \
         fatal_error "The project directory '$project_dir' should exist and be accessible" \
                     "This is an internal error likely caused by a mistake in the code"
@@ -80,10 +81,30 @@ function install() {
     virtual_python !pip install -r requirements.txt
    #virtual_python !pip install accelerate
 
-    #------------ ADD CUSTOM NODES -------------#
+    #----------------- ADD CUSTOM NODES ------------------#
+
     cd "$project_dir/custom_nodes" || \
         fatal_error "The directory '$project_dir/custom_nodes' should exist and be accessible" \
                     "This is an internal error likely caused by a mistake in the code"
+
+    ## ComfyUI Manager
+    # management functions to install, remove, disable, and enable custom nodes
+    git clone https://github.com/ltdrdata/ComfyUI-Manager
+    virtual_python !pip install -r ComfyUI-Manager/requirements.txt
+
+    ## Crystools
+    # a powerful set of tools, include performance graphs below the queue prompt
+    git clone https://github.com/crystian/ComfyUI-Crystools
+    virtual_python !pip install -r ComfyUI-Crystools/requirements.txt
+
+    ## Comfyroll Studio
+    # many util nodes including prompt nodes, pipe nodes, text nodes, logic nodes, ...
+    git clone https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes
+
+    ## Extra Models
+    # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
+    git clone https://github.com/city96/ComfyUI_ExtraModels
+    virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
 
     ## Advanced CLIP Text Encode
     # nodes that allows for more control over the way prompt weighting should be interpreted
@@ -93,20 +114,11 @@ function install() {
     # nodes that allows for more control and flexibility over noise to do
     #git clone https://github.com/BlenderNeko/ComfyUI_Noise
 
-    ## A Powerful Set of Tools
-    # include performance graphs below the queue prompt
-    git clone https://github.com/crystian/ComfyUI-Crystools
-    virtual_python !pip install -r ComfyUI-Crystools/requirements.txt
+    ## ComfyUI Inspire Pack [Error: No module named 'cv2']
+    # powerful set of tools providing nodes for enhancing the functionality of ComfyUI
+    #git clone https://github.com/ltdrdata/ComfyUI-Inspire-Pack
+    #virtual_python !pip install -r ComfyUI-Inspire-Pack/requirements.txt
 
-    ## Another Powerful Set of Tools
-    # provides various extension nodes for enhancing the functionality of ComfyUI
-    git clone https://github.com/ltdrdata/ComfyUI-Inspire-Pack
-    virtual_python !pip install -r ComfyUI-Inspire-Pack/requirements.txt
-
-    ## Extra Models for ComfyUI
-    # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
-    git clone https://github.com/city96/ComfyUI_ExtraModels
-    virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
 }
 
 #============================================================================
@@ -132,12 +144,14 @@ function launch() {
     #------------- COMFYUI OPTIONS -------------#
     local options=()
     if [[ $ProjectPort ]]; then
-        options+=( --port $ProjectPort )
+        options+=( --port "$ProjectPort" )
         port_message="on port $ProjectPort"
     fi
 
     #---------------- LAUNCHING ----------------#
-    cd "$project_dir"
+    cd "$project_dir" \
+     || fatal_error "The project directory '$project_dir' does not exist or is inaccessible." \
+                    "This could be an internal error caused by a mistake in the code."
     echox check "changed working directory to $PWD"
     echox wait  "launching ComfyUI application $port_message"
     virtual_python main.py "${options[@]}" "$@"
