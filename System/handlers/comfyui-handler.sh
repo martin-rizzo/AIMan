@@ -74,11 +74,15 @@ function install() {
         fatal_error "The project directory '$project_dir' should exist and be accessible" \
                     "This is an internal error likely caused by a mistake in the code"
 
+    ## Update PIP
+    virtual_python !pip install --upgrade pip
+
     ## NVIDIA GPU
-    virtual_python !pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+    virtual_python !pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
+    virtual_python !pip install bitsandbytes
    #virtual_python !pip install accelerate
 
     #----------------- ADD CUSTOM NODES ------------------#
@@ -137,12 +141,11 @@ function install() {
 function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
-    local port_message=''
 
     require_venv "$venv"
 
     #------------- COMFYUI OPTIONS -------------#
-    local options=()
+    local options=() port_message=''
     if [[ $ProjectPort ]]; then
         options+=( --port "$ProjectPort" )
         port_message="on port $ProjectPort"
@@ -152,8 +155,7 @@ function launch() {
     cd "$project_dir" \
      || fatal_error "The project directory '$project_dir' does not exist or is inaccessible." \
                     "This could be an internal error caused by a mistake in the code."
-    echox check "changed working directory to $PWD"
-    echox wait  "launching ComfyUI application $port_message"
+    message "changed working directory to $PWD"
+    message "launching ComfyUI application $port_message"
     virtual_python main.py "${options[@]}" "$@"
 }
-
