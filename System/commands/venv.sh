@@ -31,18 +31,18 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-#shellcheck disable=SC2034 # '$Help' is used by the main script
-Help="
-Usage: $ScriptName PROJECT.$CommandName
+#shellcheck disable=SC2034 # '$HELP' is used by the main script
+HELP="
+Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME
 
   Display details about a project.
 
 Options:
   -h, --help     show command help
-  -V, --version  show $ScriptName version and exit
+  -V, --version  show $SCRIPT_NAME version and exit
 
 Examples:
-  $ScriptName webui.$CommandName
+  $SCRIPT_NAME webui.$COMMAND_NAME
 "
 
 function run_command() {
@@ -51,13 +51,13 @@ function run_command() {
 
     # load the project information requerida by the user
     # (once the information is loaded, '@' can be used as the project name)
-    project_info "$ProjectName"
+    project_info "$PROJECT_NAME"
 
     # only display information about the virtual environment
     # of projects that are already installed
     if ! is_project_installed @; then
-        fatal_error "El proyecto '$ProjectName' no esta instalado." \
-                    "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
+        fatal_error "El proyecto '$PROJECT_NAME' no esta instalado." \
+                    "To install the project '$PROJECT_NAME', use: ./$SCRIPT_NAME $PROJECT_NAME.install"
     fi
 
     # activate the virtual environment

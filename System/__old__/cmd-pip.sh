@@ -30,25 +30,25 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName $CommandName <pip-parameters>
+HELP="
+Usage: $SCRIPT_NAME $COMMAND_NAME <pip-parameters>
 
 install, manage, and remove Python packages using 'pip'.
 
 Options:
     -h, --help     show command help
-    -V, --version  show '$ScriptName' version and exit
+    -V, --version  show '$SCRIPT_NAME' version and exit
 
 Examples:
-    $ScriptName $CommandName install <package>
-    $ScriptName $CommandName uninstall <package>
-    $ScriptName $CommandName show <package>
-    $ScriptName $CommandName freeze > requirements.txt
+    $SCRIPT_NAME $COMMAND_NAME install <package>
+    $SCRIPT_NAME $COMMAND_NAME uninstall <package>
+    $SCRIPT_NAME $COMMAND_NAME show <package>
+    $SCRIPT_NAME $COMMAND_NAME freeze > requirements.txt
 "
 
 function run_command() {
 
     require_virtual_python
-    virtual_python !pip "${CommandParams[@]}"
+    virtual_python !pip "${COMMAND_PARAMS[@]}"
 
 }

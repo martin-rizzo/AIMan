@@ -31,8 +31,8 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName PROJECT.$CommandName [VERSION]
+HELP="
+Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME [VERSION]
 
   Install a project on the local directory.
 
@@ -42,10 +42,10 @@ Arguments:
 
 Options:
   -h, --help     show command help
-  -V, --version  show $ScriptName version and exit
+  -V, --version  show $SCRIPT_NAME version and exit
 
 Description:
-  The '$CommandName' command downloads the specified project from GitHub and
+  The '$COMMAND_NAME' command downloads the specified project from GitHub and
   sets it up on your local system. If no version is provided, the version
   that has been tested as the most stable release will be installed.
 
@@ -53,8 +53,8 @@ Description:
   start the project.
 
 Examples:
-    $ScriptName forge.$CommandName
-    $ScriptName webui.$CommandName v1.8.0
+    $SCRIPT_NAME forge.$COMMAND_NAME
+    $SCRIPT_NAME webui.$COMMAND_NAME v1.8.0
 "
 
 function run_command() {
@@ -63,13 +63,13 @@ function run_command() {
 
     # select the project to extract information from,
     # it will be referenced with '@' from now on
-    project_info "$ProjectName"
+    project_info "$PROJECT_NAME"
 
     # if the project is already installed,
     # terminate with an error and display information to the user
     if is_project_installed @; then
-      fatal_error "Project '$ProjectName' is already installed." \
-        "If $ProjectName is incorrectly installed, you can try uninstalling it with '$ScriptName $ProjectName.remove' and installing it again."
+      fatal_error "Project '$PROJECT_NAME' is already installed." \
+        "If $PROJECT_NAME is incorrectly installed, you can try uninstalling it with '$SCRIPT_NAME $PROJECT_NAME.remove' and installing it again."
     fi
 
     # extract project information.
@@ -82,7 +82,7 @@ function run_command() {
 
     # ensure the project script file exists
     [[ -f $handler ]] \
-     || bug_report "AIMan does not have a handler for the '$ProjectName' project"
+     || bug_report "AIMan does not have a handler for the '$PROJECT_NAME' project"
 
     # if the user provided a version, use it to override the hash
     if [[ $version ]]; then

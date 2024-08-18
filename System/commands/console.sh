@@ -30,8 +30,8 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName PROJECT.$CommandName [COMMAND] [PARAMETERS...]
+HELP="
+Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME [COMMAND] [PARAMETERS...]
 
   Execute commands within the Python virtual environment of the specified project.
   If no command is provided, it will open an interactive console to enter commands.
@@ -42,13 +42,13 @@ Arguments:
 
 Options:
   -h, --help        show this help
-  -V, --version     show $ScriptName version and exit
+  -V, --version     show $SCRIPT_NAME version and exit
 
 Examples:
-  $ScriptName webui.$CommandName
+  $SCRIPT_NAME webui.$COMMAND_NAME
       Open an interactive console for the 'webui' project
 
-  $ScriptName webui.$CommandName pip upgrade
+  $SCRIPT_NAME webui.$COMMAND_NAME pip upgrade
       Run the 'pip upgrade' command within the 'webui' project's virtual environment
 "
 
@@ -58,7 +58,7 @@ function run_command() {
     shift
 
     # get project information
-    project_info "$ProjectName"
+    project_info "$PROJECT_NAME"
     local project_dir=$(project_info @ @local_dir)
     local venv=$(project_info @ @local_venv)
 

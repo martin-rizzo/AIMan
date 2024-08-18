@@ -30,8 +30,8 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName verify [ELEMENT]
+HELP="
+Usage: $SCRIPT_NAME verify [ELEMENT]
 
 Verify the specified ELEMENT for consistency.
 
@@ -44,25 +44,25 @@ Options:
     -V, --version  Print version information and exit.
 
 Examples:
-    $ScriptName verify @models   # verify the models directory
-    $ScriptName verify @output   # verify the output directory
+    $SCRIPT_NAME verify @models   # verify the models directory
+    $SCRIPT_NAME verify @output   # verify the output directory
 "
 
 
 function __verify_models() {
-    local models_dir=$(print_short_dir "$ModelsDir")
-    local models_real_dir=$(print_short_dir readlink "$ModelsDir")
+    local models_dir=$(print_short_dir "$MODELS_DIR")
+    local models_real_dir=$(print_short_dir readlink "$MODELS_DIR")
 
     require_storage_directory
     echo "  @models: $models_dir"
     echo "      ---> $models_real_dir"
     echo
-    report_subdirectories "$ModelsDir" "$ValidModelsSubdirs"
+    report_subdirectories "$MODELS_DIR" "$ValidModelsSubdirs"
 }
 
 function __verify_output() {
-    local output_dir=$(print_short_dir "$OutputDir")
-    local output_real_dir=$(print_short_dir readlink "$OutputDir")
+    local output_dir=$(print_short_dir "$OUTPUT_DIR")
+    local output_real_dir=$(print_short_dir readlink "$OUTPUT_DIR")
 
     require_storage_directory
     echo "  @output: $output_dir"

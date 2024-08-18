@@ -197,29 +197,29 @@ enforce_constraints() {
 
         # validate if a project name must be provided
         --project)
-            [[ $ProjectName ]] \
-             || fatal_error "The '$CommandName' command requires a project name to be provided" \
-                "If the project is 'webui', you can run: ./$ScriptName webui.$CommandName" \
-                "To see a list of available projects, use: ./$ScriptName list"
+            [[ $PROJECT_NAME ]] \
+             || fatal_error "The '$COMMAND_NAME' command requires a project name to be provided" \
+                "If the project is 'webui', you can run: ./$SCRIPT_NAME webui.$COMMAND_NAME" \
+                "To see a list of available projects, use: ./$SCRIPT_NAME list"
             ;;
         # validate if a project name must NOT be provided
         --no-project)
-            [[ -z $ProjectName ]] \
-             || fatal_error "The '$CommandName' command cannot be applied to any project" \
-                "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
+            [[ -z $PROJECT_NAME ]] \
+             || fatal_error "The '$COMMAND_NAME' command cannot be applied to any project" \
+                "For more information on how to use the '$COMMAND_NAME' command, please try: ./$SCRIPT_NAME $COMMAND_NAME --help"
             ;;
         # validate if the project should already be installed
         --installed)
-            is_project_installed "$ProjectName" \
-             || fatal_error "The project '$ProjectName' is not installed" \
-                "To check which projects are installed, use: ./$ScriptName list" \
-                "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
+            is_project_installed "$PROJECT_NAME" \
+             || fatal_error "The project '$PROJECT_NAME' is not installed" \
+                "To check which projects are installed, use: ./$SCRIPT_NAME list" \
+                "To install the project '$PROJECT_NAME', use: ./$SCRIPT_NAME $PROJECT_NAME.install"
             ;;
         # validate if NO additional parameters must be provided
         --no-params)
             [[ -n "$*" ]] \
              || fatal_error "The parameter $1 is unknown" \
-                "For more information on how to use the '$CommandName' command, please try: ./$ScriptName $CommandName --help"
+                "For more information on how to use the '$COMMAND_NAME' command, please try: ./$SCRIPT_NAME $COMMAND_NAME --help"
             ;;
         # any other type of option is unknown
         --*)

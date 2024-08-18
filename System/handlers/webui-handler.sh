@@ -44,8 +44,8 @@ EXPORT_FOR_4CHAN='false'      # Save copy of large images as JPG (true/false)
 #   - hash        : the Git commit hash or tag to use
 #
 # Globals:
-#   - ProjectName : the short name of the project, e.g. "webui"
-#   - ProjectPort : the port where the app should listen, empty = default
+#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+#   - PROJECT_PORT : the port where the app should listen, empty = default
 #
 function install() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
@@ -59,8 +59,8 @@ function install() {
     echox wait "cloning repository"
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir"
-    require_symlink 'outputs'    "$OutputDir"                  --convert-dir
-    require_symlink 'styles.csv' "$ModelsStylesDir/styles.csv" --move-file
+    require_symlink 'outputs'    "$OUTPUT_DIR"                  --convert-dir
+    require_symlink 'styles.csv' "$MODELS_STYLES_DIR/styles.csv" --move-file
 
     #--------------- EXTENSIONS ----------------#
     cd "$project_dir/extensions"
@@ -97,8 +97,8 @@ function install() {
 #   - hash        : the Git commit hash or tag to use
 #
 # Globals:
-#   - ProjectName : the short name of the project, e.g. "webui"
-#   - ProjectPort : the port where the app should listen, empty = default
+#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+#   - PROJECT_PORT : the port where the app should listen, empty = default
 #
 function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
@@ -112,9 +112,9 @@ function launch() {
     options+=( --theme dark  )   # start in dark mode
 
     # listering in the custom port
-    if [[ $ProjectPort ]]; then
-        options+=( --port $ProjectPort )
-        port_message="on port $ProjectPort"
+    if [[ $PROJECT_PORT ]]; then
+        options+=( --port $PROJECT_PORT )
+        port_message="on port $PROJECT_PORT"
     fi
 
     #-------------- OPTIMIZATIONS --------------#
@@ -125,18 +125,18 @@ function launch() {
 
     #------ REDIRECT DIRECTORIES TO AIMAN ------#
     local directories=()
-    directories+=( --codeformer-models-path "$ModelsCodeformerDir"      )
-    directories+=( --embeddings-dir         "$ModelsEmbeddingsDir"      )
-    directories+=( --esrgan-models-path     "$ModelsEsrganDir"          )
-    directories+=( --gfpgan-models-path     "$ModelsGfpganDir"          )
-    directories+=( --hypernetwork-dir       "$ModelsHypernetworkDir"    )
-    directories+=( --ldsr-models-path       "$ModelsLdsrDir"            )
-    directories+=( --lora-dir               "$ModelsLoraDir"            )
-    directories+=( --realesrgan-models-path "$ModelsRealesrganDir"      )
-    directories+=( --scunet-models-path     "$ModelsScunetDir"          )
-    directories+=( --ckpt-dir               "$ModelsStableDiffusionDir" )
-    directories+=( --swinir-models-path     "$ModelsSwinirDir"          )
-    directories+=( --vae-dir                "$ModelsVaeDir"             )
+    directories+=( --codeformer-models-path "$MODELS_CODEFORMER_DIR"      )
+    directories+=( --embeddings-dir         "$MODELS_EMBEDDINGS_DIR"      )
+    directories+=( --esrgan-models-path     "$MODELS_ESRGAN_DIR"          )
+    directories+=( --gfpgan-models-path     "$MODELS_GFPGAN_DIR"          )
+    directories+=( --hypernetwork-dir       "$MODELS_HYPERNETWORK_DIR"    )
+    directories+=( --ldsr-models-path       "$MODELS_LDSR_DIR"            )
+    directories+=( --lora-dir               "$MODELS_LORA_DIR"            )
+    directories+=( --realesrgan-models-path "$MODELS_REALESRGAN_DIR"      )
+    directories+=( --scunet-models-path     "$MODELS_SCUNET_DIR"          )
+    directories+=( --ckpt-dir               "$MODELS_STABLEDIFFUSION_DIR" )
+    directories+=( --swinir-models-path     "$MODELS_SWINIR_DIR"          )
+    directories+=( --vae-dir                "$MODELS_VAE_DIR"             )
 
     cd "$project_dir"
     echox check "changed working directory to $PWD"

@@ -42,8 +42,8 @@
 #   - hash        : the Git commit hash or tag to use
 #
 # Globals:
-#   - ProjectName : the short name of the project, e.g. "webui"
-#   - ProjectPort : the port where the app should listen, empty = default
+#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+#   - PROJECT_PORT : the port where the app should listen, empty = default
 #
 function install() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
@@ -55,16 +55,16 @@ function install() {
 
     clone_repository "$repo" "$hash" "$project_dir"
     cd "$project_dir/models"
-    require_symlink 'checkpoints'   "$ModelsStableDiffusionDir" --convert-dir
-    require_symlink 'controlnet'    "$ModelsControlnetDir"      --convert-dir
-    require_symlink 'embeddings'    "$ModelsEmbeddingsDir"      --convert-dir
-    require_symlink 'hypernetworks' "$ModelsHypernetworkDir"    --convert-dir
-    require_symlink 'loras'         "$ModelsLoraDir"            --convert-dir
-    require_symlink 'pixart'        "$ModelsDir/PixArt"         --convert-dir
-    require_symlink 't5'            "$ModelsDir/t5"             --convert-dir
-    require_symlink 'vae'           "$ModelsVaeDir"             --convert-dir
+    require_symlink 'checkpoints'   "$MODELS_STABLEDIFFUSION_DIR" --convert-dir
+    require_symlink 'controlnet'    "$MODELS_CONTROLNET_DIR"      --convert-dir
+    require_symlink 'embeddings'    "$MODELS_EMBEDDINGS_DIR"      --convert-dir
+    require_symlink 'hypernetworks' "$MODELS_HYPERNETWORK_DIR"    --convert-dir
+    require_symlink 'loras'         "$MODELS_LORA_DIR"            --convert-dir
+    require_symlink 'pixart'        "$MODELS_DIR/PixArt"         --convert-dir
+    require_symlink 't5'            "$MODELS_DIR/t5"             --convert-dir
+    require_symlink 'vae'           "$MODELS_VAE_DIR"             --convert-dir
     cd "$project_dir"
-    require_symlink 'output'        "$OutputDir"                --convert-dir
+    require_symlink 'output'        "$OUTPUT_DIR"                --convert-dir
 
 
 
@@ -135,8 +135,8 @@ function install() {
 #   - hash        : the Git commit hash or tag to use
 #
 # Globals:
-#   - ProjectName : the short name of the project, e.g. "webui"
-#   - ProjectPort : the port where the app should listen, empty = default
+#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+#   - PROJECT_PORT : the port where the app should listen, empty = default
 #
 function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
@@ -146,9 +146,9 @@ function launch() {
 
     #------------- COMFYUI OPTIONS -------------#
     local options=() port_message=''
-    if [[ $ProjectPort ]]; then
-        options+=( --port "$ProjectPort" )
-        port_message="on port $ProjectPort"
+    if [[ $PROJECT_PORT ]]; then
+        options+=( --port "$PROJECT_PORT" )
+        port_message="on port $PROJECT_PORT"
     fi
 
     #---------------- LAUNCHING ----------------#

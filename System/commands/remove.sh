@@ -30,53 +30,53 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName PROJECT.$CommandName
+HELP="
+Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME
 
   Remove a project from the aiman directory.
 
 Options:
   -h, --help     show command help
-  -V, --version  show $ScriptName version and exit
+  -V, --version  show $SCRIPT_NAME version and exit
 
 Examples:
-  $ScriptName comfyui.$CommandName
+  $SCRIPT_NAME comfyui.$COMMAND_NAME
 "
 
 function run_command() {
     enforce_constraints --project "$@"
 
     # get project information
-    project_info "$ProjectName"
+    project_info "$PROJECT_NAME"
     local project_dir=$(project_info @ @local_dir)
     local venv=$(project_info @ @local_venv)
 
     # ensure the project is installed before attempting to remove it
-    if ! is_project_installed "$ProjectName"; then
-        fatal_error "The project '$ProjectName' is not installed" \
-            "To check which projects are installed, use: ./$ScriptName list" \
-            "To install the project '$ProjectName', use: ./$ScriptName $ProjectName.install"
+    if ! is_project_installed "$PROJECT_NAME"; then
+        fatal_error "The project '$PROJECT_NAME' is not installed" \
+            "To check which projects are installed, use: ./$SCRIPT_NAME list" \
+            "To install the project '$PROJECT_NAME', use: ./$SCRIPT_NAME $PROJECT_NAME.install"
     fi
 
     # verify that the internal state is correct
-    [[ -n "$RepoDir" && -n "$VENV_DIR" ]] \
-      || bug_report "Something is not right, \$RepoDir or \$VENV_DIR appear to be empty"
+    [[ -n "$REPOS_DIR" && -n "$VENV_DIR" ]] \
+      || bug_report "Something is not right, \$REPOS_DIR or \$VENV_DIR appear to be empty"
 
     # ensure the directories are valid
-    [[ "$project_dir" == "$RepoDir/"* ]] \
+    [[ "$project_dir" == "$REPOS_DIR/"* ]] \
       || bug_report "\$project_dir seems to contain an invalid path: $project_dir"
     [[ "$venv" == "$VENV_DIR/"* ]] \
       || bug_report "\$venv seems to contain an invalid path: $venv"
 
     # ask for user confirmation before removing the project
     if ask_confirmation \
-          "Are you sure you want to remove the project '$ProjectName'?" \
+          "Are you sure you want to remove the project '$PROJECT_NAME'?" \
           "While AIMan always tries to keep the models and data isolated and protected from each installation, it's possible that application-specific extensions or configurations may be removed."
     then
         # if the user confirmed, proceed to remove the project
-        echox wait "Removing project '$ProjectName'"
+        echox wait "Removing project '$PROJECT_NAME'"
         rm -rf "$project_dir" "$venv"
-        echox check "Project '$ProjectName' has been removed."
+        echox check "Project '$PROJECT_NAME' has been removed."
     else
         # if the user cancelled, do nothing
         echox "Project removal cancelled."

@@ -30,18 +30,18 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName python <action>
+HELP="
+Usage: $SCRIPT_NAME python <action>
 
 manage the python virtual environment
 
 Options:
     -h, --help     show command help
-    -V, --version  show $ScriptName version and exit
+    -V, --version  show $SCRIPT_NAME version and exit
 
 Examples:
-    $ScriptName python activate
-    $ScriptName python destroy
+    $SCRIPT_NAME python activate
+    $SCRIPT_NAME python destroy
 "
 
 

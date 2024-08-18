@@ -31,13 +31,13 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-ScriptName=${BASH_SOURCE[0]##*/}
-ScriptVer=0.2      # script version
-ProjectName=       # name of the project on which the command will be executed
-CommandName=       # name of the command to be executed
-CommandParams=()   # parameters for the command
-Help="
-Usage: $ScriptName [PROJECT.]COMMAND [param1] [param2] ... [paramN]
+SCRIPT_NAME=${BASH_SOURCE[0]##*/}
+SCRIPT_VER=0.2      # script version
+PROJECT_NAME=       # name of the project on which the command will be executed
+COMMAND_NAME=       # name of the command to be executed
+COMMAND_PARAMS=()   # parameters for the command
+HELP="
+Usage: $SCRIPT_NAME [PROJECT.]COMMAND [param1] [param2] ... [paramN]
 
   A command-line package manager for AI open source projects.
 
@@ -52,68 +52,63 @@ Commands:
     setdir     Change the directories used for input and output.
     add2path   Add aiman to the user's PATH.
 
-Run '$ScriptName COMMAND --help' for more information on a command.
+Run '$SCRIPT_NAME COMMAND --help' for more information on a command.
 
 Options:
     -h, --help      Show command help
-    -V, --version   Show $ScriptName version and exit
+    -V, --version   Show $SCRIPT_NAME version and exit
 
 Examples:
-    $ScriptName list
-    $ScriptName webui.info
-    $ScriptName webui.console pip upgrade
-    $ScriptName launch --help
+    $SCRIPT_NAME list
+    $SCRIPT_NAME webui.info
+    $SCRIPT_NAME webui.console pip upgrade
+    $SCRIPT_NAME launch --help
 "
 
-# Determine the main directory containing the script
-MainDir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
+# Determine the base directory containing the script
+BASE_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 
-# Define directory paths relative to the main directory
-ModelsDir="$MainDir/Models"
-OutputDir="$MainDir/Output"
-RepoDir="$MainDir/Repos"
-StorageDir="$MainDir/Storage"
-SystemDir="$MainDir/System"
-VENV_DIR="$MainDir/VEnv"
+# Define directory paths relative to the base directory
+MODELS_DIR="$BASE_DIR/Models"
+OUTPUT_DIR="$BASE_DIR/Output"
+REPOS_DIR="$BASE_DIR/Repos"
+STORAGE_DIR="$BASE_DIR/Storage"
+SYSTEM_DIR="$BASE_DIR/System"
+VENV_DIR="$BASE_DIR/VEnv"
 
 # Code directories
-CommandsDir="$SystemDir/commands"
-HandlersDir="$SystemDir/handlers"
+COMMANDS_DIR="$SYSTEM_DIR/commands"
+HANDLERS_DIR="$SYSTEM_DIR/handlers"
 
 # Models directories
-ModelsCodeformerDir="$ModelsDir/Codeformer"
-ModelsControlnetDir="$ModelsDir/ControlNet"
-ModelsEmbeddingsDir="$ModelsDir/embeddings"
-ModelsEsrganDir="$ModelsDir/ESRGAN"
-ModelsGfpganDir="$ModelsDir/GFPGAN"
-ModelsHypernetworkDir="$ModelsDir/hypernetworks"
-ModelsLdsrDir="$ModelsDir/LDSR"
-ModelsLoraDir="$ModelsDir/Lora"
-ModelsRealesrganDir="$ModelsDir/RealESRGAN"
-ModelsScunetDir="$ModelsDir/ScuNET"
-ModelsStableDiffusionDir="$ModelsDir/Stable-diffusion"
-ModelsStylesDir="$ModelsDir/styles"
-ModelsSwinirDir="$ModelsDir/SwinIR"
-ModelsVaeDir="$ModelsDir/VAE"
+MODELS_CODEFORMER_DIR="$MODELS_DIR/Codeformer"
+MODELS_CONTROLNET_DIR="$MODELS_DIR/ControlNet"
+MODELS_EMBEDDINGS_DIR="$MODELS_DIR/embeddings"
+MODELS_ESRGAN_DIR="$MODELS_DIR/ESRGAN"
+MODELS_GFPGAN_DIR="$MODELS_DIR/GFPGAN"
+MODELS_HYPERNETWORK_DIR="$MODELS_DIR/hypernetworks"
+MODELS_LDSR_DIR="$MODELS_DIR/LDSR"
+MODELS_LORA_DIR="$MODELS_DIR/Lora"
+MODELS_REALESRGAN_DIR="$MODELS_DIR/RealESRGAN"
+MODELS_SCUNET_DIR="$MODELS_DIR/ScuNET"
+MODELS_STABLEDIFFUSION_DIR="$MODELS_DIR/Stable-diffusion"
+MODELS_STYLES_DIR="$MODELS_DIR/styles"
+MODELS_SWINIR_DIR="$MODELS_DIR/SwinIR"
+MODELS_VAE_DIR="$MODELS_DIR/VAE"
 
-
-# Compatible version of Python to be used in the virtual environment.
-# ATTENTION: The version must be 3.10 or lower!
+# The compatible version of Python to be used within the virtual environment.
+# This version should ensure that all projects function correctly. It will be
+# used as a fallback when the system Python version is incompatible with the
+# project being installed.
 COMPATIBLE_PYTHON='python3.10'
 
 # The project port (leave empty to use default port)
-# Requires root rights for ports < 1024
-ProjectPort=8086
-
-## Subdirectories of /Modules (a string with space-separated names)
-#ValidModelsSubdirs='
-#BLIP Codeformer deepbooru embeddings ESRGAN GFPGAN hypernetworks karlo
-#LDSR Lora RealESRGAN ScuNET Stable-diffusion SwinIR VAE VAE-approx'
-
+# ATTENTION: Requires root rights for ports < 1024
+PROJECT_PORT=8086
 
 function is_valid_command() {
     local command_name=$1
-    [[ -f "$CommandsDir/$command_name.sh" ]]
+    [[ -f "$COMMANDS_DIR/$command_name.sh" ]]
 }
 
 #===========================================================================#
@@ -121,15 +116,15 @@ function is_valid_command() {
 #===========================================================================#
 
 # change to the main directory
-cd "$MainDir" &> /dev/null ||
-    fatal_error "Unable to change directory to $MainDir"
+cd "$BASE_DIR" &> /dev/null ||
+    fatal_error "Unable to change directory to $BASE_DIR"
 
 # load helper functions
 source 'System/library/lib_directories.sh'
 source 'System/library/lib_misc.sh'
 source 'System/library/lib_projectdb.sh'
 source 'System/library/lib_venv.sh'
-load_project_db "$HandlersDir/00_database.csv"
+load_project_db "$HANDLERS_DIR/00_database.csv"
 
 # loop through all the script parameters
 show_help=false
@@ -149,72 +144,72 @@ while [ $# -gt 0 ]; do
         *)
             # if the command name todavia no fue seteado,
             # set it to the current parameter
-            if [[ ! $CommandName ]]; then
-                CommandName=$param
+            if [[ ! $COMMAND_NAME ]]; then
+                COMMAND_NAME=$param
                 shift
                 continue
             fi
             has_parameters=true
             ;;
     esac
-    CommandParams+=( "$param" )
+    COMMAND_PARAMS+=( "$param" )
     shift
 done
 
 # if the user uses the dot format (e.g., "webui.install"),
 # extract the project name and command name from the command string
-if [[ "$CommandName" == *'.'* ]]; then
-    ProjectName=${CommandName%%.*}
-    CommandName=${CommandName#*.}
+if [[ "$COMMAND_NAME" == *'.'* ]]; then
+    PROJECT_NAME=${COMMAND_NAME%%.*}
+    COMMAND_NAME=${COMMAND_NAME#*.}
     # correct if the user mistakenly reverses the command and project name
-    if is_valid_command "$ProjectName" ; then
-        temp=$ProjectName
-        ProjectName=$CommandName
-        CommandName=$temp
+    if is_valid_command "$PROJECT_NAME" ; then
+        temp=$PROJECT_NAME
+        PROJECT_NAME=$COMMAND_NAME
+        COMMAND_NAME=$temp
     fi
 # if the user does not use the dot format,
 # then the first parameter of the command is the project name
-elif is_valid_project "${CommandParams[0]}"; then
-    ProjectName=${CommandParams[0]}
-    CommandParams=( "${CommandParams[@]:1}" )
+elif is_valid_project "${COMMAND_PARAMS[0]}"; then
+    PROJECT_NAME=${COMMAND_PARAMS[0]}
+    COMMAND_PARAMS=( "${COMMAND_PARAMS[@]:1}" )
 fi
 
 # if the user did not enter any command, show the general help and exit
-if [[ -z "$CommandName" ]]; then
-    echo "$Help"
+if [[ -z "$COMMAND_NAME" ]]; then
+    echo "$HELP"
     exit 0
 fi
 
 # validate the command name
-if ! is_valid_command "$CommandName" ; then
-    fatal_error "Invalid command - $CommandName" \
-                "To view the available commands, please run: ./$ScriptName --help"
+if ! is_valid_command "$COMMAND_NAME" ; then
+    fatal_error "Invalid command - $COMMAND_NAME" \
+                "To view the available commands, please run: ./$SCRIPT_NAME --help"
 fi
 
 # validate the project name
-if [[ "$ProjectName" ]] && ! is_valid_project "$ProjectName"; then
-    fatal_error "Project '$ProjectName' is not recognized" \
-                "To see a list of available projects, use: ./$ScriptName list"
+if [[ "$PROJECT_NAME" ]] && ! is_valid_project "$PROJECT_NAME"; then
+    fatal_error "Project '$PROJECT_NAME' is not recognized" \
+                "To see a list of available projects, use: ./$SCRIPT_NAME list"
 fi
 
 #----------------------------------------------------------------------------
 # load the selected command's code
 #shellcheck disable=1090
-source "$CommandsDir/$CommandName.sh"
+source "$COMMANDS_DIR/$COMMAND_NAME.sh"
 
 # check if the user requested help or version for the loaded command.
 # both '--help' and '--version' must have been entered without any extra params
 if [[ $show_help == true && $has_parameters == false ]]; then
-    echo "$Help"
+    echo "$HELP"
     exit 0
 fi
 if [[ $show_version == true && $has_parameters == false ]]; then
-    echo $ScriptVer
+    echo "$SCRIPT_VER"
     exit 0
 fi
 
 # run the command code
-run_command "${CommandParams[@]}"
+run_command "${COMMAND_PARAMS[@]}"
 exit $?
 
 

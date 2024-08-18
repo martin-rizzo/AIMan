@@ -30,8 +30,8 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName PROJECT.$CommandName [PARAMETERS...]
+HELP="
+Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME [PARAMETERS...]
 
   Launch a project that has been previously installed.
 
@@ -41,10 +41,10 @@ Arguments:
 
 Options:
   -h, --help     show command help
-  -V, --version  show $ScriptName version and exit
+  -V, --version  show $SCRIPT_NAME version and exit
 
 Description:
-  The '$CommandName' command starts the specified project on your local system.
+  The '$COMMAND_NAME' command starts the specified project on your local system.
   Any extra parameters you provide will be passed directly to the project's
   launch script or executable.
 
@@ -57,15 +57,15 @@ Description:
   in the project's documentation.
 
 Examples:
-  $ScriptName forge.$CommandName
-  $ScriptName webui.$CommandName
+  $SCRIPT_NAME forge.$COMMAND_NAME
+  $SCRIPT_NAME webui.$COMMAND_NAME
 "
 
 function run_command() {
     enforce_constraints --project --installed "$@"
 
     # retrieve project information
-    project_info "$ProjectName"
+    project_info "$PROJECT_NAME"
     local project_dir=$(project_info @ @local_dir)
     local venv=$(project_info @ @local_venv)
     local repo=$(project_info @ @repo)
@@ -74,7 +74,7 @@ function run_command() {
 
     # ensure the project script file exists
     [[ -f $script ]] \
-     || bug_report "AIMan does not have a script for the '$ProjectName' project"
+     || bug_report "AIMan does not have a script for the '$PROJECT_NAME' project"
 
     source "$script"
     launch "$venv" "$project_dir" "$repo" "$hash" "$@"

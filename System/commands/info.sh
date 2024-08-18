@@ -31,18 +31,18 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-#shellcheck disable=SC2034 # '$Help' es utilizado por el script principal
-Help="
-Usage: $ScriptName PROJECT.$CommandName
+#shellcheck disable=SC2034 # '$HELP' es utilizado por el script principal
+HELP="
+Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME
 
   Display details about a project.
 
 Options:
   -h, --help     show command help
-  -V, --version  show $ScriptName version and exit
+  -V, --version  show $SCRIPT_NAME version and exit
 
 Examples:
-  $ScriptName webui.$CommandName
+  $SCRIPT_NAME webui.$COMMAND_NAME
 "
 
 function run_command() {
@@ -50,7 +50,7 @@ function run_command() {
 
     # load the project information requerida by the user
     # (once the information is loaded, '@' can be used as the project name)
-    project_info "$ProjectName"
+    project_info "$PROJECT_NAME"
 
     # display all relevant project information
     echo
@@ -69,7 +69,7 @@ function run_command() {
     if is_project_installed @; then
         LIB_LOG_PADDING=' '
         message "The project is already installed."
-        message "Run '$ScriptName $ProjectName.venv' to get details on the versions of python libraries used."
+        message "Run '$SCRIPT_NAME $PROJECT_NAME.venv' to get details on the versions of python libraries used."
         message
     fi
 }

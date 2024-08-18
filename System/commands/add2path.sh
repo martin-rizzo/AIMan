@@ -30,23 +30,23 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName add2path
+HELP="
+Usage: $SCRIPT_NAME add2path
 
-  Add $ScriptName script to the user's PATH, allowing you to run it from any directory.
+  Add $SCRIPT_NAME script to the user's PATH, allowing you to run it from any directory.
 
 Options:
   -h, --help     show command help
-  -V, --version  show $ScriptName version and exit
+  -V, --version  show $SCRIPT_NAME version and exit
 
 Examples:
-  $ScriptName add2path
+  $SCRIPT_NAME add2path
 "
 
 function run_command() {
     enforce_constraints --no-project --no-params "$@"
     local file=~/.bashrc
-    local line_to_add='export PATH=$PATH'":$MainDir"
+    local line_to_add='export PATH=$PATH'":$BASE_DIR"
 
     # check if the ~/.bashrc file exists
     if [[ ! -e $file ]]; then

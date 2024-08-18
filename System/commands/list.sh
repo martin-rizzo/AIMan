@@ -30,17 +30,17 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName $CommandName
+HELP="
+Usage: $SCRIPT_NAME $COMMAND_NAME
 
   List all available projects.
 
 Options:
   -h, --help     show command help
-  -V, --version  show $ScriptName version and exit
+  -V, --version  show $SCRIPT_NAME version and exit
 
 Examples:
-  $ScriptName $CommandName
+  $SCRIPT_NAME $COMMAND_NAME
 "
 
 function run_command() {

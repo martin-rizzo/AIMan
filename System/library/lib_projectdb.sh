@@ -126,9 +126,9 @@ project_info() {
         IFS=','; while read -r project local_dir repo hash license name brief description; do
             if [[ $project == "$project_name" ]]; then
                 CACHE_PROJECT_INFO[0]=$project
-                CACHE_PROJECT_INFO[1]="$RepoDir/${local_dir}"
+                CACHE_PROJECT_INFO[1]="$REPOS_DIR/${local_dir}"
                 CACHE_PROJECT_INFO[2]="$VENV_DIR/$project-venv"
-                CACHE_PROJECT_INFO[3]="$HandlersDir/$project-handler.sh"
+                CACHE_PROJECT_INFO[3]="$HANDLERS_DIR/$project-handler.sh"
                 CACHE_PROJECT_INFO[4]=$repo
                 CACHE_PROJECT_INFO[5]=$hash
                 CACHE_PROJECT_INFO[6]=$license

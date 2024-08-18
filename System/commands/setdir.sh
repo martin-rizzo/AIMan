@@ -30,8 +30,8 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-Help="
-Usage: $ScriptName setdir <ELEMENT> <DIRECTORY>
+HELP="
+Usage: $SCRIPT_NAME setdir <ELEMENT> <DIRECTORY>
 
   Change the directories used for input and output by the AI projects.
 
@@ -44,24 +44,25 @@ Options:
   -V, --version  Print version information and exit.
 
 Examples:
-  $ScriptName setdir @models /mnt/the-ai-disk/models
-  $ScriptName setdir @output /var/output
+  $SCRIPT_NAME setdir @models /mnt/the-ai-disk/models
+  $SCRIPT_NAME setdir @output /var/output
 "
 
 function run_command() {
     enforce_constraints --no-project "$@"
     local element=$1 directory=$2
-    local old_directory
 
     require_storage_dir
     if [[ $element == '@models' ]]; then
-        old_directory=$(readlink "$MainDir/Models")
-        modify_storage_link "$MainDir/Models" "$directory"
-        modify_storage_link "$HOME/Models"    "$directory" "$old_directory"
+        #local old_directory
+        #old_directory=$(readlink "$MODELS_DIR")
+        modify_storage_link  "$MODELS_DIR"   "$directory"
+        #modify_storage_link "$HOME/Models" "$directory" "$old_directory"
     fi
     if [[ $element == '@output' ]]; then
-        old_directory=$(readlink "$MainDir/Output")
-        modify_storage_link "$MainDir/Output" "$directory"
-        modify_storage_link "$HOME/Output"    "$directory" "$old_directory"
+        #local old_directory
+        #old_directory=$(readlink "$OUTPUT_DIR")
+        modify_storage_link  "$OUTPUT_DIR"   "$directory"
+        #modify_storage_link "$HOME/Output" "$directory" "$old_directory"
     fi
 }
