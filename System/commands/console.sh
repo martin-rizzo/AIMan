@@ -72,7 +72,7 @@ function run_command() {
     if [[ $command ]]; then
         virtual_python "$venv" "!$command" "$@"
     else
-        cd "$project_dir"
+        safe_chdir "$project_dir"
         virtual_python "$venv" CONSOLE
     fi
 }

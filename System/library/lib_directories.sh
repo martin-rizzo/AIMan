@@ -246,11 +246,11 @@ function require_storage_dir() {
     require_directory "$STORAGE_DIR"
     require_directory "$STORAGE_DIR/Models"
     require_directory "$STORAGE_DIR/Output"
-    cd "$BASE_DIR"
+    safe_chdir "$BASE_DIR"
     require_symlink 'Models' "$STORAGE_DIR/Models"
     require_symlink 'Output' "$STORAGE_DIR/Output"
     if [[ $USER =~ ^aiman[0-9]?$ ]]; then
-        cd "$HOME"
+        safe_chdir "$HOME"
         require_symlink 'Models' "$STORAGE_DIR/Models"
         require_symlink 'Output' "$STORAGE_DIR/Output"
     fi

@@ -31,26 +31,26 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #
-# TODO: reajustar lso formatos de 'echox' para igualarlos a otros proyectos
-# TODO: completar el resumen de cada funcion en la lista de abajo
-#
 # FUNCTIONS:
-#   - echox()                  : Prints messages with different formats.
-#   - bug_report()             : ???
-#   - fatal_error()            : ???
-#   - error_unrecognized_arg() : Displays error message for unrecognized argument.
-#   - trim()                   : ???
-#   - clone_repository()       : Clones a Git repository.
-#   - enforce_constraints()    : Enforce command constraints
-#   - require_system_command() : Checks whether a given command is available in the system.
-#   - ask_confirmation()       : Prompts the user for confirmation.
+#   >echox()                  : Prints messages in different formats.
+#   >message()                : Displays a regular message.
+#   >error()                  : Displays an error message.
+#   >fatal_error()            : Displays a fatal error message and stops the script.
+#   >error_unrecognized_arg() : Displays an error for an unrecognized argument and stops the script.
+#   >bug_report()             : Displays a fatal error caused by a bug and stops the script.
+#   >trim()                   : Removes leading and trailing whitespace from a string.
+#   >clone_repository()       : Clones a Git repository.
+#   >enforce_constraints()    : Enforces command constraints.
+#   >require_system_command() : Checks if a given command is available on the system.
+#   >ask_confirmation()       : Prompts the user for confirmation.
+#   >safe_chdir()             : Changes directory safely, stopping the script if unsuccessful.
 #
 #-----------------------------------------------------------------------------
 
 RED='\e[1;31m'
 GREEN='\e[1;32m'
 YELLOW='\e[1;33m'
-BLUE='\e[1;34m'
+#BLUE='\e[1;34m'
 CYAN='\e[1;36m'
 DEFAULT_COLOR='\e[0m'
 
@@ -88,16 +88,7 @@ echox() {
     esac
     echo -e -n "$prefix" >&2
     echo    -n "$@"      >&2
-    echo -e    "$suffix" >&2
-}
-
-bug_report() {
-    local bug_message=$1
-    echo
-    echox error "$bug_message"
-    echox info  "This is likely caused by a bug in the code. Please report this issue to a developer so he or she can investigate and fix it."
-    echo
-    exit 1
+    echo    -e "$suffix" >&2
 }
 
 # Display a regular message
@@ -134,8 +125,17 @@ fatal_error() {
 # Function to display an error message for unrecognized arguments
 # $@ - all the arguments that were not recognized
 error_unrecognized_arguments() {
-  echo "Error: Unrecognized argument(s): $@"
+  echo "Error: Unrecognized argument(s):" "$@"
   exit 1
+}
+
+bug_report() {
+    local bug_message=$1
+    echo
+    echox error "$bug_message"
+    echox info  "This is likely caused by a bug in the code. Please report this issue to a developer so he or she can investigate and fix it."
+    echo
+    exit 1
 }
 
 trim() {
@@ -161,8 +161,9 @@ trim() {
 #
 clone_repository() {
     local repo=$1 hash=$2 directory=$3
-    local previous_dir=$(pwd)
+    local previous_dir
 
+    previous_dir=$(pwd)
     if [[ $repo == '' || $hash == '' || $directory == '' ]]; then
         fatal_error "Missing required parameters in clone_repository() function." \
                     "This is an internal error likely caused by a mistake in the code"
@@ -170,10 +171,10 @@ clone_repository() {
 
     git clone "$repo" "$directory"
     if [[ $hash != '' && $hash != '-' ]]; then
-        cd "$directory"
+        safe_chdir "$directory"
         git reset --hard "$hash"
     fi
-    cd "$previous_dir" &> /dev/null
+    safe_chdir "$previous_dir"
 }
 
 # Enforces command constraints and exits script with a fatal error if not met.
@@ -281,4 +282,25 @@ ask_confirmation() {
     echox
     read -p " - $message (y/n): " -n 1 -r ; echo ; echo
     [[ $REPLY =~ ^[Yy]$ ]]
+}
+
+# Attempts to change directory.
+#
+# Usage:
+#   safe_chdir <target_dir>
+#
+# Parameters:
+#   - target_dir: the directory to change to.
+#
+# Example:
+#   safe_chdir "/home/user/documents"
+#
+safe_chdir() {
+    local target_dir="$1"
+
+    if [ ! -d "$target_dir" ]; then
+        fatal_error "Failed to change directory to '$target_dir', the directory does not exist." \
+                    "This could be due to a bug or a special situation that wasn't accounted for when generating the code."
+    fi
+    safe_chdir "$target_dir"
 }

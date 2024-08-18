@@ -57,12 +57,12 @@ function install() {
     require_venv "$venv"
 
     clone_repository "$repo" "$hash" "$project_dir"
-    cd "$project_dir"
+    safe_chdir "$project_dir"
     require_symlink 'outputs'    "$OUTPUT_DIR"                  --convert-dir
     require_symlink 'styles.csv' "$MODELS_STYLES_DIR/styles.csv" --move-file
 
     #--------------- EXTENSIONS ----------------#
-    cd "$project_dir/extensions"
+    safe_chdir "$project_dir/extensions"
     echox wait "installing 'One Button Prompt' extension"
     git clone https://github.com/AIrjen/OneButtonPrompt > /dev/null
     echox wait "installing 'Test my prompt!' extension"
@@ -81,7 +81,7 @@ function install() {
     echo "$config_file"
 
     #--------------- INSTALLING ----------------#
-    cd "$project_dir"
+    safe_chdir "$project_dir"
     echox wait "installing 'Stable Diffusion FORGE'"
     virtual_python launch.py --no-download-sd-model --exit
 }
@@ -157,7 +157,7 @@ function launch() {
     directories+=( --swinir-models-path     "$MODELS_SWINIR_DIR"          )
     directories+=( --vae-dir                "$MODELS_VAE_DIR"             )
 
-    cd "$project_dir"
+    safe_chdir "$project_dir"
     echox check "changed working directory to $PWD"
     echox wait  "launching SD WebUI Forge application $port_message"
     virtual_python launch.py "${options[@]}" "${optimizations[@]}" "${directories[@]}" "$@"

@@ -42,7 +42,7 @@ function install() {
     require_venv "$venv"
 
     clone_repository "$repo" "$hash" "$project_dir"
-    cd "$project_dir"
+    safe_chdir "$project_dir"
 
     # export INVOKEAI_ROOT=$project_dir
 

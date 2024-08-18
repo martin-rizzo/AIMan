@@ -54,7 +54,7 @@ function install() {
     require_venv "$venv"
 
     clone_repository "$repo" "$hash" "$project_dir"
-    cd "$project_dir/models"
+    safe_chdir "$project_dir/models"
     require_symlink 'checkpoints'   "$MODELS_STABLEDIFFUSION_DIR" --convert-dir
     require_symlink 'controlnet'    "$MODELS_CONTROLNET_DIR"      --convert-dir
     require_symlink 'embeddings'    "$MODELS_EMBEDDINGS_DIR"      --convert-dir
@@ -63,16 +63,14 @@ function install() {
     require_symlink 'pixart'        "$MODELS_DIR/PixArt"         --convert-dir
     require_symlink 't5'            "$MODELS_DIR/t5"             --convert-dir
     require_symlink 'vae'           "$MODELS_VAE_DIR"             --convert-dir
-    cd "$project_dir"
+    safe_chdir "$project_dir"
     require_symlink 'output'        "$OUTPUT_DIR"                --convert-dir
 
 
 
     #-------------------- INSTALLING ---------------------#
 
-    cd "$project_dir" || \
-        fatal_error "The project directory '$project_dir' should exist and be accessible" \
-                    "This is an internal error likely caused by a mistake in the code"
+    safe_chdir "$project_dir"
 
     ## Update PIP
     virtual_python !pip install --upgrade pip
@@ -87,9 +85,7 @@ function install() {
 
     #----------------- ADD CUSTOM NODES ------------------#
 
-    cd "$project_dir/custom_nodes" || \
-        fatal_error "The directory '$project_dir/custom_nodes' should exist and be accessible" \
-                    "This is an internal error likely caused by a mistake in the code"
+    safe_chdir "$project_dir/custom_nodes"
 
     ## ComfyUI Manager
     # management functions to install, remove, disable, and enable custom nodes
@@ -152,9 +148,7 @@ function launch() {
     fi
 
     #---------------- LAUNCHING ----------------#
-    cd "$project_dir" \
-     || fatal_error "The project directory '$project_dir' does not exist or is inaccessible." \
-                    "This could be an internal error caused by a mistake in the code."
+    safe_chdir "$project_dir"
     message "changed working directory to $PWD"
     message "launching ComfyUI application $port_message"
     virtual_python main.py "${options[@]}" "$@"
