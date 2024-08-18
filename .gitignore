@@ -2,10 +2,18 @@
 #-----------------------------
 # System and temporary files
 #
-.kate-swp
+#> backup and temporary files
+*.kate-swp
+*.bak
+*.swp
+*~
+#> system and user-specific files
+._*
 .DS_Store
 .profile
 Thumbs.db
+#> log files
+*.log
 
 
 #-----------------------------
