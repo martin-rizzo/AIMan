@@ -116,7 +116,11 @@ function is_valid_command() {
 #===========================================================================#
 
 # change to the main directory
-safe_chdir "$BASE_DIR"
+if ! cd "$BASE_DIR" &>/dev/null ; then
+    echo " ERROR: Failed to change directory to '$BASE_DIR'."
+    echo " This could be due to user '$USER' does not have sufficient permissions to access the directory."
+    exit 1
+fi
 
 # load helper functions
 source 'System/library/lib_directories.sh'

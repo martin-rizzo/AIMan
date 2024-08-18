@@ -242,7 +242,7 @@ enforce_constraints() {
 #
 require_system_command() {
     for cmd in "$@"; do
-        if ! command -v $cmd &> /dev/null; then
+        if ! command -v "$cmd" &> /dev/null; then
             echox error "$cmd is not available!"
             echox "   you can try to install '$cmd' using the following command:"
             echox "   > sudo dnf install $cmd\n"
@@ -302,5 +302,8 @@ safe_chdir() {
         fatal_error "Failed to change directory to '$target_dir', the directory does not exist." \
                     "This could be due to a bug or a special situation that wasn't accounted for when generating the code."
     fi
-    safe_chdir "$target_dir"
+    cd "$target_dir" &>/dev/null ||
+        fatal_error "Failed to change directory to '$target_dir'."\
+                    "This could be due to a bug or a special situation that wasn't accounted for when generating the code." \
+                    "It's also possible that user '$USER' does not have sufficient permissions to access the directory."
 }
