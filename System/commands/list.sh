@@ -45,9 +45,9 @@ Examples:
 
 function run_command() {
     enforce_constraints --no-project --no-params "$@"
-    local projects=$(project_info all)
-    local brief mark
+    local projects brief mark
 
+    projects=$(project_info all)
     echo
     IFS=' '; for project in $projects; do
         is_project_installed "$project" && mark='>' || mark=' '

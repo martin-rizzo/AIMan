@@ -65,10 +65,24 @@ declare -a CACHE_PROJECT_INFO
 #
 load_project_db() {
     local csv_db_file=$1
+    # iterate through each line of the CSV file
+    IFS=','; while read -r project_handler dir repo hash license name brief description; do
 
-    # iterate through each line of the CSV file and trim the content
-    IFS=','; while read -r project dir repo hash license name brief description; do
+        # if a colon is present in the project name,
+        # separate the project and handler
+        if [[ $project_handler =~ ':' ]]; then
+            project=${project_handler%%:*}  # <- extract everything before the first ':'
+            handler=${project_handler##*:}  # <- extract everything after the last ':'
+        # if no colon is present, project and handler are the same
+        else
+            project=$project_handler
+            handler=$project_handler
+        fi
+
+        # trim all strings to prevent potential errors.
+        # (unexpected spaces could lead to incorrect comparisons or file path issues)
         project=$(trim "$project")
+        handler=$(trim "$handler")
         dir=$(trim "$dir")
         repo=$(trim "$repo")
         hash=$(trim "$hash")
@@ -76,9 +90,10 @@ load_project_db() {
         name=$(trim "$name")
         brief=$(trim "$brief")
         description=$(trim "$description")
+
         # append the trimmed project information to the $PROJECTS_DB variable
         PROJECTS_LIST+="$project "
-        PROJECTS_DB+="$project,$dir,$repo,$hash,$license,$name,$brief,$description
+        PROJECTS_DB+="$project,$handler,$dir,$repo,$hash,$license,$name,$brief,$description
 "
     done < "$csv_db_file"
 }
@@ -123,12 +138,12 @@ project_info() {
     # (if '@' is provided as the project name, it means that the cache content should be printed)
     if [[ $project_name != '@' && $project_name != "${CACHE_PROJECT_INFO[0]}" ]]; then
         CACHE_PROJECT_INFO=()
-        IFS=','; while read -r project local_dir repo hash license name brief description; do
+        IFS=','; while read -r project handler local_dir repo hash license name brief description; do
             if [[ $project == "$project_name" ]]; then
                 CACHE_PROJECT_INFO[0]=$project
                 CACHE_PROJECT_INFO[1]="$REPOS_DIR/${local_dir}"
                 CACHE_PROJECT_INFO[2]="$VENV_DIR/$project-venv"
-                CACHE_PROJECT_INFO[3]="$HANDLERS_DIR/$project-handler.sh"
+                CACHE_PROJECT_INFO[3]="$HANDLERS_DIR/$handler-handler.sh"
                 CACHE_PROJECT_INFO[4]=$repo
                 CACHE_PROJECT_INFO[5]=$hash
                 CACHE_PROJECT_INFO[6]=$license
