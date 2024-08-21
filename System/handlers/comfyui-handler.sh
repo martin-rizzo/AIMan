@@ -56,15 +56,17 @@ function install() {
     clone_repository "$repo" "$hash" "$project_dir"
     safe_chdir "$project_dir/models"
     require_symlink 'checkpoints'   "$MODELS_STABLEDIFFUSION_DIR" --convert-dir
+    require_symlink 'clip'          "$MODELS_TEXTENCODER_DIR"     --convert-dir
     require_symlink 'controlnet'    "$MODELS_CONTROLNET_DIR"      --convert-dir
     require_symlink 'embeddings'    "$MODELS_EMBEDDINGS_DIR"      --convert-dir
     require_symlink 'hypernetworks' "$MODELS_HYPERNETWORK_DIR"    --convert-dir
     require_symlink 'loras'         "$MODELS_LORA_DIR"            --convert-dir
-    require_symlink 'pixart'        "$MODELS_DIR/PixArt"         --convert-dir
-    require_symlink 't5'            "$MODELS_DIR/t5"             --convert-dir
+    require_symlink 'pixart'        "$MODELS_DIR/PixArt"          --convert-dir
+    require_symlink 't5'            "$MODELS_DIR/t5"              --convert-dir
+    require_symlink 'unet'          "$MODELS_DIR/unet"            --convert-dir
     require_symlink 'vae'           "$MODELS_VAE_DIR"             --convert-dir
     safe_chdir "$project_dir"
-    require_symlink 'output'        "$OUTPUT_DIR"                --convert-dir
+    require_symlink 'output'        "$OUTPUT_DIR"                 --convert-dir
 
 
 
@@ -100,6 +102,11 @@ function install() {
     ## Comfyroll Studio
     # many util nodes including prompt nodes, pipe nodes, text nodes, logic nodes, ...
     git clone https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes
+
+    ## ComfyUI GGUF
+    # GGUF Quantization support for native ComfyUI models
+    git clone https://github.com/city96/ComfyUI-GGUF
+    virtual_python !pip install -r ComfyUI-GGUF/requirements.txt
 
     ## Extra Models
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs

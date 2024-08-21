@@ -94,6 +94,7 @@ MODELS_SCUNET_DIR="$MODELS_DIR/ScuNET"
 MODELS_STABLEDIFFUSION_DIR="$MODELS_DIR/Stable-diffusion"
 MODELS_STYLES_DIR="$MODELS_DIR/styles"
 MODELS_SWINIR_DIR="$MODELS_DIR/SwinIR"
+MODELS_TEXTENCODER_DIR="$MODELS_DIR/text_encoder"
 MODELS_VAE_DIR="$MODELS_DIR/VAE"
 
 # The compatible version of Python to be used within the virtual environment.

@@ -52,7 +52,7 @@ function run_command() {
     IFS=' '; for project in $projects; do
         is_project_installed "$project" && mark='>' || mark=' '
         brief=$(project_info "$project" @brief)
-        printf "  %s %-8s : %s\n" "$mark" "$project" "$brief"
+        printf "  %s %-11s : %s\n" "$mark" "$project" "$brief"
     done
     echo
 }
