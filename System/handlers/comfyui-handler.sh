@@ -99,10 +99,6 @@ function install() {
     git clone https://github.com/crystian/ComfyUI-Crystools
     virtual_python !pip install -r ComfyUI-Crystools/requirements.txt
 
-    ## Comfyroll Studio
-    # many util nodes including prompt nodes, pipe nodes, text nodes, logic nodes, ...
-    git clone https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes
-
     ## ComfyUI GGUF
     # GGUF Quantization support for native ComfyUI models
     git clone https://github.com/city96/ComfyUI-GGUF
@@ -112,6 +108,10 @@ function install() {
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
     git clone https://github.com/city96/ComfyUI_ExtraModels
     virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
+
+    ### Comfyroll Studio
+    ## many util nodes including prompt nodes, pipe nodes, text nodes, logic nodes, ...
+    #git clone https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes
 
     ## Advanced CLIP Text Encode
     # nodes that allows for more control over the way prompt weighting should be interpreted
