@@ -180,59 +180,72 @@ clone_repository() {
 # Enforces command constraints and exits script with a fatal error if not met.
 #
 # Usage:
-#   enforce_constraints [--project] [--no-project] [--no-params] "$@"
+#   enforce_constraints [--project] [--no-project] [--no-params] - "$@"
 #
 # Options:
 #   --no-params  : Indicates that no additional parameters should be provided.
 #   --no-project : Indicates that no project name should be provided.
 #   --project    : Indicates that a project name must be provided.
 #   --installed  : Indicates that the provided project must be installed.
+#   -            : End of options
 #   "$@" = The arguments that were passed to the command.
 #
 # Example:
-#   enforce_constraints --no-project --no-params "$@"
+#   enforce_constraints --no-project --no-params - "$@"
 #
 enforce_constraints() {
-    while true; do
-      case "$1" in
+    local no_params=false
 
-        # validate if a project name must be provided
-        --project)
-            [[ $PROJECT_NAME ]] \
-             || fatal_error "The '$COMMAND_NAME' command requires a project name to be provided" \
-                "If the project is 'webui', you can run: ./$SCRIPT_NAME webui.$COMMAND_NAME" \
-                "To see a list of available projects, use: ./$SCRIPT_NAME list"
-            ;;
-        # validate if a project name must NOT be provided
-        --no-project)
-            [[ -z $PROJECT_NAME ]] \
-             || fatal_error "The '$COMMAND_NAME' command cannot be applied to any project" \
-                "For more information on how to use the '$COMMAND_NAME' command, please try: ./$SCRIPT_NAME $COMMAND_NAME --help"
-            ;;
-        # validate if the project should already be installed
-        --installed)
-            is_project_installed "$PROJECT_NAME" \
-             || fatal_error "The project '$PROJECT_NAME' is not installed" \
-                "To check which projects are installed, use: ./$SCRIPT_NAME list" \
-                "To install the project '$PROJECT_NAME', use: ./$SCRIPT_NAME $PROJECT_NAME.install"
-            ;;
-        # validate if NO additional parameters must be provided
-        --no-params)
-            [[ -n "$*" ]] \
-             || fatal_error "The parameter $1 is unknown" \
-                "For more information on how to use the '$COMMAND_NAME' command, please try: ./$SCRIPT_NAME $COMMAND_NAME --help"
-            ;;
-        # any other type of option is unknown
-        --*)
-            bug_report "Unknown option passed to the enforce_constraints() function: $1"
-            ;;
-        *)
-            break
-            ;;
-      esac
-      shift
+    # iterate through all options
+    while true; do
+        case "$1" in
+
+            # validate if a project name must be provided
+            --project)
+                [[ $PROJECT_NAME ]] \
+                || fatal_error "The '$COMMAND_NAME' command requires a project name to be provided" \
+                    "If the project is 'webui', you can run: ./$SCRIPT_NAME webui.$COMMAND_NAME" \
+                    "To see a list of available projects, use: ./$SCRIPT_NAME list"
+                ;;
+            # validate if a project name must NOT be provided
+            --no-project)
+                [[ -z $PROJECT_NAME ]] \
+                || fatal_error "The '$COMMAND_NAME' command cannot be applied to any project" \
+                    "For more information on how to use the '$COMMAND_NAME' command, please try: ./$SCRIPT_NAME $COMMAND_NAME --help"
+                ;;
+            # validate if the project should already be installed
+            --installed)
+                is_project_installed "$PROJECT_NAME" \
+                || fatal_error "The project '$PROJECT_NAME' is not installed" \
+                    "To check which projects are installed, use: ./$SCRIPT_NAME list" \
+                    "To install the project '$PROJECT_NAME', use: ./$SCRIPT_NAME $PROJECT_NAME.install"
+                ;;
+            # validate if NO additional parameters must be provided
+            --no-params)
+                no_params=true
+                ;;
+            # if the end of options ('-') is found, stop processing options
+            -)
+                shift
+                break
+                ;;
+            # any other type of option is unknown
+            *)
+                bug_report "Unknown option passed to the enforce_constraints() function: $1"
+                ;;
+        esac
+        shift
     done
+
+    # validate that no more parameters are left if required (--no-params)
+    if [[ $no_params == true ]]; then
+        [[ -n "$*" ]] \
+        || fatal_error "Parameter $1 unknown, this command does not support parameters" \
+            "For more information on how to use the '$COMMAND_NAME' command, please try: ./$SCRIPT_NAME $COMMAND_NAME --help"
+    fi
 }
+
+
 
 # Function that checks whether a given command is available in the system
 # and prints an error message with installation instructions if it is not.

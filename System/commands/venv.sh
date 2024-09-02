@@ -46,7 +46,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --project --no-params "$@"
+    enforce_constraints --project --no-params - "$@"
     local venv python_ver
 
     # load the project information requerida by the user

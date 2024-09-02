@@ -46,7 +46,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --project --no-params "$@"
+    enforce_constraints --project --no-params - "$@"
 
     # load the project information requerida by the user
     # (once the information is loaded, '@' can be used as the project name)

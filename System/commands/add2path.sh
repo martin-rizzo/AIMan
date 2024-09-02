@@ -44,7 +44,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --no-project --no-params "$@"
+    enforce_constraints --no-project --no-params - "$@"
     local file=~/.bashrc
     local line_to_add='export PATH=$PATH'":$BASE_DIR"
 

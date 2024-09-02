@@ -53,7 +53,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --project --installed "$@"
+    enforce_constraints --project --installed - "$@"
     local command=$1
     shift
 

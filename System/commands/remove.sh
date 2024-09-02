@@ -44,7 +44,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --project "$@"
+    enforce_constraints --project - "$@"
 
     # get project information
     project_info "$PROJECT_NAME"

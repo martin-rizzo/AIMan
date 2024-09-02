@@ -49,7 +49,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --no-project "$@"
+    enforce_constraints --no-project - "$@"
     local element=$1 directory=$2
 
     require_storage_dir

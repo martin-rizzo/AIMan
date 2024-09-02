@@ -62,20 +62,22 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --project --installed "$@"
+    enforce_constraints --project --installed - "$@"
 
     # retrieve project information
     project_info "$PROJECT_NAME"
-    local project_dir=$(project_info @ @local_dir)
-    local venv=$(project_info @ @local_venv)
-    local repo=$(project_info @ @repo)
-    local hash=$(project_info @ @hash)
-    local script=$(project_info @ @script)
+    local project_dir venv repo hash script
+    project_dir=$(project_info @ @local_dir)
+    venv=$(project_info @ @local_venv)
+    repo=$(project_info @ @repo)
+    hash=$(project_info @ @hash)
+    script=$(project_info @ @script)
 
     # ensure the project script file exists
     [[ -f $script ]] \
-     || bug_report "AIMan does not have a script for the '$PROJECT_NAME' project"
+    || bug_report "AIMan does not have a script for the '$PROJECT_NAME' project"
 
+    #shellcheck disable=SC1090
     source "$script"
     launch "$venv" "$project_dir" "$repo" "$hash" "$@"
 }

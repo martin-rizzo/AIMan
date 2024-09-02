@@ -58,7 +58,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --project "$@"
+    enforce_constraints --project - "$@"
     local version=$1
 
     # select the project to extract information from,

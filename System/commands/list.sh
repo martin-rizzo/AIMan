@@ -44,7 +44,7 @@ Examples:
 "
 
 function run_command() {
-    enforce_constraints --no-project --no-params "$@"
+    enforce_constraints --no-project --no-params - "$@"
     local projects brief mark
 
     projects=$(project_info all)
