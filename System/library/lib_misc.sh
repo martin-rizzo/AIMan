@@ -239,7 +239,7 @@ enforce_constraints() {
 
     # validate that no more parameters are left if required (--no-params)
     if [[ $no_params == true ]]; then
-        [[ -n "$*" ]] \
+        [[ -z "$*" ]] \
         || fatal_error "Parameter $1 unknown, this command does not support parameters" \
             "For more information on how to use the '$COMMAND_NAME' command, please try: ./$SCRIPT_NAME $COMMAND_NAME --help"
     fi
