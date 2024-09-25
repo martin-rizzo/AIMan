@@ -94,11 +94,16 @@ echox() {
 # Display a regular message
 message() {
     local message=$1
+    shift
     if [[ "$message" ]]; then
-        echo -e "${LIB_LOG_PADDING}${GREEN}>${DEFAULT_COLOR} $message" >&2
-    else
-        echo >&2
+        echo -e -n "${LIB_LOG_PADDING}${GREEN}>${DEFAULT_COLOR} $message" >&2
+        while [[ $# -gt 0 ]]; do
+            message=$1
+            echo -e -n " $message" >&2
+            shift
+        done
     fi
+    echo >&2
 }
 
 # Display an error message
