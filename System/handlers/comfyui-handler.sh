@@ -82,7 +82,7 @@ function install() {
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
-    virtual_python !pip install bitsandbytes
+   #virtual_python !pip install bitsandbytes
    #virtual_python !pip install accelerate
 
     #----------------- ADD CUSTOM NODES ------------------#
@@ -99,15 +99,15 @@ function install() {
     git clone https://github.com/crystian/ComfyUI-Crystools
     virtual_python !pip install -r ComfyUI-Crystools/requirements.txt
 
-    ## ComfyUI GGUF
-    # GGUF Quantization support for native ComfyUI models
-    git clone https://github.com/city96/ComfyUI-GGUF
-    virtual_python !pip install -r ComfyUI-GGUF/requirements.txt
-
     ## Extra Models
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
     git clone https://github.com/city96/ComfyUI_ExtraModels
     virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
+
+    ### ComfyUI GGUF
+    ## GGUF Quantization support for native ComfyUI models
+    #git clone https://github.com/city96/ComfyUI-GGUF
+    #virtual_python !pip install -r ComfyUI-GGUF/requirements.txt
 
     ### Comfyroll Studio
     ## many util nodes including prompt nodes, pipe nodes, text nodes, logic nodes, ...
@@ -158,5 +158,7 @@ function launch() {
     safe_chdir "$project_dir"
     message "changed working directory to $PWD"
     message "launching ComfyUI application $port_message"
+    message "main.py" "${options[@]}" "$@"
+    message
     virtual_python main.py "${options[@]}" "$@"
 }
