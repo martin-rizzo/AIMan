@@ -67,6 +67,8 @@ load_project_db() {
     local csv_db_file=$1
     # iterate through each line of the CSV file
     IFS=','; while read -r project_handler dir repo hash license name brief description; do
+        # skip lines starting with '#'
+        [[ -z "$project_handler" || $project_handler == \#* ]] && continue
 
         # if a colon is present in the project name,
         # separate the project and handler

@@ -45,14 +45,14 @@ Examples:
 
 function run_command() {
     enforce_constraints --no-project --no-params - "$@"
-    local projects brief mark
+    local projects brief projmark
 
     projects=$(project_info all)
     echo
     IFS=' '; for project in $projects; do
-        is_project_installed "$project" && mark='>' || mark=' '
         brief=$(project_info "$project" @brief)
-        printf "  %s %-11s : %s\n" "$mark" "$project" "$brief"
+        is_project_installed "$project" && projmark="[$project]" || projmark=" $project "
+        printf " %-13s: %s\n" "$projmark" "$brief"
     done
     echo
 }
