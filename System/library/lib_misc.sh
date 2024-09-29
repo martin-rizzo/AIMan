@@ -263,7 +263,8 @@ require_system_command() {
         if ! command -v "$cmd" &> /dev/null; then
             echox error "$cmd is not available!"
             echox "   you can try to install '$cmd' using the following command:"
-            echox "   > sudo dnf install $cmd\n"
+            echox "   > sudo dnf install $cmd"
+            echox
             exit 1
         else
             echox check "$cmd is installed"
