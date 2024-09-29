@@ -32,10 +32,10 @@
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 #
 # FUNCTIONS:
-#  - is_venv_active()             : Checks if the virtual environment is active.
-#  - ensure_venv_is_initialized() : Ensures that a virtual environment is created and initialized.
-#  - ensure_venv_is_active()      : Ensures that a virtual environment is active.
-#  - virtual_python()             : Runs a command or Python script within the specified virtual environment.
+#  - is_venv_active()      : Checks if a virtual environment is active.
+#  - require_venv()        : Ensures a virtual environment exists and is properly configured.
+#  - require_active_venv() : Ensures a virtual environment is active.
+#  - virtual_python()      : Runs a command or Python script within the a virtual environment.
 #
 #-----------------------------------------------------------------------------
 
@@ -44,7 +44,7 @@
 HLP__LAST_VENV=
 
 
-# Checks if the Python virtual environment is active.
+# Checks if the virtual environment is active.
 #
 # Usage:
 #   is_venv_active <venv>
@@ -66,91 +66,99 @@ is_venv_active() {
         return 1 # NO ACTIVE #
     fi
     if [[ "$venv" != *"${VIRTUAL_ENV#\~}" ]]; then
-        return 2 # NO ACTIVE (otro venv esta activo) #
+        return 2 # NO ACTIVE (a different venv is active) #
     fi
     return 0 # ACTIVE! #
 }
 
-# Checks whether a given virtual environment exists and is properly configured.
+
+# Ensures a virtual environment exists and is properly configured.
 #
 # Usage:
-#   require_venv [--quiet] <venv> <python> <requirements>
+#   require_venv [--quiet] <venv> [forced_python] [requirements_file]
 #
 # Parameters:
-#   - --quiet     : (optional) if set, suppress output.
-#   - venv        : the path to the virtual environment to be checked.
-#   - python      : the command to execute python, usually 'python' but a different version could be used
-#   - requirements: the path to the 'requirements.txt' file if the venv needs to be initialized with some dependencies
+#   --quiet           : (optional) suppresses output messages.
+#   venv              : path to the virtual environment.
+#   forced_python     : (optional) path or command name to a specific python version, overrides default.
+#   requirements_file : (optional) path to a requirements.txt file to install packages.
 #
-# Example:
+# Examples:
 #   require_venv "/path/to/my-venv"
 #   require_venv --quiet "/path/to/my-venv"
+#   require_venv --quiet "/path/to/my-venv" python3.10
 #
 require_venv() {
 
-    # process all initial parameters that start with '-'
+    # process initial parameters starting with '-'
     local quiet=false
     while [[ "$1" =~ ^- ]]; do
         case "$1" in
-        --quiet) quiet=true ;;
-        -)       shift ; break ;;
-        *)       fatal_error "require_venv does not support the parameter '$1'"  ;;
+            --quiet) quiet=true ;;
+            -)       shift; break ;;
+            *)       fatal_error "require_venv does not support the option '$1'" ;;
         esac
         shift
     done
 
-    local venv_prompt="venv"
-    local venv=$1 python=${2:-${COMPATIBLE_PYTHON:-python}} requirements=$3
-    local update=false
+    local venv=$1 forced_python=$2 requirements_file=$3
 
+    # construct the virtual environment prompt text
+    local venv_prompt
     venv_prompt=$(basename "$venv")
     venv_prompt="${venv_prompt%-venv} venv"
 
-    # if the venv does not exist, then create it
+    # determine the Python command; use forced version if provided, otherwise default
+    local python_cmd=${forced_python:-${COMPATIBLE_PYTHON:-python}}
+    local update=false
+
+    # create the venv if it doesn't exist
     if [[ ! -d $venv ]]; then
         $quiet || message wait 'creating python virtual environment'
-        $quiet || message "      > '$python' -m venv '$venv' --prompt '$venv_prompt'"
-        "$python" -m venv "$venv" --prompt "$venv_prompt"
+        $quiet || message "      > '$python_cmd' -m venv '$venv' --prompt '$venv_prompt'"
+        "$python_cmd" -m venv "$venv" --prompt "$venv_prompt"
         update=true
         $quiet || message check 'new python virtual environment created:'
         $quiet || message  "     $venv"
 
-    # if the venv already exists but contains a different version of Python,
-    # then try to delete it and recreate it with the compatible version
-    elif [[ ! -e "$venv/bin/$python" ]]; then
-        $quiet || warning "a different version of python was selected ($python)"
+    # recreate the venv if a different python version is forced and incompatible
+    # WARNING: This is experimental and might not work in all cases
+    elif [[ -n "$forced_python" ]] && [[ ! -e "$venv/bin/$forced_python" ]]; then
+        $quiet || warning "forced python version '$forced_python' differs from existing environment"
         $quiet || message wait "recreating virtual environment"
         rm -Rf "$venv"
-        "$python" -m venv "$venv" --prompt "$venv_prompt"
+        "$forced_python" -m venv "$venv" --prompt "$venv_prompt"
         update=true
-        $quiet || message check "virtual environment recreated for $python"
+        $quiet || message check 'new python virtual environment created:'
+        $quiet || message  "     $venv"
 
-    # if the venv exists and has the correct version of Python, do nothing!
+    # if the venv exists and the python version is correct, do nothing
     else
-        $quiet || message check 'virtual environment exists'
+        $quiet || message "virtual environment already exists"
     fi
 
     HLP__LAST_VENV=$venv
     if [[ $update == 'true' ]]; then
         virtual_python "$venv" !pip install --upgrade pip
-        [[ $requirements ]] && virtual_python "$VENV_DIR" !pip install -r "$requirements"
+        [[ $requirements ]] && virtual_python "$VENV_DIR" !pip install -r "$requirements_file"
     fi
 }
+
 
 # Ensures the specified Python virtual environment is active.
 #
 # Usage:
-#   ensure_venv_is_active [--quiet] <venv>
+#   require_active_venv [--quiet] <venv>
 #
 # Parameters:
 #   * --quiet: (optional) if set, suppress output.
 #   * venv: the path to the Python virtual environment to be activated.
 #
 # Example:
-#   ensure_venv_is_active "/path/to/my-venv"
-#   ensure_venv_is_active --quiet "/path/to/my-venv"
+#   require_active_venv "/path/to/my-venv"
+#   require_active_venv --quiet "/path/to/my-venv"
 #
-ensure_venv_is_active() {
+require_active_venv() {
 
     # process all initial parameters that start with '-'
     local quiet=false
@@ -158,7 +166,7 @@ ensure_venv_is_active() {
         case "$1" in
         --quiet) quiet=true ;;
         -)       shift ; break ;;
-        *)       fatal_error "ensure_venv_is_active does not support the parameter '$1'"  ;;
+        *)       fatal_error "require_active_venv does not support the parameter '$1'"  ;;
         esac
         shift
     done
@@ -172,7 +180,7 @@ ensure_venv_is_active() {
 
     if [[ $? -eq 2 ]]; then
         fatal_error \
-            "function ensure_venv_is_active() is unable to switch between virtual environments" \
+            "function require_active_venv() is unable to switch between virtual environments" \
             "This is an internal error likely caused by a mistake in the code"
     fi
 
@@ -183,7 +191,7 @@ ensure_venv_is_active() {
 }
 
 
-# Runs a command or Python script within the specified virtual environment.
+# Runs a command or Python script within the a virtual environment.
 #
 # Usage:
 #   virtual_python [<venv>] <command> [args...]
@@ -242,7 +250,7 @@ virtual_python() {
 
     # ensure that the virtual environment is activated and ready,
     # and store it as the last one used for future reference
-    ensure_venv_is_active --quiet "$venv"
+    require_active_venv --quiet "$venv"
     HLP__LAST_VENV=$venv
 
     # if no command was provided, there is nothing to execute
