@@ -62,7 +62,7 @@ function run_command() {
 
     # activate the virtual environment
     venv=$(project_info @ @local_venv)
-    require_venv "$venv" quiet
+    require_venv --quiet "$venv"
 
     # extract versions of each package
     packages=$(virtual_python !pip list)

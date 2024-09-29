@@ -71,85 +71,102 @@ is_venv_active() {
     return 0 # ACTIVE! #
 }
 
-# Checks whether a given virtual environment exista y este bien configurado
+# Checks whether a given virtual environment exists and is properly configured.
 #
 # Usage:
-#   require_venv <venv>
+#   require_venv [--quiet] <venv> <python> <requirements>
 #
 # Parameters:
-#   - venv: the path to the virtual environment to be chequeado.
+#   - --quiet     : (optional) if set, suppress output.
+#   - venv        : the path to the virtual environment to be checked.
+#   - python      : the command to execute python, usually 'python' but a different version could be used
+#   - requirements: the path to the 'requirements.txt' file if the venv needs to be initialized with some dependencies
 #
 # Example:
 #   require_venv "/path/to/my-venv"
+#   require_venv --quiet "/path/to/my-venv"
 #
 require_venv() {
-    local venv=$1 quiet=$2
+
+    # process all initial parameters that start with '-'
+    local quiet=false
+    while [[ "$1" =~ ^- ]]; do
+        case "$1" in
+        --quiet) quiet=true ;;
+        -)       shift ; break ;;
+        *)       fatal_error "require_venv does not support the parameter '$1'"  ;;
+        esac
+        shift
+    done
+
     local venv_prompt="venv"
-
-    # normaliza el parametro quiet a true/false
-    if [[ $quiet == 'true' || $quiet == 'yes' || $quiet == 'quiet' ]]; then
-        quiet=true
-    else
-        quiet=false
-    fi
-
-    # verify that the 'venv' parameter is a subdirectory of $VENV_DIR
-    if [[ "$venv" != "$VENV_DIR"* ]]; then
-        fatal_error \
-            "'ensure_venv_is_initialized()' failed, the provided venv '$venv' is not a subdir of \$VENV_DIR." \
-            "This is an internal error likely caused by a mistake in the code."
-    fi
+    local venv=$1 python=${2:-${COMPATIBLE_PYTHON:-python}} requirements=$3
+    local update=false
 
     venv_prompt=$(basename "$venv")
     venv_prompt="${venv_prompt%-venv} venv"
 
     # if the venv does not exist, then create it
     if [[ ! -d $venv ]]; then
-        $quiet || echox wait 'creating python virtual environment'
-        $quiet || echox "      > '$COMPATIBLE_PYTHON' -m venv '$venv' --prompt '$venv_prompt'"
-        "$COMPATIBLE_PYTHON" -m venv "$venv" --prompt "$venv_prompt"
-        $quiet || echox check 'new python virtual environment created:'
-        $quiet || echox  "     $venv"
+        $quiet || message wait 'creating python virtual environment'
+        $quiet || message "      > '$python' -m venv '$venv' --prompt '$venv_prompt'"
+        "$python" -m venv "$venv" --prompt "$venv_prompt"
+        update=true
+        $quiet || message check 'new python virtual environment created:'
+        $quiet || message  "     $venv"
 
     # if the venv already exists but contains a different version of Python,
     # then try to delete it and recreate it with the compatible version
-    elif [[ ! -e "$venv/bin/$COMPATIBLE_PYTHON" ]]; then
-        $quiet || echox warn "a different version of python was selected ($COMPATIBLE_PYTHON)"
-        $quiet || echox wait "recreating virtual environment"
+    elif [[ ! -e "$venv/bin/$python" ]]; then
+        $quiet || warning "a different version of python was selected ($python)"
+        $quiet || message wait "recreating virtual environment"
         rm -Rf "$venv"
-        "$COMPATIBLE_PYTHON" -m venv "$venv" --prompt "$venv_prompt"
-        $quiet || echox check "virtual environment recreated for $COMPATIBLE_PYTHON"
+        "$python" -m venv "$venv" --prompt "$venv_prompt"
+        update=true
+        $quiet || message check "virtual environment recreated for $python"
 
     # if the venv exists and has the correct version of Python, do nothing!
     else
-        $quiet || echox check 'virtual environment exists'
+        $quiet || message check 'virtual environment exists'
     fi
+
     HLP__LAST_VENV=$venv
+    if [[ $update == 'true' ]]; then
+        virtual_python "$venv" !pip install --upgrade pip
+        [[ $requirements ]] && virtual_python "$VENV_DIR" !pip install -r "$requirements"
+    fi
 }
 
 # Ensures the specified Python virtual environment is active.
 #
 # Usage:
-#   ensure_venv_is_active <venv>
+#   ensure_venv_is_active [--quiet] <venv>
 #
 # Parameters:
-#   - venv: the path to the Python virtual environment to be activated.
+#   * --quiet: (optional) if set, suppress output.
+#   * venv: the path to the Python virtual environment to be activated.
 #
 # Example:
 #   ensure_venv_is_active "/path/to/my-venv"
+#   ensure_venv_is_active --quiet "/path/to/my-venv"
 #
 ensure_venv_is_active() {
-    local venv=$1 quiet=$2
 
-    # normaliza el parametro quiet a true/false
-    if [[ $quiet == 'true' || $quiet == 'yes' || $quiet == 'quiet' ]]; then
-        quiet=true
-    else
-        quiet=false
-    fi
+    # process all initial parameters that start with '-'
+    local quiet=false
+    while [[ "$1" =~ ^- ]]; do
+        case "$1" in
+        --quiet) quiet=true ;;
+        -)       shift ; break ;;
+        *)       fatal_error "ensure_venv_is_active does not support the parameter '$1'"  ;;
+        esac
+        shift
+    done
+
+    local venv=$1
 
     if is_venv_active "$venv"; then
-        $quiet || echox check "virtual environment already activated"
+        $quiet || message check "virtual environment already activated"
         return
     fi
 
@@ -159,10 +176,12 @@ ensure_venv_is_active() {
             "This is an internal error likely caused by a mistake in the code"
     fi
 
-    $quiet || echox wait 'activating virtual environment'
+    $quiet || message wait 'activating virtual environment'
+    # shellcheck source=/dev/null
     source "$venv/bin/activate"
-    $quiet || echox check 'virtual environment activated'
+    $quiet || message check 'virtual environment activated'
 }
+
 
 # Runs a command or Python script within the specified virtual environment.
 #
@@ -192,12 +211,13 @@ ensure_venv_is_active() {
 virtual_python() {
     local venv command
 
-    # determine if the first argument is a valid virtual environment directory
-    if [[ $1 =~ ^\.?/ ]] || [[ -d "$1" ]]; then
+    if [[ -d "$1" ]]; then
+        # if the first parameter is a directory, it's assumed to be the `venv`
         venv=$1
         command=$2
         shift 2
     else
+        # if the first parameter is NOT a directory, the `venv` will be the last used one
         venv=$HLP__LAST_VENV
         command=$1
         shift 1
@@ -207,8 +227,8 @@ virtual_python() {
         fatal_error "The venv parameter is not previously defined"
 
     [[ -f "$venv/bin/activate" ]] || \
-        fatal_error "No existe el entorno virtual '$venv'." \
-                    "Si el error persiste intente reinstalar el proyecto."
+        fatal_error "The virtual environment '$venv' does not exist." \
+                    "Please ensure the virtual environment is correctly installed."
 
     # handle the CONSOLE command
     if [[ $command == 'CONSOLE' ]]; then
@@ -222,7 +242,7 @@ virtual_python() {
 
     # ensure that the virtual environment is activated and ready,
     # and store it as the last one used for future reference
-    ensure_venv_is_active "$venv" quiet
+    ensure_venv_is_active --quiet "$venv"
     HLP__LAST_VENV=$venv
 
     # if no command was provided, there is nothing to execute
@@ -239,4 +259,3 @@ virtual_python() {
         python "$command" "$@"
     fi
 }
-

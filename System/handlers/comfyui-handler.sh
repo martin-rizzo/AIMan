@@ -51,7 +51,7 @@ function install() {
 
     require_system_command git
     require_storage_dir
-    require_venv "$venv"
+    require_venv "$venv" "python"
 
     clone_repository "$repo" "$hash" "$project_dir"
     safe_chdir "$project_dir/models"
@@ -145,7 +145,7 @@ function launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
 
-    require_venv "$venv"
+    require_venv "$venv" "python"
 
     #------------- COMFYUI OPTIONS -------------#
     local options=() port_message=''
