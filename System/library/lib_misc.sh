@@ -299,8 +299,19 @@ ask_confirmation() {
         echox alert "$alert"
     fi
     echox
-    read -p " - $message (y/n): " -n 1 -r ; echo ; echo
-    [[ $REPLY =~ ^[Yy]$ ]]
+    while true; do
+        read -r -p " $message [y/N]: " response
+        case ${response,,} in
+            y|yes)
+                echox
+                return 0
+                ;;
+            n|no)
+                echox
+                return 1
+                ;;
+        esac
+    done
 }
 
 # Attempts to change directory.
