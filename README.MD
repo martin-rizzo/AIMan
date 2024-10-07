@@ -1,29 +1,33 @@
-<h1 align="center">AIMan</h1>
-<p align="center">A simple package manager for open-source AI projects.</p>
-<p align="center">
-<img alt="Platform" src="https://img.shields.io/badge/platform-Fedora 40-33F">
-<img alt="Language" src="https://img.shields.io/badge/language-bash script-22E">
-<img alt="License"  src="https://img.shields.io/github/license/martin-rizzo/AIMan?color=11D">
-<img alt="Last"     src="https://img.shields.io/github/last-commit/martin-rizzo/AIMan">
+<div align="center">
+
+# AIMan
+
+<p>
+<img alt="Platform" src="https://img.shields.io/badge/platform-Fedora 40-blue">
+<img alt="Language" src="https://img.shields.io/badge/language-bash script-blue">
+<img alt="License"  src="https://img.shields.io/github/license/martin-rizzo/AIMan?color=blue">
 <img alt="Version"  src="https://img.shields.io/github/v/tag/martin-rizzo/AIMan?label=version">
+<img alt="Last"     src="https://img.shields.io/github/last-commit/martin-rizzo/AIMan">
 </p>
 
-<!--
-# AIMan
--->
+![AIMan commands](./XDocs/aiman.jpg)
+</div>
 
-**AIMan** is a simple package manager designed for managing open-source AI
-projects. It’s implemented entirely with Bash scripts, making it easy to set
-up. Although it was developed for personal use, the code is available on GitHub
-in case someone else finds it useful.
+**AIMan** is a lightweight package manager to handle open-source AI projects,
+built entirely with Bash scripts and designed to run via the command line. It was
+developed for personal use on my specific setup (Fedora), so compatibility with
+other environments might be limited. However, the code is available on GitHub for
+anyone who finds it useful.
 
 
 ## AI projects supported
 
- - [x] Stable Diffusion web UI
+ - [x] Stable Diffusion WebUI
  - [x] Stable Diffusion WebUI Forge
  - [x] ComfyUI
  - [x] InvokeAI
+ - [x] Ollama
+ - [ ] Open WebUI
 
 
 ## Installation
