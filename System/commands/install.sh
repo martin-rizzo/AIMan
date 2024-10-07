@@ -78,7 +78,7 @@ function run_command() {
     venv=$(project_info @ @local_venv)
     repo=$(project_info @ @repo)
     hash=$(project_info @ @hash)
-    handler=$(project_info @ @script)
+    handler=$(project_info @ @handler)
 
     # ensure the project script file exists
     [[ -f $handler ]] \

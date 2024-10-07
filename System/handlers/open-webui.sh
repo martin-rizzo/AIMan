@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# File    : commands/list.sh
-# Brief   : Command to list available projects
+# File    : handlers/open-webui.sh
+# Brief   : Manages the local copy of the "Open WebUI" project.
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
-# Date    : Apr 14, 2024
+# Date    : Oct 7, 2024
 # Repo    : https://github.com/martin-rizzo/AIMan
 # License : MIT
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30,29 +30,3 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-HELP="
-Usage: $SCRIPT_NAME $COMMAND_NAME
-
-  List all available projects.
-
-Options:
-  -h, --help     show command help
-  -V, --version  show $SCRIPT_NAME version and exit
-
-Examples:
-  $SCRIPT_NAME $COMMAND_NAME
-"
-
-function run_command() {
-    enforce_constraints --no-project --no-params - "$@"
-    local projects brief projmark
-
-    projects=$(project_info all)
-    echo
-    IFS=' '; for project in $projects; do
-        brief=$(project_info "$project" @brief)
-        is_project_installed "$project" && projmark="> $project" || projmark="  $project"
-        printf " %-13s: %s\n" "$projmark" "$brief"
-    done
-    echo
-}

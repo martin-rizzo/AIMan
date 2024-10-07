@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# File    : project-comfyui.sh
-# Brief   : Manages the local copy of the "comfyui" project.
+# File    : handlers/comfyui.sh
+# Brief   : Manages the local copy of the "ComfyUI" project.
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Nov 28, 2023
 # Repo    : https://github.com/martin-rizzo/AIMan

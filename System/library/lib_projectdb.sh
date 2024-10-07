@@ -70,6 +70,8 @@ load_project_db() {
         # skip lines starting with '#'
         [[ -z "$project_handler" || $project_handler == \#* ]] && continue
 
+        local project handler
+
         # if a colon is present in the project name,
         # separate the project and handler
         if [[ $project_handler =~ ':' ]]; then
@@ -113,7 +115,7 @@ load_project_db() {
 #   Valid parameters are:
 #      "@local_dir"   : Outputs the local directory of the project.
 #      "@local_venv"  : Outputs the local virtual environment directory of the project.
-#      "@script"      : Outputs the path of the AIMan script responsible for managing the project.
+#      "@handler"     : Outputs the path of the AIMan script responsible for managing the project.
 #      "@repo"        : Outputs the repository URL of the project.
 #      "@hash"        : Outputs the commit hash of the project.
 #      "@license"     : Outputs the license of the project.
@@ -145,7 +147,7 @@ project_info() {
                 CACHE_PROJECT_INFO[0]=$project
                 CACHE_PROJECT_INFO[1]="$REPOS_DIR/${local_dir}"
                 CACHE_PROJECT_INFO[2]="$VENV_DIR/$project-venv"
-                CACHE_PROJECT_INFO[3]="$HANDLERS_DIR/$handler-handler.sh"
+                CACHE_PROJECT_INFO[3]="$HANDLERS_DIR/$handler.sh"
                 CACHE_PROJECT_INFO[4]=$repo
                 CACHE_PROJECT_INFO[5]=$hash
                 CACHE_PROJECT_INFO[6]=$license
@@ -166,7 +168,7 @@ project_info() {
                 "@id"         ) echo -n "${CACHE_PROJECT_INFO[0]}" ;;
                 "@local_dir"  ) echo -n "${CACHE_PROJECT_INFO[1]}" ;;
                 "@local_venv" ) echo -n "${CACHE_PROJECT_INFO[2]}" ;;
-                "@script"     ) echo -n "${CACHE_PROJECT_INFO[3]}" ;;
+                "@handler"    ) echo -n "${CACHE_PROJECT_INFO[3]}" ;;
                 "@repo"       ) echo -n "${CACHE_PROJECT_INFO[4]}" ;;
                 "@hash"       ) echo -n "${CACHE_PROJECT_INFO[5]}" ;;
                 "@license"    ) echo -n "${CACHE_PROJECT_INFO[6]}" ;;

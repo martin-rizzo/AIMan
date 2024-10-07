@@ -62,7 +62,7 @@ function run_command() {
     project_info @ " Hash/Tag    : " @hash
     project_info @ " Directory   : " @local_dir
     project_info @ " Virt.enviro : " @local_venv
-    project_info @ " Script      : " @script
+    project_info @ " Handler     : " @handler
     project_info @ " Description : " @description
     echo
 

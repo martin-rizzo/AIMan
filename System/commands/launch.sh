@@ -66,18 +66,18 @@ function run_command() {
 
     # retrieve project information
     project_info "$PROJECT_NAME"
-    local project_dir venv repo hash script
+    local project_dir venv repo hash handler
     project_dir=$(project_info @ @local_dir)
     venv=$(project_info @ @local_venv)
     repo=$(project_info @ @repo)
     hash=$(project_info @ @hash)
-    script=$(project_info @ @script)
+    handler=$(project_info @ @handler)
 
-    # ensure the project script file exists
-    [[ -f $script ]] \
-    || bug_report "AIMan does not have a script for the '$PROJECT_NAME' project"
+    # ensure the project handler exists
+    [[ -f $handler ]] \
+    || bug_report "AIMan does not have a handler for the '$PROJECT_NAME' project"
 
     #shellcheck disable=SC1090
-    source "$script"
+    source "$handler"
     launch "$venv" "$project_dir" "$repo" "$hash" "$@"
 }
