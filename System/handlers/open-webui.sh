@@ -30,3 +30,88 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+INSTALL_PIPELINES=true
+
+#============================================================================
+# Installs the project in the specified environment.
+#
+# Parameters:
+#   - venv        : the path to the Python virtual environment to use
+#   - project_dir : the path to the local project directory
+#   - repo        : the URL of the project's Git repository
+#   - hash        : the Git commit hash or tag to use
+#
+# Globals:
+#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+#   - PROJECT_PORT : the port where the app should listen, empty = default
+#
+function install() {
+    local venv=$1 project_dir=$2 repo=$3 hash=$4
+    shift 4
+
+    # Python  >= 3.11
+    # Node.js >= 20.10
+    require_system_command git npm python3.11
+    require_venv "$venv" python3.11
+    clone_repository "$repo" "$hash" "$project_dir"
+
+    #-------------------- INSTALLING ---------------------#
+    safe_chdir "$project_dir"
+
+    # copying required .env file
+    cp -RPp .env.example .env
+
+    # building frontend using node
+    npm install
+    npm run build
+
+    # install backend dependencies
+    safe_chdir "$project_dir"
+    virtual_python !pip install --upgrade pip
+    virtual_python !pip install -r backend/requirements.txt -U
+
+    #------------------ ADD PIPELINES ------------------#
+    if [[ $INSTALL_PIPELINES == true ]]; then
+
+        # install pipelines
+        mkdir "$project_dir"
+        git clone https://github.com/open-webui/pipelines.git
+        virtual_python !pip install -r pipelines/requirements.txt
+
+    fi
+}
+
+#============================================================================
+# Launches the project application in the specified environment.
+#
+# Parameters:
+#   - venv        : the path to the Python virtual environment to use
+#   - project_dir : the path to the local project directory
+#   - repo        : the URL of the project's Git repository
+#   - hash        : the Git commit hash or tag to use
+#
+# Globals:
+#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+#   - PROJECT_PORT : the port where the app should listen, empty = default
+#
+function launch() {
+    local venv=$1 project_dir=$2 repo=$3 hash=$4
+    shift 4
+
+    require_venv "$venv" python
+
+    #----------------- OPTIONS -----------------#
+    local options=() port='' port_message=''
+    if [[ $PROJECT_PORT ]]; then
+        port=$PROJECT_PORT
+        port_message="on port $PROJECT_PORT"
+    fi
+
+    #---------------- LAUNCHING ----------------#
+    safe_chdir "$project_dir/backend"
+    message "changed working directory to $PWD"
+    message "launching Open WebUI application $port_message"
+    message "./start.sh" "${options[@]}" "$@"
+    message
+    virtual_python !./start.sh "${options[@]}" "$@"
+}
