@@ -45,11 +45,15 @@ Examples:
 
 function run_command() {
     enforce_constraints --project - "$@"
+    local venv project_dir repo hash handler
 
     # get project information
     project_info "$PROJECT_NAME"
-    local project_dir=$(project_info @ @local_dir)
-    local venv=$(project_info @ @local_venv)
+    project_dir=$(project_info @ @local_dir )
+    venv=$(project_info        @ @local_venv)
+    repo=$(project_info        @ @repo      )
+    hash=$(project_info        @ @hash      )
+    handler=$(project_info     @ @handler   )
 
     # ensure the project is installed before attempting to remove it
     if ! is_project_installed "$PROJECT_NAME"; then
@@ -69,16 +73,22 @@ function run_command() {
       || bug_report "\$venv seems to contain an invalid path: $venv"
 
     # ask for user confirmation before removing the project
-    if ask_confirmation \
+    if ! ask_confirmation \
           "Are you sure you want to remove the project '$PROJECT_NAME'?" \
           "While AIMan always tries to keep the models and data isolated and protected from each installation, it's possible that application-specific extensions or configurations may be removed."
     then
-        # if the user confirmed, proceed to remove the project
-        echox wait "Removing project '$PROJECT_NAME'"
-        rm -rf "$project_dir" "$venv"
-        echox check "Project '$PROJECT_NAME' has been removed."
-    else
         # if the user cancelled, do nothing
         echox "Project removal cancelled."
+        exit 0
     fi
+
+    # if the user confirmed, proceed to remove the project
+    #shellcheck disable=SC1090
+    source "$handler"
+    if [[ "$(type -t remove_extra)" = "function" ]]; then
+      remove_extra "$venv" "$project_dir" "$repo" "$hash"
+    fi
+    echox wait "Removing project '$PROJECT_NAME'"
+    rm -rf "$project_dir" "$venv"
+    echox check "Project '$PROJECT_NAME' has been removed."
 }
