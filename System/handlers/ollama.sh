@@ -108,5 +108,6 @@ function launch() {
     message "changed working directory to $PWD"
     message "launching Ollama Server $port_message"
     message
-    OLLAMA_HOST="127.0.0.1:$port" ./ollama serve
+    mkdir -p "$MODELS_OLLAMA_DIR"
+    OLLAMA_HOST="127.0.0.1:$port" OLLAMA_MODELS="$MODELS_OLLAMA_DIR" ./ollama serve
 }

@@ -223,7 +223,8 @@ function require_symlink() {
 
     elif [[ $move_dir == true && -d $link_name ]]; then
         echox wait "converting '$link_name' to a symlink and moving its contents inside."
-        local temp_dir=$(mktemp -d)
+        local temp_dir
+        temp_dir=$(mktemp -d)
         mv "$link_name"/* "$temp_dir"
         rm -rf "$link_name"
         ln -s "$target" "$link_name"
