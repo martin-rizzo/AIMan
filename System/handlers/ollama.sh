@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# File    : ollama-handler.sh
-# Brief   : Manages the local copy of the "ollama" project.
+# File    : handlers/ollama.sh
+# Brief   : Manages the local copy of "ollama"
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Sep 28, 2024
 # Repo    : https://github.com/martin-rizzo/AIMan
@@ -46,30 +46,47 @@
 #    > sudo ln -s /usr/bin/gcc-13/usr/local/cuda/bin/gcc
 #    > sudo ln -s /usr/bin/g++-13 /usr/local/cuda/bin/g++
 #
+
+
+#============================================================================
+# Initialize the project handler
 #
+# Usage:
+#   _init_ NAME PORT VENV PYTHON LOCAL_DIR REMOTE_URL REMOTE_HASH
+#
+# Parameters:
+#   - NAME        : short name of the project (e.g. "webui")
+#   - PORT        : port number where the app should listen, empty = default
+#   - VENV        : path to the Python virtual environment to use
+#   - PYTHON      : name (or path to) the Python interpreter to use (e.g. "python3.11")
+#   - LOCAL_DIR   : path to the local project directory
+#   - REMOTE_URL  : URL of the project's Git repository
+#   - REMOTE_HASH : Git commit hash or tag of the recommended version
+
+_init_() {
+    #NAME=$1
+    PORT=$2
+    #VENV=$3
+    #PYTHON=python3.11 # =$4
+    LOCAL_DIR=$5
+    REMOTE_URL=$6
+    REMOTE_HASH=$7
+}
 
 #============================================================================
 # Installs the project in the specified environment.
 #
-# Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag to use
+# Usage:
+#   _init_ ...
+#   cmd_install [user_args]
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-function install() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
+cmd_install() {
 
     require_system_command git cmake go gcc-13 g++-13
     #require_storage_dir
 
-    clone_repository "$repo" "$hash" "$project_dir"
-    safe_chdir "$project_dir"
+    clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
+    safe_chdir "$LOCAL_DIR"
 
     # build ollama from source code
     go generate ./...
@@ -79,31 +96,23 @@ function install() {
 #============================================================================
 # Launches the project application in the specified environment.
 #
-# Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag to use
+# Usage:
+#   _init_ ...
+#   cmd_launch [user_args]
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-function launch() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
+cmd_launch() {
 
     # default ollama port configuration
     local port=11434 port_message=''
 
     # attempt to override the default port based on project configuration
-    if [[ $PROJECT_PORT ]]; then
-        message "Cannot bind to $PROJECT_PORT. Ollama port configuration not yet implemented"
-        # port=$PROJECT_PORT
+    if [[ $PORT ]]; then
+        message "Cannot bind to $PORT. Ollama port configuration not yet implemented"
+        # port=$PORT
     fi
 
     #---------------- LAUNCHING ----------------#
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
     [[ $port ]] && port_message="on port $port"
     message "changed working directory to $PWD"
     message "launching Ollama Server $port_message"

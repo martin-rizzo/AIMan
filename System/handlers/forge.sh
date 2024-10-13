@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# File    : project-forge.sh
-# Brief   : Manages the local copy of the "stable diffusion webui forge" project.
+# File    : handlers/forge.sh
+# Brief   : Manages the local copy of "Stable Diffusion WebUI Forge".
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
 # Date    : Mar 2, 2024
 # Repo    : https://github.com/martin-rizzo/AIMan
@@ -35,34 +35,51 @@ AUTO_LAUNCH_BROWSER='Disable' # Automatically open webui in browser on startup (
 EXPORT_FOR_4CHAN='false'      # Save copy of large images as JPG (true/false)
 
 #============================================================================
-# Installs the project in the specified environment.
+# Initialize the project handler
+#
+# Usage:
+#   _init_ NAME PORT VENV PYTHON LOCAL_DIR REMOTE_URL REMOTE_HASH
 #
 # Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag to use
+#   - NAME        : short name of the project (e.g. "webui")
+#   - PORT        : port number where the app should listen, empty = default
+#   - VENV        : path to the Python virtual environment to use
+#   - PYTHON      : name (or path to) the Python interpreter to use (e.g. "python3.11")
+#   - LOCAL_DIR   : path to the local project directory
+#   - REMOTE_URL  : URL of the project's Git repository
+#   - REMOTE_HASH : Git commit hash or tag of the recommended version
+
+_init_() {
+    #NAME=$1
+    PORT=$2
+    VENV=$3
+    PYTHON=python3.10 # =$4
+    LOCAL_DIR=$5
+    REMOTE_URL=$6
+    REMOTE_HASH=$7
+}
+
+#============================================================================
+# Installs the project in the specified environment.
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
-#   - PROJECT_PORT : the port where the app should listen, empty = default
+# Usage:
+#   _init_ ...
+#   cmd_install [user_args]
 #
-function install() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
-    local config_file="$project_dir/config.json"
+cmd_install() {
+    local config_file="$LOCAL_DIR/config.json"
 
     require_system_command git wget
     require_storage_dir
-    require_venv "$venv"
+    require_venv "$VENV" "$PYTHON"
 
-    clone_repository "$repo" "$hash" "$project_dir"
-    safe_chdir "$project_dir"
+    clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
+    safe_chdir "$LOCAL_DIR"
     require_symlink 'outputs'    "$OUTPUT_DIR"                  --convert-dir
     require_symlink 'styles.csv' "$MODELS_STYLES_DIR/styles.csv" --move-file
 
     #--------------- EXTENSIONS ----------------#
-    safe_chdir "$project_dir/extensions"
+    safe_chdir "$LOCAL_DIR/extensions"
     echox wait "installing 'One Button Prompt' extension"
     git clone https://github.com/AIrjen/OneButtonPrompt > /dev/null
     echox wait "installing 'Test my prompt!' extension"
@@ -81,7 +98,7 @@ function install() {
     echo "$config_file"
 
     #--------------- INSTALLING ----------------#
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
     echox wait "installing 'Stable Diffusion FORGE'"
     virtual_python launch.py --no-download-sd-model --exit
 }
@@ -89,31 +106,22 @@ function install() {
 #============================================================================
 # Launches the project application in the specified environment.
 #
-# Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag to use
+# Usage:
+#   _init_ ...
+#   cmd_launch [user_args]
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-function launch() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
-    local port_message=''
+cmd_launch() {
 
-    require_venv "$venv"
+    require_venv "$VENV" "$PYTHON"
 
     #--------- CONFIGURE USER SETTINGS ---------#
-    local options=()
+    local options=() port_message=''
     options+=( --theme dark  )   # start in dark mode
 
     # listering in the custom port
-    if [[ $PROJECT_PORT ]]; then
-        options+=( --port $PROJECT_PORT )
-        port_message="on port $PROJECT_PORT"
+    if [[ $PORT ]]; then
+        options+=( --port "$PORT" )
+        port_message="on port $PORT"
     fi
 
     #-------------- OPTIMIZATIONS --------------#
@@ -157,7 +165,7 @@ function launch() {
     directories+=( --swinir-models-path     "$MODELS_SWINIR_DIR"          )
     directories+=( --vae-dir                "$MODELS_VAE_DIR"             )
 
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
     echox check "changed working directory to $PWD"
     echox wait  "launching SD WebUI Forge application $port_message"
     virtual_python launch.py "${options[@]}" "${optimizations[@]}" "${directories[@]}" "$@"

@@ -111,7 +111,7 @@ cmd_install() {
     # copying required .env file
     cp -RPp .env.example .env
 
-    # building frontend using node
+    # building frontend using nodejs
     npm install
     npm run build
 
