@@ -44,6 +44,7 @@
 #   >require_system_command() : Checks if a given command is available on the system.
 #   >ask_confirmation()       : Prompts the user for confirmation.
 #   >safe_chdir()             : Changes directory safely, stopping the script if unsuccessful.
+#   >is_valid_function()      : Checks if all provided names are valid bash functions.
 #
 #-----------------------------------------------------------------------------
 
@@ -337,3 +338,29 @@ safe_chdir() {
                     "This could be due to a bug or a special situation that wasn't accounted for when generating the code." \
                     "It's also possible that user '$USER' does not have sufficient permissions to access the directory."
 }
+
+# Checks if all provided names are valid bash functions.
+#
+# Usage:
+#   is_valid_function <function_name1> [<function_name2> ...]
+#
+# Parameters:
+#   - function_name1, function_name2, ...: Names of functions to check.
+#
+# Example:
+#   if is_valid_function "foo" "bar"; then
+#       echo "Both foo and bar are valid functions"
+#   else
+#       echo "Either foo or bar is not a valid function"
+#   fi
+#
+is_valid_function() {
+    [[ $# -eq 0 ]] && return 0
+    for name in "$@"; do
+        if [[ $(type -t "$name") != 'function' ]]; then
+            return 1
+        fi
+    done
+    return 0
+}
+

@@ -33,28 +33,45 @@
 
 
 #============================================================================
-# Installs the project in the specified environment.
+# Initialize the project handler
+#
+# Usage:
+#   _init_ NAME PORT VENV PYTHON LOCAL_DIR REMOTE_URL REMOTE_HASH
 #
 # Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag to use
-#
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-function install() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
+#   - NAME        : short name of the project (e.g. "webui")
+#   - PORT        : port number where the app should listen, empty = default
+#   - VENV        : path to the Python virtual environment to use
+#   - PYTHON      : name (or path to) the Python interpreter to use (e.g. "python3.11")
+#   - LOCAL_DIR   : path to the local project directory
+#   - REMOTE_URL  : URL of the project's Git repository
+#   - REMOTE_HASH : Git commit hash or tag of the recommended version
 
-    require_system_command git
+_init_() {
+    #NAME=$1
+    PORT=$2
+    VENV=$3
+    PYTHON=python # =$4
+    LOCAL_DIR=$5
+    REMOTE_URL=$6
+    REMOTE_HASH=$7
+}
+
+#============================================================================
+# Installs the project in the specified environment.
+#
+# Usage:
+#   _init_ ...
+#   cmd_install [user_args]
+#
+cmd_install() {
+
+    require_system_command git "$PYTHON"
     require_storage_dir
-    require_venv "$venv" python
+    require_venv "$VENV" "$PYTHON"
 
-    clone_repository "$repo" "$hash" "$project_dir"
-    safe_chdir "$project_dir/models"
+    clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
+    safe_chdir "$LOCAL_DIR/models"
     require_symlink 'checkpoints'   "$MODELS_STABLEDIFFUSION_DIR" --convert-dir
     require_symlink 'clip'          "$MODELS_TEXTENCODER_DIR"     --convert-dir
     require_symlink 'controlnet'    "$MODELS_CONTROLNET_DIR"      --convert-dir
@@ -65,14 +82,14 @@ function install() {
     require_symlink 't5'            "$MODELS_DIR/t5"              --convert-dir
     require_symlink 'unet'          "$MODELS_DIR/unet"            --convert-dir
     require_symlink 'vae'           "$MODELS_VAE_DIR"             --convert-dir
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
     require_symlink 'output'        "$OUTPUT_DIR"                 --convert-dir
 
 
 
     #-------------------- INSTALLING ---------------------#
 
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
 
     ## Update PIP
     virtual_python !pip install --upgrade pip
@@ -87,7 +104,7 @@ function install() {
 
     #----------------- ADD CUSTOM NODES ------------------#
 
-    safe_chdir "$project_dir/custom_nodes"
+    safe_chdir "$LOCAL_DIR/custom_nodes"
 
     ## ComfyUI Manager
     # management functions to install, remove, disable, and enable custom nodes
@@ -131,31 +148,23 @@ function install() {
 #============================================================================
 # Launches the project application in the specified environment.
 #
-# Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag to use
+# Usage:
+#   _init_ ...
+#   cmd_launch [user_args]
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-function launch() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
+cmd_launch() {
 
-    require_venv "$venv" python
+    require_venv "$VENV" "$PYTHON"
 
     #------------- COMFYUI OPTIONS -------------#
     local options=() port_message=''
-    if [[ $PROJECT_PORT ]]; then
-        options+=( --port "$PROJECT_PORT" )
-        port_message="on port $PROJECT_PORT"
+    if [[ $PORT ]]; then
+        options+=( --port "$PORT" )
+        port_message="on port $PORT"
     fi
 
     #---------------- LAUNCHING ----------------#
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
     message "changed working directory to $PWD"
     message "launching ComfyUI application $port_message"
     message "main.py" "${options[@]}" "$@"

@@ -64,20 +64,30 @@ Examples:
 function run_command() {
     enforce_constraints --project --installed - "$@"
 
-    # retrieve project information
+    # select the project to extract information from,
+    # it will be referenced with '@' from now on
     project_info "$PROJECT_NAME"
-    local project_dir venv repo hash handler
+
+    # get project information
+    local project_dir port venv python repo hash handler
     project_dir=$(project_info @ @local_dir)
     venv=$(project_info @ @local_venv)
     repo=$(project_info @ @repo)
     hash=$(project_info @ @hash)
     handler=$(project_info @ @handler)
+    port=$PROJECT_PORT
+    python=$COMPATIBLE_PYTHON
 
     # ensure the project handler exists
     [[ -f $handler ]] \
     || bug_report "AIMan does not have a handler for the '$PROJECT_NAME' project"
-
-    #shellcheck disable=SC1090
+    #shellcheck source=/dev/null
     source "$handler"
-    launch "$venv" "$project_dir" "$repo" "$hash" "$@"
+
+    # execute the launch command from the project handler
+    is_valid_function _init_ cmd_launch \
+    || bug_report "The project handler for '$PROJECT_NAME' is missing required functions ('_init_' or 'cmd_launch')"
+
+    _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash"
+    cmd_launch "$@"
 }

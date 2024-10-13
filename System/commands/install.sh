@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#shellcheck disable=SC2154 source=/dev/null
 # File    : commands/install.sh
 # Brief   : Command to install projects on the aiman directory
 # Author  : Martin Rizzo | <martinrizzo@gmail.com>
@@ -31,6 +30,7 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+#shellcheck disable=SC2034
 HELP="
 Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME [VERSION]
 
@@ -72,24 +72,31 @@ function run_command() {
         "If $PROJECT_NAME is incorrectly installed, you can try uninstalling it with '$SCRIPT_NAME $PROJECT_NAME.remove' and installing it again."
     fi
 
-    # extract project information.
-    local project_dir venv repo hash handler
+    # get project information
+    local project_dir port venv python repo hash handler
     project_dir=$(project_info @ @local_dir)
     venv=$(project_info @ @local_venv)
     repo=$(project_info @ @repo)
     hash=$(project_info @ @hash)
     handler=$(project_info @ @handler)
-
-    # ensure the project script file exists
-    [[ -f $handler ]] \
-     || bug_report "AIMan does not have a handler for the '$PROJECT_NAME' project"
+    port=$PROJECT_PORT
+    python=$COMPATIBLE_PYTHON
 
     # if the user provided a version, use it to override the hash
     if [[ $version ]]; then
         hash=$version
     fi
 
-    # execute the install command from the project handler
+    # ensure the project script file exists
+    [[ -f $handler ]] \
+    || bug_report "AIMan does not have a handler for the '$PROJECT_NAME' project"
+    #shellcheck source=/dev/null
     source "$handler"
-    install "$venv" "$project_dir" "$repo" "$hash"
+
+    # execute the install command from the project handler
+    is_valid_function _init_ cmd_install \
+    || bug_report "The project handler for '$PROJECT_NAME' is missing required functions ('_init_' or 'cmd_install')"
+
+    _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash"
+    cmd_install
 }

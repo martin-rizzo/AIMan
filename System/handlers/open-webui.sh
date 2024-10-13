@@ -39,61 +39,74 @@ INSTALL_PIPELINES=true
 # Path to the 'pipelines' directory (relative to open-webui).
 PIPELINES_REL_DIR="../open-webui-pipelines"
 
-# Python interpreter compatible with open-webui
-COMPATIBLE_PYTHON=python3.11
+
+#--------------------------------- HELPERS ----------------------------------
 
 # Launches three services within a screen session,
 # each in a separate horizontally split panel.
 launch_in_screen_session() {
-    local session=$1
+    local session=$1 aiman=$2
 
     # check if a session name is provided.
     [[ -n "$session" ]] ||
         bug_report "The 'launch_in_screen_session()' function requires a session name as the first argument"
 
     screen -S "$session" -X focus top
-    screen -S "$session" -X screen -t   'OLLAMA'  "$AIMAN" ollama.launch
+    screen -S "$session" -X screen -t   'OLLAMA'  "$aiman" ollama.launch
 
     screen -S "$session" -X split
     screen -S "$session" -X focus next
-    screen -S "$session" -X screen -t 'PIPELINES' "$AIMAN" open-webui.launch --pipelines
+    screen -S "$session" -X screen -t 'PIPELINES' "$aiman" open-webui.launch --pipelines
 
     sleep 1
     screen -S "$session" -X split
     screen -S "$session" -X focus next
-    screen -S "$session" -X screen -t   'WEBUI'   "$AIMAN" open-webui.launch --webui
+    screen -S "$session" -X screen -t   'WEBUI'   "$aiman" open-webui.launch --webui
 }
 
+
+#============================================================================
+# Initialize the project handler
+#
+# Usage:
+#   _init_ NAME PORT VENV PYTHON LOCAL_DIR REMOTE_URL REMOTE_HASH
+#
+# Parameters:
+#   - NAME        : short name of the project (e.g. "webui")
+#   - PORT        : port number where the app should listen, empty = default
+#   - VENV        : path to the Python virtual environment to use
+#   - PYTHON      : name (or path to) the Python interpreter to use (e.g. "python3.11")
+#   - LOCAL_DIR   : path to the local project directory
+#   - REMOTE_URL  : URL of the project's Git repository
+#   - REMOTE_HASH : Git commit hash or tag of the recommended version
+
+_init_() {
+    #NAME=$1
+    #PORT=$2
+    VENV=$3
+    PYTHON=python3.11  # =$4
+    LOCAL_DIR=$5
+    REMOTE_URL=$6
+    REMOTE_HASH=$7
+}
 
 #============================================================================
 # Installs the project in the specified environment.
 #
 # Usage:
-#   install <venv> <project_dir> <repo> <hash>
+#   _init_ ...
+#   cmd_install [user_args]
 #
-# Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag of the recommended version
-#
-# AIMan Globals:
-#   - AIMAN        : the path to the main AIMan script (e.g. "/home/user/AIMan/aiman.sh")
-#   - PROJECT_NAME : the short name of the project (e.g. "webui")
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-install() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
+cmd_install() {
 
     # Python  >= 3.11
     # Node.js >= 20.10
-    require_system_command git npm "$COMPATIBLE_PYTHON"
-    require_venv "$venv" "$COMPATIBLE_PYTHON"
-    clone_repository "$repo" "$hash" "$project_dir"
+    require_system_command git npm "$PYTHON"
+    require_venv "$VENV" "$PYTHON"
+    clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
 
     #-------------------- INSTALLING ---------------------#
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
 
     # copying required .env file
     cp -RPp .env.example .env
@@ -103,7 +116,7 @@ install() {
     npm run build
 
     # install backend dependencies
-    safe_chdir "$project_dir"
+    safe_chdir "$LOCAL_DIR"
     virtual_python !pip install --upgrade pip
     virtual_python !pip install -r backend/requirements.txt -U
 
@@ -111,35 +124,22 @@ install() {
     if [[ $INSTALL_PIPELINES == true ]]; then
 
         # install pipelines
-        mkdir -p   "$project_dir/$PIPELINES_REL_DIR"
-        safe_chdir "$project_dir/$PIPELINES_REL_DIR"
+        mkdir -p   "$LOCAL_DIR/$PIPELINES_REL_DIR"
+        safe_chdir "$LOCAL_DIR/$PIPELINES_REL_DIR"
         git clone https://github.com/open-webui/pipelines.git .
         virtual_python !pip install -r requirements.txt
 
     fi
 }
 
-
 #============================================================================
 # Launches the project application in the specified environment.
 #
 # Usage:
-#   launch <venv> <project_dir> <repo> <hash>
+#   _init_ ...
+#   cmd_launch [user_args]
 #
-# Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag of the recommended version
-#
-# AIMan Globals:
-#   - AIMAN        : the path to the main AIMan script (e.g. "/home/user/AIMan/aiman.sh")
-#   - PROJECT_NAME : the short name of the project (e.g. "webui")
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-launch() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
+cmd_launch() {
 
     # default service to launch is SCREEN with 3 panels: ollama/pipelines/webui
     local launch='screen'
@@ -184,8 +184,8 @@ launch() {
             fatal_error "Automatic installation of Pipelines with Open WebUI is disabled" \
                 "This is due to 'INSTALL_PIPELINES' is set to '$INSTALL_PIPELINES 'in System/handlers/open-webui.sh"
         fi
-        require_venv "$venv" "$COMPATIBLE_PYTHON"
-        safe_chdir "$project_dir/$PIPELINES_REL_DIR"
+        require_venv "$VENV" "$PYTHON"
+        safe_chdir "$LOCAL_DIR/$PIPELINES_REL_DIR"
         message "working directory changed to: $PWD"
         message "launching Pipelines $port_message"
         message "./start.sh" "${options[@]}" "$@"
@@ -195,8 +195,8 @@ launch() {
 
     # launch "Open WebUI"
     elif [[ $launch == 'webui' ]]; then
-        require_venv "$venv" "$COMPATIBLE_PYTHON"
-        safe_chdir "$project_dir/backend"
+        require_venv "$VENV" "$PYTHON"
+        safe_chdir "$LOCAL_DIR/backend"
         message "working directory changed to: $PWD"
         message "launching Open WebUI application $port_message"
         message "./start.sh" "${options[@]}" "$@"
@@ -208,38 +208,25 @@ launch() {
     elif [[ $launch == 'screen' ]]; then
         local screen_session='open-webui'
         require_system_command screen
-        launch_in_screen_session "$screen_session" &
+        launch_in_screen_session "$screen_session" "$AIMAN" &
         screen               -S  "$screen_session" -t "LAUNCHING" sleep 5
 
 
     fi
 }
 
-
 #============================================================================
 # Removes any extra files that were installed outside the main project.
 #
 # Usage:
-#   remove_extra <venv> <project_dir> <repo> <hash>
+#   _init_ ...
+#   cmd_remove_extra [user_args]
 #
-# Parameters:
-#   - venv        : the path to the Python virtual environment to use
-#   - project_dir : the path to the local project directory
-#   - repo        : the URL of the project's Git repository
-#   - hash        : the Git commit hash or tag of the recommended version
-#
-# AIMan Globals:
-#   - AIMAN        : the path to the main AIMan script (e.g. "/home/user/AIMan/aiman.sh")
-#   - PROJECT_NAME : the short name of the project (e.g. "webui")
-#   - PROJECT_PORT : the port where the app should listen, empty = default
-#
-remove_extra() {
-    local venv=$1 project_dir=$2 repo=$3 hash=$4
-    shift 4
+cmd_remove_extra() {
 
     if [[ $INSTALL_PIPELINES == true ]]; then
         echox wait  "Removing sub-project 'open-webui-pipelines'"
-        rm -rf "${project_dir:?}/${PIPELINES_REL_DIR:?}"
+        rm -rf "${LOCAL_DIR:?}/${PIPELINES_REL_DIR:?}"
         echox check "Sub-project 'open-webui-pipelines' has been removed."
     fi
 }

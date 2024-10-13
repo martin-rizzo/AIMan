@@ -30,6 +30,7 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+#shellcheck disable=SC2034
 HELP="
 Usage: $SCRIPT_NAME PROJECT.$COMMAND_NAME
 
@@ -45,15 +46,20 @@ Examples:
 
 function run_command() {
     enforce_constraints --project - "$@"
-    local venv project_dir repo hash handler
+
+    # select the project to extract information from,
+    # it will be referenced with '@' from now on
+    project_info "$PROJECT_NAME"
 
     # get project information
-    project_info "$PROJECT_NAME"
+    local project_dir port venv python repo hash handler
     project_dir=$(project_info @ @local_dir )
     venv=$(project_info        @ @local_venv)
     repo=$(project_info        @ @repo      )
     hash=$(project_info        @ @hash      )
     handler=$(project_info     @ @handler   )
+    port=$PROJECT_PORT
+    python=$COMPATIBLE_PYTHON
 
     # ensure the project is installed before attempting to remove it
     if ! is_project_installed "$PROJECT_NAME"; then
@@ -82,12 +88,19 @@ function run_command() {
         exit 0
     fi
 
-    # if the user confirmed, proceed to remove the project
-    #shellcheck disable=SC1090
+    # ensure the project script file exists
+    [[ -f $handler ]] \
+    || bug_report "AIMan does not have a handler for the '$PROJECT_NAME' project"
+    #shellcheck source=/dev/null
     source "$handler"
-    if [[ "$(type -t remove_extra)" = "function" ]]; then
-      remove_extra "$venv" "$project_dir" "$repo" "$hash"
+
+    # remove any extra files that were installed outside the main project
+    if is_valid_function _init_ cmd_remove_extra; then
+        _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash"
+        cmd_remove_extra
     fi
+
+    # proceed to remove the project
     echox wait "Removing project '$PROJECT_NAME'"
     rm -rf "$project_dir" "$venv"
     echox check "Project '$PROJECT_NAME' has been removed."
