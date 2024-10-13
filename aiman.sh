@@ -31,8 +31,10 @@
 #     TORT OR OTHERWISE, ARISING FROM,OUT OF OR IN CONNECTION WITH THE
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-SCRIPT_NAME=${BASH_SOURCE[0]##*/}
-SCRIPT_VER=0.2      # script version
+AIMAN=$(realpath "${BASH_SOURCE[0]}")
+SCRIPT_DIR=$(dirname "$AIMAN")
+SCRIPT_NAME=$(basename "$AIMAN")
+SCRIPT_VER=0.1      # script version
 PROJECT_NAME=       # name of the project on which the command will be executed
 COMMAND_NAME=       # name of the command to be executed
 COMMAND_PARAMS=()   # parameters for the command
@@ -65,16 +67,13 @@ Examples:
     $SCRIPT_NAME launch --help
 "
 
-# Determine the base directory containing the script
-BASE_DIR=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
-
 # Define directory paths relative to the base directory
-MODELS_DIR="$BASE_DIR/Models"
-OUTPUT_DIR="$BASE_DIR/Output"
-REPOS_DIR="$BASE_DIR/Repos"
-STORAGE_DIR="$BASE_DIR/Storage"
-SYSTEM_DIR="$BASE_DIR/System"
-VENV_DIR="$BASE_DIR/VEnv"
+MODELS_DIR="$SCRIPT_DIR/Models"
+OUTPUT_DIR="$SCRIPT_DIR/Output"
+REPOS_DIR="$SCRIPT_DIR/Repos"
+STORAGE_DIR="$SCRIPT_DIR/Storage"
+SYSTEM_DIR="$SCRIPT_DIR/System"
+VENV_DIR="$SCRIPT_DIR/VEnv"
 
 # Code directories
 COMMANDS_DIR="$SYSTEM_DIR/commands"
@@ -118,8 +117,8 @@ function is_valid_command() {
 #===========================================================================#
 
 # change to the main directory
-if ! cd "$BASE_DIR" &>/dev/null ; then
-    echo " ERROR: Failed to change directory to '$BASE_DIR'."
+if ! cd "$SCRIPT_DIR" &>/dev/null ; then
+    echo " ERROR: Failed to change directory to '$SCRIPT_DIR'."
     echo " This could be due to user '$USER' does not have sufficient permissions to access the directory."
     exit 1
 fi

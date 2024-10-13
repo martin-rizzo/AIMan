@@ -110,8 +110,8 @@ function print_short_dir() {
         readlink) directory=$(readlink "$2") ;;
         *)        directory=$1               ;;
     esac
-    if [[ $directory == "$BASE_DIR"* ]]; then
-        echo ".${directory#$BASE_DIR}"
+    if [[ $directory == "$SCRIPT_DIR"* ]]; then
+        echo ".${directory#$SCRIPT_DIR}"
     elif [[ $directory == "$HOME"* ]]; then
         echo "~${directory#$HOME}"
     else
@@ -247,7 +247,7 @@ function require_storage_dir() {
     require_directory "$STORAGE_DIR"
     require_directory "$STORAGE_DIR/Models"
     require_directory "$STORAGE_DIR/Output"
-    safe_chdir "$BASE_DIR"
+    safe_chdir "$SCRIPT_DIR"
     require_symlink 'Models' "$STORAGE_DIR/Models"
     require_symlink 'Output' "$STORAGE_DIR/Output"
     if [[ $USER =~ ^aiman[0-9]?$ ]]; then

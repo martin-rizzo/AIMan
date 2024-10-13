@@ -31,11 +31,6 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
-# Command to invoke the AIMan script. (it's hardcoded)
-# TODO: make aiman main script configure some global variable
-AIMAN_CMD="$HOME/AIMan/aiman.sh"
-
-
 # Whether to install and configure the "Pipelines" framework
 #  (https://github.com/open-webui/pipelines)
 #  'true' is 100% recommended for enhanced functionality
@@ -57,21 +52,24 @@ launch_in_screen_session() {
         bug_report "The 'launch_in_screen_session()' function requires a session name as the first argument"
 
     screen -S "$session" -X focus top
-    screen -S "$session" -X screen -t   'OLLAMA'  "$AIMAN_CMD" ollama.launch
+    screen -S "$session" -X screen -t   'OLLAMA'  "$AIMAN" ollama.launch
 
     screen -S "$session" -X split
     screen -S "$session" -X focus next
-    screen -S "$session" -X screen -t 'PIPELINES' "$AIMAN_CMD" open-webui.launch --pipelines
+    screen -S "$session" -X screen -t 'PIPELINES' "$AIMAN" open-webui.launch --pipelines
 
     sleep 1
     screen -S "$session" -X split
     screen -S "$session" -X focus next
-    screen -S "$session" -X screen -t   'WEBUI'   "$AIMAN_CMD" open-webui.launch --webui
+    screen -S "$session" -X screen -t   'WEBUI'   "$AIMAN" open-webui.launch --webui
 }
 
 
 #============================================================================
 # Installs the project in the specified environment.
+#
+# Usage:
+#   install <venv> <project_dir> <repo> <hash>
 #
 # Parameters:
 #   - venv        : the path to the Python virtual environment to use
@@ -79,8 +77,9 @@ launch_in_screen_session() {
 #   - repo        : the URL of the project's Git repository
 #   - hash        : the Git commit hash or tag of the recommended version
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+# AIMan Globals:
+#   - AIMAN        : the path to the main AIMan script (e.g. "/home/user/AIMan/aiman.sh")
+#   - PROJECT_NAME : the short name of the project (e.g. "webui")
 #   - PROJECT_PORT : the port where the app should listen, empty = default
 #
 install() {
@@ -124,22 +123,26 @@ install() {
 #============================================================================
 # Launches the project application in the specified environment.
 #
+# Usage:
+#   launch <venv> <project_dir> <repo> <hash>
+#
 # Parameters:
 #   - venv        : the path to the Python virtual environment to use
 #   - project_dir : the path to the local project directory
 #   - repo        : the URL of the project's Git repository
 #   - hash        : the Git commit hash or tag of the recommended version
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+# AIMan Globals:
+#   - AIMAN        : the path to the main AIMan script (e.g. "/home/user/AIMan/aiman.sh")
+#   - PROJECT_NAME : the short name of the project (e.g. "webui")
 #   - PROJECT_PORT : the port where the app should listen, empty = default
 #
 launch() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
     shift 4
 
-    # default service to launch is WebUI
-    local launch='webui'
+    # default service to launch is SCREEN with 3 panels: ollama/pipelines/webui
+    local launch='screen'
     local options=()
 
     # override the default service to launch based on the first argument
@@ -172,7 +175,7 @@ launch() {
 
     # launch "Ollama"
     if [[ $launch == 'ollama' ]]; then
-        "$AIMAN_CMD" ollama.launch
+        "$AIMAN" ollama.launch
 
 
     # launch "Pipelines" (a ui-agnostic openai api plugin framework)
@@ -216,14 +219,19 @@ launch() {
 #============================================================================
 # Removes any extra files that were installed outside the main project.
 #
+# Usage:
+#   remove_extra <venv> <project_dir> <repo> <hash>
+#
 # Parameters:
 #   - venv        : the path to the Python virtual environment to use
 #   - project_dir : the path to the local project directory
 #   - repo        : the URL of the project's Git repository
 #   - hash        : the Git commit hash or tag of the recommended version
 #
-# Globals:
-#   - PROJECT_NAME : the short name of the project, e.g. "webui"
+# AIMan Globals:
+#   - AIMAN        : the path to the main AIMan script (e.g. "/home/user/AIMan/aiman.sh")
+#   - PROJECT_NAME : the short name of the project (e.g. "webui")
+#   - PROJECT_PORT : the port where the app should listen, empty = default
 #
 remove_extra() {
     local venv=$1 project_dir=$2 repo=$3 hash=$4
