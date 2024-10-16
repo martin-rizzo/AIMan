@@ -31,13 +31,23 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
+# Check if AIMAN variable is set, otherwise exit with an error
+AIMAN=${AIMAN:?}
+
 # Whether to install and configure the "Pipelines" framework
 #  (https://github.com/open-webui/pipelines)
 #  'true' is 100% recommended for enhanced functionality
 INSTALL_PIPELINES=true
 
-# Path to the 'pipelines' directory (relative to open-webui).
-PIPELINES_REL_DIR="../open-webui-pipelines"
+# Path to the 'pipelines' project directory (relative to open-webui).
+PIPELINES_REL="../open-webui-pipelines"
+
+# Directory to store 'pipelines' workflows.
+# This will be created if it doesn't exist.
+PIPELINES_WORKFLOWS_DIR="$MODELS_DIR/Pipelines"
+
+# Port number for the 'pipelines' server
+PIPELINES_PORT=9099
 
 
 #--------------------------------- HELPERS ----------------------------------
@@ -61,7 +71,7 @@ launch_in_screen_session() {
     sleep 1
     screen -S "$session" -X split
     screen -S "$session" -X focus next
-    screen -S "$session" -X screen -t   'WEBUI'   "$aiman" open-webui.launch --webui
+    screen -S "$session" -X screen -t   'WEBUI'   "$aiman" open-webui.launch --webui --close-screen-on-exit
 }
 
 
@@ -81,13 +91,14 @@ launch_in_screen_session() {
 #   - REMOTE_HASH : Git commit hash or tag of the recommended version
 
 _init_() {
-    #NAME=$1
+    NAME=$1
     #PORT=$2
     VENV=$3
     PYTHON=python3.11  # =$4
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
+    PIPELINES_LOCAL_DIR="${LOCAL_DIR:?}/${PIPELINES_REL:?}"
 }
 
 #============================================================================
@@ -124,8 +135,8 @@ cmd_install() {
     if [[ $INSTALL_PIPELINES == true ]]; then
 
         # install pipelines
-        mkdir -p   "$LOCAL_DIR/$PIPELINES_REL_DIR"
-        safe_chdir "$LOCAL_DIR/$PIPELINES_REL_DIR"
+        mkdir -p   "$PIPELINES_LOCAL_DIR"
+        safe_chdir "$PIPELINES_LOCAL_DIR"
         git clone https://github.com/open-webui/pipelines.git .
         virtual_python !pip install -r requirements.txt
 
@@ -143,27 +154,39 @@ cmd_launch() {
 
     # default service to launch is SCREEN with 3 panels: ollama/pipelines/webui
     local launch='screen'
+    local close_screen=false
     local options=()
 
-    # override the default service to launch based on the first argument
-    case $1 in
-        '--ollama')
-            launch='ollama'
-            shift
-            ;;
-        '--pipelines')
-            launch='pipelines'
-            shift
-            ;;
-        '--webui')
-            launch='webui'
-            shift
-            ;;
-        '--screen')
-            launch='screen'
-            shift
-            ;;
-    esac
+    # process command-line arguments que especifican the service to launch
+    # and whether to close the screen session.
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            '--ollama')
+                launch='ollama'
+                shift
+                ;;
+            '--pipelines')
+                launch='pipelines'
+                shift
+                ;;
+            '--webui')
+                launch='webui'
+                shift
+                ;;
+            '--screen')
+                launch='screen'
+                shift
+                ;;
+            # internally used to close the 'screen' session on exit
+            '--close-screen-on-exit')
+                close_screen=true
+                shift
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
 
     # port selection
     # (currently not used, but kept for future expansion).
@@ -172,6 +195,7 @@ cmd_launch() {
 
 
     #-- LAUNCHING THE USER-SPECIFIED SERVICE -------------#
+    local screen_session="$NAME-ss"
 
     # launch "Ollama"
     if [[ $launch == 'ollama' ]]; then
@@ -185,16 +209,20 @@ cmd_launch() {
                 "This is due to 'INSTALL_PIPELINES' is set to '$INSTALL_PIPELINES 'in System/handlers/open-webui.sh"
         fi
         require_venv "$VENV" "$PYTHON"
-        safe_chdir "$LOCAL_DIR/$PIPELINES_REL_DIR"
+        safe_chdir "$PIPELINES_LOCAL_DIR"
         message "working directory changed to: $PWD"
         message "launching Pipelines $port_message"
         message "./start.sh" "${options[@]}" "$@"
         message
+        mkdir -p "$PIPELINES_WORKFLOWS_DIR"
+        export PIPELINES_DIR="$PIPELINES_WORKFLOWS_DIR"
+        export PORT="$PIPELINES_PORT"
         virtual_python !./start.sh "${options[@]}" "$@"
 
 
     # launch "Open WebUI"
     elif [[ $launch == 'webui' ]]; then
+        echo -ne "\033]0; Open WebUI 👋\a"
         require_venv "$VENV" "$PYTHON"
         safe_chdir "$LOCAL_DIR/backend"
         message "working directory changed to: $PWD"
@@ -206,12 +234,16 @@ cmd_launch() {
 
     # launch WebUI + Pipelines+ Ollama in three separate screen regions
     elif [[ $launch == 'screen' ]]; then
-        local screen_session='open-webui'
         require_system_command screen
         launch_in_screen_session "$screen_session" "$AIMAN" &
         screen               -S  "$screen_session" -t "LAUNCHING" sleep 5
+    fi
 
 
+    # on service completion,
+    # close the 'screen' session if requested
+    if [[ $close_screen == true ]]; then
+        screen -S "$screen_session" -X quit
     fi
 }
 
@@ -226,7 +258,7 @@ cmd_remove_extra() {
 
     if [[ $INSTALL_PIPELINES == true ]]; then
         echox wait  "Removing sub-project 'open-webui-pipelines'"
-        rm -rf "${LOCAL_DIR:?}/${PIPELINES_REL_DIR:?}"
+        rm -rf "${PIPELINES_LOCAL_DIR:?}"
         echox check "Sub-project 'open-webui-pipelines' has been removed."
     fi
 }
