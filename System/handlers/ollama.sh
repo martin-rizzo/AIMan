@@ -46,7 +46,9 @@
 #    > sudo ln -s /usr/bin/gcc-13/usr/local/cuda/bin/gcc
 #    > sudo ln -s /usr/bin/g++-13 /usr/local/cuda/bin/g++
 #
-
+# Verificar que CUDA Toolkit esta instalado:
+#    > ??? /usr/local/cuda-12/bin/nvcc
+#
 
 #============================================================================
 # Initialize the project handler
@@ -71,6 +73,7 @@ _init_() {
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
+    VERSION=$REMOTE_HASH
 }
 
 #============================================================================
@@ -88,9 +91,18 @@ cmd_install() {
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
     safe_chdir "$LOCAL_DIR"
 
+    ## https://github.com/ollama/ollama/blob/main/docs/gpu.md
+    export CMAKE_CUDA_ARCHITECTURES=86
+
+    # LDFLGAS OPTIONS [https://pkg.go.dev/cmd/link]
+    #  -s                       Remove all symbol table and relocation information from the executable.
+    #  -w                       Omit the DWARF symbol table.
+    #  -X importpath.name=value Set the value of the string variable in importpath named name to value.
+    local ldflags="-w -s -X github.com/ollama/ollama/version.Version=$VERSION -X github.com/ollama/ollama/server.mode=release"
+
     # build ollama from source code
     go generate ./...
-    go build .
+    go build -x -ldflags="$ldflags"
 }
 
 #============================================================================
@@ -118,5 +130,5 @@ cmd_launch() {
     message "launching Ollama Server $port_message"
     message
     mkdir -p "$MODELS_OLLAMA_DIR"
-    OLLAMA_HOST="127.0.0.1:$port" OLLAMA_MODELS="$MODELS_OLLAMA_DIR" ./ollama serve
+    OLLAMA_HOST="127.0.0.1:$port" OLLAMA_MODELS="$MODELS_OLLAMA_DIR" OLLAMA_DEBUG=1 ./ollama serve
 }
