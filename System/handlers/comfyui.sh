@@ -94,8 +94,8 @@ cmd_install() {
     ## Update PIP
     virtual_python !pip install --upgrade pip
 
-    ## NVIDIA GPU
-    virtual_python !pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+    ## NVIDIA GPU + pytorch 2.5.0 + CUDA 12.4
+    virtual_python !pip3 install torch torchvision torchaudio
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
