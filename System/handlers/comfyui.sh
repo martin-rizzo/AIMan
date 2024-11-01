@@ -51,7 +51,7 @@ _init_() {
     #NAME=$1
     PORT=$2
     VENV=$3
-    PYTHON=python # =$4
+    PYTHON=python3.12 # =$4
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
@@ -91,11 +91,12 @@ cmd_install() {
 
     safe_chdir "$LOCAL_DIR"
 
-    ## Update PIP
+    ## Update PIP & pyyaml
     virtual_python !pip install --upgrade pip
+    virtual_python !pip install pyyaml
 
     ## NVIDIA GPU + pytorch 2.5.0 + CUDA 12.4
-    virtual_python !pip3 install torch torchvision torchaudio
+    virtual_python !pip install torch torchvision torchaudio
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
