@@ -52,8 +52,49 @@ PIPELINES_PORT=9099
 
 #--------------------------------- HELPERS ----------------------------------
 
+# Installs a pipeline script into the '$PIPELINES_WORKFLOWS_DIR' directory.
+#
+# Usage: install_pipelines <pipeline_name> <path_to_script>
+#
+# Parameters:
+#   pipeline_name  - The name of the pipeline, ej: "Google GenAI Manifold Pipeline"
+#   path_to_script - Full path to the script file that needs to be installed.
+#
+install_pipelines() {
+    local pipeline_name=$1 pipeline_script=$2
+    local filename
+
+    [[ -n "$pipeline_script" ]] \
+      || bug_report "install_pipelines() did not receive any script to install"
+    [[ -f "$pipeline_script" ]] \
+      || bug_report "install_pipelines() did not find the script '$pipeline_script'"
+
+    # if no pipeline name was provided, set it to the basename of the script
+    filename=$(basename "$pipeline_script")
+    if [[ -z $pipeline_name ]]; then
+        pipeline_name=$filename
+    fi
+
+    # check if a file with the same name already exists in the pipelines directory
+    if [[ -e "$PIPELINES_WORKFLOWS_DIR/$filename" ]]; then
+        echox check "$filename already installed"
+        return
+    fi
+
+    echox wait "Installing $pipeline_name"
+    mkdir -p "$PIPELINES_WORKFLOWS_DIR"
+    cp "$pipeline_script" "$PIPELINES_WORKFLOWS_DIR"
+}
+
 # Launches three services within a screen session,
 # each in a separate horizontally split panel.
+#
+# Usage: launch_in_screen_session <session_name> <aiman_command>
+#
+# Parameters:
+#   session - The name of the 'screen' session to be created or reused.
+#   aiman   - The full path to the 'aiman' command used to start the services.
+#
 launch_in_screen_session() {
     local session=$1 aiman=$2
 
@@ -116,7 +157,7 @@ cmd_install() {
     require_venv "$VENV" "$PYTHON"
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
 
-    #-------------------- INSTALLING ---------------------#
+    #---------------- INSTALL OPEN-WEBUI -----------------#
     safe_chdir "$LOCAL_DIR"
 
     # copying required .env file
@@ -131,16 +172,25 @@ cmd_install() {
     virtual_python !pip install --upgrade pip
     virtual_python !pip install -r backend/requirements.txt -U
 
-    #------------------ ADD PIPELINES ------------------#
-    if [[ $INSTALL_PIPELINES == true ]]; then
+    #----------------- INSTALL PIPELINES -----------------#
 
-        # install pipelines
-        mkdir -p   "$PIPELINES_LOCAL_DIR"
-        safe_chdir "$PIPELINES_LOCAL_DIR"
-        git clone https://github.com/open-webui/pipelines.git .
-        virtual_python !pip install -r requirements.txt
+    # if the installation of pipelines is not required, return early
+    [[ $INSTALL_PIPELINES != true ]] && return
 
-    fi
+    # define source paths to the predefined pipeline examples
+    # shellcheck disable=SC2034
+    local filters="$PIPELINES_LOCAL_DIR/examples/filters"      \
+          pipelines="$PIPELINES_LOCAL_DIR/examples/pipelines"  \
+          scaffolds="$PIPELINES_LOCAL_DIR/examples/scaffolds"
+
+    # MAIN
+    mkdir -p   "$PIPELINES_LOCAL_DIR"
+    safe_chdir "$PIPELINES_LOCAL_DIR"
+    git clone https://github.com/open-webui/pipelines.git .
+    virtual_python !pip install -r requirements.txt
+
+    # install specific scripts that come predefined with PIPELINES
+    install_pipelines "Google GenAI Manifold Pipeline" "$pipelines/providers/google_manifold_pipeline.py"
 }
 
 #============================================================================
