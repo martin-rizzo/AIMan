@@ -96,6 +96,7 @@ MODELS_STYLES_DIR="$MODELS_DIR/styles"
 MODELS_SWINIR_DIR="$MODELS_DIR/SwinIR"
 MODELS_TEXTENCODER_DIR="$MODELS_DIR/text_encoder"
 MODELS_VAE_DIR="$MODELS_DIR/VAE"
+MODELS_VAE_APPROX_DIR="$MODELS_DIR/VAE-approx"
 
 # The compatible version of Python to be used within the virtual environment.
 # This version should ensure that all projects function correctly. It will be

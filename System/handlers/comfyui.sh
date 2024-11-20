@@ -82,6 +82,7 @@ cmd_install() {
     require_symlink 't5'            "$MODELS_DIR/t5"              --convert-dir
     require_symlink 'unet'          "$MODELS_DIR/unet"            --convert-dir
     require_symlink 'vae'           "$MODELS_VAE_DIR"             --convert-dir
+    require_symlink 'vae_approx'    "$MODELS_VAE_APPROX_DIR"      --convert-dir
     safe_chdir "$LOCAL_DIR"
     require_symlink 'output'        "$OUTPUT_DIR"                 --convert-dir
 
@@ -121,6 +122,12 @@ cmd_install() {
     # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
     git clone https://github.com/city96/ComfyUI_ExtraModels
     virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
+
+    ## OmniGen-ComfyUI
+    # A custom node for OmniGen [https://github.com/VectorSpaceLab/OmniGen]
+    #git clone https://github.com/AIFSH/OmniGen-ComfyUI
+    #git clone https://github.com/harkonkr/OmniGen-ComfyUI
+    #virtual_python !pip install -r OmniGen-ComfyUI/requirements.txt
 
     ### ComfyUI GGUF
     ## GGUF Quantization support for native ComfyUI models
