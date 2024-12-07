@@ -86,8 +86,6 @@ cmd_install() {
     safe_chdir "$LOCAL_DIR"
     require_symlink 'output'        "$OUTPUT_DIR"                 --convert-dir
 
-
-
     #-------------------- INSTALLING ---------------------#
 
     safe_chdir "$LOCAL_DIR"
@@ -96,7 +94,7 @@ cmd_install() {
     virtual_python !pip install --upgrade pip
     virtual_python !pip install pyyaml
 
-    ## NVIDIA GPU + pytorch 2.5.0 + CUDA 12.4
+    ## NVIDIA GPU + pytorch 2.5.1 + CUDA 12.4
     virtual_python !pip install torch torchvision torchaudio
 
     ## Dependencies
