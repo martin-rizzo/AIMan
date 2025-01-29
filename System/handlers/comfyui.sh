@@ -51,7 +51,7 @@ _init_() {
     #NAME=$1
     PORT=$2
     VENV=$3
-    PYTHON=python3.12 # =$4
+    PYTHON=python3.10 # =$4
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
@@ -78,8 +78,6 @@ cmd_install() {
     require_symlink 'embeddings'    "$MODELS_EMBEDDINGS_DIR"      --convert-dir
     require_symlink 'hypernetworks' "$MODELS_HYPERNETWORK_DIR"    --convert-dir
     require_symlink 'loras'         "$MODELS_LORA_DIR"            --convert-dir
-    require_symlink 'pixart'        "$MODELS_DIR/PixArt"          --convert-dir
-    require_symlink 't5'            "$MODELS_DIR/t5"              --convert-dir
     require_symlink 'unet'          "$MODELS_DIR/unet"            --convert-dir
     require_symlink 'vae'           "$MODELS_VAE_DIR"             --convert-dir
     require_symlink 'vae_approx'    "$MODELS_VAE_APPROX_DIR"      --convert-dir
