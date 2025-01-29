@@ -269,7 +269,6 @@ cmd_launch() {
         export PORT="$PIPELINES_PORT"
         virtual_python !./start.sh "${options[@]}" "$@"
 
-
     # launch "Open WebUI"
     elif [[ $launch == 'webui' ]]; then
         echo -ne "\033]0; Open WebUI 👋\a"
@@ -279,6 +278,9 @@ cmd_launch() {
         message "launching Open WebUI application $port_message"
         message "./start.sh" "${options[@]}" "$@"
         message
+        # export GLOBAL_LOG_LEVEL="DEBUG"
+        export HOST="127.0.0.1"
+        export PORT="8080"
         virtual_python !./start.sh "${options[@]}" "$@"
 
 

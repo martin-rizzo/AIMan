@@ -101,8 +101,11 @@ cmd_install() {
     local ldflags="-w -s -X github.com/ollama/ollama/version.Version=$VERSION -X github.com/ollama/ollama/server.mode=release"
 
     # build ollama from source code
-    go generate ./...
-    go build -x -ldflags="$ldflags"
+    #go generate ./...
+    make runners
+    go build -ldflags="$ldflags" .
+    # -tags avx,cuda12  : ??
+    # -x                : displays the commands executed by the build process
 }
 
 #============================================================================
