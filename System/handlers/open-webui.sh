@@ -86,33 +86,99 @@ install_pipelines() {
     cp "$pipeline_script" "$PIPELINES_WORKFLOWS_DIR"
 }
 
-# Launches three services within a screen session,
-# each in a separate horizontally split panel.
-#
-# Usage: launch_in_screen_session <session_name> <aiman_command>
+# Launches/closes the three services within a 'screen' session.
+# Usage: control_screen_session <session> <command> [aiman_path]
 #
 # Parameters:
-#   session - The name of the 'screen' session to be created or reused.
-#   aiman   - The full path to the 'aiman' command used to start the services.
+#   session    - The name of the 'screen' session to be created or destroyed.
+#   command    - The action to perform: "launch" or "close".
+#   aiman_path - The full path to the 'aiman' command used to start the services.
 #
-launch_in_screen_session() {
-    local session=$1 aiman=$2
-
-    # check if a session name is provided.
+control_screen_session() {
+    local session=$1 command=$2 aiman_path=$3
     [[ -n "$session" ]] ||
-        bug_report "The 'launch_in_screen_session()' function requires a session name as the first argument"
+        bug_report "The control_screen_session() function requires a session name as the first argument"
 
-    screen -S "$session" -X focus top
-    screen -S "$session" -X screen -t   'OLLAMA'  "$aiman" ollama.launch
+    # launch the three services within the screen session
+    if [[ $command == "launch" ]]; then
 
-    screen -S "$session" -X split
-    screen -S "$session" -X focus next
-    screen -S "$session" -X screen -t 'PIPELINES' "$aiman" open-webui.launch --pipelines
+        # launch OLLAMA service
+        sleep 1
+        screen -S "$session" -X focus top
+        screen -S "$session" -X screen -t   'OLLAMA'  "$aiman_path" ollama.launch
 
-    sleep 1
-    screen -S "$session" -X split
-    screen -S "$session" -X focus next
-    screen -S "$session" -X screen -t   'WEBUI'   "$aiman" open-webui.launch --webui --close-screen-on-exit
+        # split the screen and launch PIPELINES service in the new pane
+        sleep 1
+        screen -S "$session" -X split
+        screen -S "$session" -X focus next
+        screen -S "$session" -X screen -t 'PIPELINES' "$aiman_path" open-webui.launch --pipelines
+
+        # split the screen again and launch WEBUI service in the new pane
+        sleep 1
+        screen -S "$session" -X split
+        screen -S "$session" -X focus next
+        screen -S "$session" -X screen -t   'WEBUI'   "$aiman_path" open-webui.launch --webui --close-screen-on-exit
+
+    # close the screen session (shutting down all services)
+    elif [[ $command == "close" ]]; then
+        screen -S "$session" -X quit
+
+    # report an error if an unknown command is provided
+    else
+        bug_report "Invalid command '$command' in control_screen_session() function."
+    fi
+}
+
+# Launches/closes the three services within a `tmux` session
+# Usage: control_tmux_session <session> <command> [aiman_path]
+#
+# Parameters:
+#   session    - The name of the 'tmux' session to be created or destroyed.
+#   command    - The action to perform: "launch" or "close".
+#   aiman_path - The full path to the 'aiman' command used to start the services.
+#
+control_tmux_session() {
+    local session=$1 command=$2 aiman_path=$3
+    [[ -n "$session" ]] ||
+        bug_report "The control_tmux_session() function requires a session name as the first argument"
+
+    # launch the three services within the tmux session
+    if [[ $command == "launch" ]]; then
+
+        # create a new tmux session with the window split vertically into 3 panels
+        tmux new-session -d -s "$session"
+        tmux split-window -v
+        tmux split-window -v
+
+        # launch OLLAMA in the first panel
+        message "Launching ollama"
+        tmux select-pane -t "$session:0.0"
+        tmux send-keys "'$aiman_path' launch ollama" C-m
+
+        # launch PIPELINES in the second panel
+        sleep 1
+        message "Launching pipelines"
+        tmux select-pane -t "$session:0.1"
+        tmux send-keys "'$aiman_path' launch open-webui --pipelines" C-m
+
+        # launch WEBUI in the third panel
+        sleep 1
+        message "Launching open-webui"
+        tmux select-pane -t "$session:0.2"
+        tmux send-keys "'$aiman_path' launch open-webui --webui --close-tmux-on-exit" C-m
+
+        # attach to the tmux session to see all panels
+        tmux attach-session -t "$session"
+
+    # close the tmux session (shutting down all services)
+    elif [[ $command == "close" ]]; then
+        tmux kill-session -t "$session"
+
+    # report an error if an unknown command is provided
+    else
+        bug_report "Invalid command '$command' in control_tmux_session() function."
+
+    fi
 }
 
 
@@ -202,9 +268,10 @@ cmd_install() {
 #
 cmd_launch() {
 
-    # default service to launch is SCREEN with 3 panels: ollama/pipelines/webui
-    local launch='screen'
+    # default service to launch is TMUX with 3 panels: ollama/pipelines/webui
+    local launch='tmux'
     local close_screen=false
+    local close_tmux=false
     local options=()
 
     # process command-line arguments que especifican the service to launch
@@ -212,24 +279,22 @@ cmd_launch() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             '--ollama')
-                launch='ollama'
-                shift
-                ;;
+                launch='ollama' ; shift ;;
             '--pipelines')
-                launch='pipelines'
-                shift
-                ;;
+                launch='pipelines' ; shift ;;
             '--webui')
-                launch='webui'
-                shift
-                ;;
+                launch='webui' ; shift  ;;
             '--screen')
-                launch='screen'
-                shift
-                ;;
+                launch='screen' ; shift ;;
+
             # internally used to close the 'screen' session on exit
             '--close-screen-on-exit')
                 close_screen=true
+                shift
+                ;;
+            # internally used to close the 'tmux' session on exit
+            '--close-tmux-on-exit')
+                close_tmux=true
                 shift
                 ;;
             *)
@@ -245,7 +310,8 @@ cmd_launch() {
 
 
     #-- LAUNCHING THE USER-SPECIFIED SERVICE -------------#
-    local screen_session="$NAME-ss"
+    local screen_session="$NAME-screen"
+    local tmux_session="$NAME-tmux"
 
     # launch "Ollama"
     if [[ $launch == 'ollama' ]]; then
@@ -284,19 +350,22 @@ cmd_launch() {
         virtual_python !./start.sh "${options[@]}" "$@"
 
 
-    # launch WebUI + Pipelines+ Ollama in three separate screen regions
+    # launch WebUI + Pipelines + Ollama in three separate screen regions
     elif [[ $launch == 'screen' ]]; then
         require_system_command screen
-        launch_in_screen_session "$screen_session" "$AIMAN" &
+        control_screen_session   "$screen_session" launch "$AIMAN" &
         screen               -S  "$screen_session" -t "LAUNCHING" sleep 5
-    fi
 
+    # launch WebUI + Pipelines + Ollama in three separate tmux windows
+    elif [[ $launch == 'tmux' ]]; then
+        require_system_command tmux
+        control_tmux_session "$tmux_session" launch "$AIMAN"
+    fi
 
     # on service completion,
-    # close the 'screen' session if requested
-    if [[ $close_screen == true ]]; then
-        screen -S "$screen_session" -X quit
-    fi
+    # close the `screen` or `tmux` session if requested
+    [[ $close_screen == true ]] && control_screen_session "$screen_session" close
+    [[ $close_tmux   == true ]] && control_tmux_session   "$tmux_session"   close
 }
 
 #============================================================================
