@@ -19,15 +19,18 @@ developed for personal use on my specific setup (Fedora), so compatibility with
 other environments might be limited. However, the code is available on GitHub for
 anyone who finds it useful.
 
+Please note that AIMan was not conceived for public use and may contain
+incomplete features or bugs, as well as potential information loss in
+different contexts beyond my usage.
+
 
 ## AI projects supported
 
- - [x] Stable Diffusion WebUI
  - [x] Stable Diffusion WebUI Forge
  - [x] ComfyUI
  - [x] InvokeAI
  - [x] Ollama
- - [ ] Open WebUI
+ - [x] Open WebUI
 
 
 ## Installation
