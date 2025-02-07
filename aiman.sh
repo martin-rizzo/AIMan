@@ -68,6 +68,7 @@ Examples:
 "
 
 # Define directory paths relative to the base directory
+CONFIG_DIR="$SCRIPT_DIR/Config"
 MODELS_DIR="$SCRIPT_DIR/Models"
 OUTPUT_DIR="$SCRIPT_DIR/Output"
 REPOS_DIR="$SCRIPT_DIR/Repos"

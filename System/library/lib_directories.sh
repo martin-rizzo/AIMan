@@ -245,16 +245,18 @@ function require_symlink() {
 function require_storage_dir() {
     pushd . > /dev/null
     require_directory "$STORAGE_DIR"
+    require_directory "$STORAGE_DIR/Config"
     require_directory "$STORAGE_DIR/Models"
     require_directory "$STORAGE_DIR/Output"
     safe_chdir "$SCRIPT_DIR"
+    require_symlink 'Config' "$STORAGE_DIR/Config"
     require_symlink 'Models' "$STORAGE_DIR/Models"
     require_symlink 'Output' "$STORAGE_DIR/Output"
-    if [[ $USER =~ ^aiman[0-9]?$ ]]; then
-        safe_chdir "$HOME"
-        require_symlink 'Models' "$STORAGE_DIR/Models"
-        require_symlink 'Output' "$STORAGE_DIR/Output"
-    fi
+#     if [[ $USER =~ ^aiman[0-9]?$ ]]; then
+#         safe_chdir "$HOME"
+#         require_symlink 'Models' "$STORAGE_DIR/Models"
+#         require_symlink 'Output' "$STORAGE_DIR/Output"
+#     fi
     popd > /dev/null
 }
 

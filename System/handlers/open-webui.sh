@@ -147,8 +147,8 @@ control_tmux_session() {
 
         # create a new tmux session with the window split vertically into 3 panels
         tmux new-session -d -s "$session"
-        tmux split-window -v
-        tmux split-window -v
+        tmux split-window
+        tmux split-window
 
         # launch OLLAMA in the first panel
         message "Launching ollama"
@@ -220,11 +220,16 @@ _init_() {
 #
 cmd_install() {
 
-    # Python  >= 3.11
-    # Node.js >= 20.10
+    # Python >= 3.11 // Node.js >= 20.10
     require_system_command git npm "$PYTHON"
+    require_storage_dir
     require_venv "$VENV" "$PYTHON"
+
+    # clone the repository converting the directories that must be preserved
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
+    safe_chdir "$LOCAL_DIR/backend"
+    mkdir -p               "$CONFIG_DIR/open-webui/data"
+    require_symlink 'data' "$CONFIG_DIR/open-webui/data" --convert-dir
 
     #---------------- INSTALL OPEN-WEBUI -----------------#
     safe_chdir "$LOCAL_DIR"
