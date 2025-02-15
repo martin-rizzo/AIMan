@@ -85,27 +85,72 @@ _init_() {
 #
 cmd_install() {
 
-    require_system_command git cmake go gcc-13 g++-13
-    #require_storage_dir
+    # valid presets are defined in:
+    # https://github.com/ollama/ollama/blob/main/CMakePresets.json
+    PRESET='CUDA' # default value
 
+    # iterate through the user arguments
+    while [[ $# -gt 0 ]]; do
+        local arg=$1
+        shift
+        case "$arg" in
+            --cpu)
+                PRESET='CPU'
+                ;;
+            --cuda)
+                PRESET='CUDA'
+                ;;
+            --cuda11)
+                PRESET='CUDA 11'
+                ;;
+            --cuda12)
+                PRESET='CUDA 12'
+                ;;
+            --jetpack5)
+                PRESET='JetPack 5'
+                ;;
+            --jetpack6)
+                PRESET='JetPack 6'
+                ;;
+            --rocm)
+                PRESET='ROCm'
+                ;;
+            --rocm6)
+                PRESET='ROCm 6'
+                ;;
+            --4060 | --4070 | --4080 | --4090 )
+                PRESET='CUDA'
+                export CMAKE_CUDA_ARCHITECTURES='89'
+                ;;
+            --3060 | --3070 | --3080 | --3090 )
+                PRESET='CUDA'
+                export CMAKE_CUDA_ARCHITECTURES='86'
+                ;;
+            --1650 | --2060 | --2070 | --2080 )
+                PRESET='CUDA'
+                export CMAKE_CUDA_ARCHITECTURES='75'
+                ;;
+            -*)
+                fatal_error "Error: Unknown option '$arg'"
+                ;;
+        esac
+    done
+    message "selected PRESET = '$PRESET'"
+
+
+    # clone ollama repository
+    require_system_command git cmake go gcc-13 g++-13
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
     safe_chdir "$LOCAL_DIR"
 
-    ## https://github.com/ollama/ollama/blob/main/docs/gpu.md
-    export CMAKE_CUDA_ARCHITECTURES=86
-
-    # LDFLGAS OPTIONS [https://pkg.go.dev/cmd/link]
-    #  -s                       Remove all symbol table and relocation information from the executable.
-    #  -w                       Omit the DWARF symbol table.
-    #  -X importpath.name=value Set the value of the string variable in importpath named name to value.
-    local ldflags="-w -s -X github.com/ollama/ollama/version.Version=$VERSION -X github.com/ollama/ollama/server.mode=release"
+    # set ollama version
+    sed -i 's/"0.0.0"/"'"$VERSION"'"/g' version/version.go
 
     # build ollama from source code
-    #go generate ./...
-    make runners
-    go build -ldflags="$ldflags" .
-    # -tags avx,cuda12  : ??
-    # -x                : displays the commands executed by the build process
+    # https://github.com/ollama/ollama/blob/main/docs/development.md
+    export CUDA_PATH=/usr/local/cuda/
+    cmake -B      build --preset "$PRESET"
+    cmake --build build --preset "$PRESET" --config Release
 }
 
 #============================================================================
@@ -133,5 +178,9 @@ cmd_launch() {
     message "launching Ollama Server $port_message"
     message
     mkdir -p "$MODELS_OLLAMA_DIR"
-    OLLAMA_HOST="127.0.0.1:$port" OLLAMA_MODELS="$MODELS_OLLAMA_DIR" OLLAMA_DEBUG=1 ./ollama serve
+
+    export OLLAMA_HOST="127.0.0.1:$port"
+    export OLLAMA_MODELS="$MODELS_OLLAMA_DIR"
+    #export OLLAMA_DEBUG=1
+    go run . serve
 }
