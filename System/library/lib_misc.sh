@@ -364,3 +364,31 @@ is_valid_function() {
     return 0
 }
 
+
+# Gets the first argument that is not an option (doesn't start with a dash).
+#
+# Usage:
+#   get_first_non_option <arg1> <arg2> ...
+#
+# Example:
+#   first_non_option=$(get_first_non_option -a -b "my_value" -c)
+#
+get_first_non_option() {
+    local arg
+    while [[ $# -gt 0 ]]; do
+        arg="$1"
+        shift
+        case "$arg" in
+            -*)
+                # argument starts with a dash, so it's an option
+                # do nothing and continue
+                ;;
+            *)
+                # print the argument and exit the function
+                echo "$arg"
+                return 0
+                ;;
+        esac
+    done
+    return 1
+}

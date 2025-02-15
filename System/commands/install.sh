@@ -59,7 +59,8 @@ Examples:
 
 function run_command() {
     enforce_constraints --project - "$@"
-    local version=$1
+    local version
+    version=$(get_first_non_option "$@")
 
     # select the project to extract information from,
     # it will be referenced with '@' from now on
@@ -98,5 +99,5 @@ function run_command() {
     || bug_report "The project handler for '$PROJECT_NAME' is missing required functions ('_init_' or 'cmd_install')"
 
     _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash"
-    cmd_install
+    cmd_install "$@"
 }
