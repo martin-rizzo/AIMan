@@ -50,6 +50,87 @@
 #    > ??? /usr/local/cuda-12/bin/nvcc
 #
 
+#--------------------------------- HELPERS ----------------------------------
+
+# Modify the ollama version specified in a `version.go` file.
+# Usage: modify_ollama_version <version_file> <version>
+#
+# Parameters:
+#   version_file: The path to the `version.go` file to update.
+#   version     : The actual ollama version.
+#
+modify_ollama_version() {
+    local version_file=$1 version=$2
+
+    if [[ ! -f "$version_file" ]]; then
+        warning "The file '$version_file' does not exist."
+        return
+    fi
+    if ! [[ "$version" =~ ^v?[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+        warning "The ollama version '$version' has an invalid format (e.g., 1.20, 1.20.5)."
+    fi
+    # modify the version.go file
+    if sed -i 's/"0.0.0"/"'"$version"'"/g' "$version_file"
+    then
+        message "Ollama version updated successfully."
+    else
+        warning "Ollama version update failed."
+    fi
+}
+
+# Modify the Go version specified in a `go.mod` file.
+# Usage: modify_go_version <go_mod_file> <version>
+#
+# Parameters:
+#   go_mod_file: The path to the `go.mod` file to update.
+#   version    : The desired Go version (e.g., 1.20, 1.20.5).
+#
+modify_go_version() {
+    local go_mod_file=$1 version=$2
+
+    if [[ ! -f "$go_mod_file" ]]; then
+        warning "The file '$go_mod_file' does not exist."
+        return
+    fi
+    if ! [[ "$version" =~ ^v?[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+        warning "The GO version '$version' has an invalid format (e.g., 1.20, 1.20.5)."
+    fi
+    # modify the go.mod file
+    if sed -i "s/^go .*/go $version/" "$go_mod_file"
+    then
+        message "Go version updated successfully."
+    else
+        warning "Go version update failed."
+    fi
+}
+
+# Create un script para ejecutar ollama (if it doesn't exist).
+# Usage: create_ollama_script <filename>
+#
+# Parameters:
+#   filename: The name of the file to create (e.g., ollama.sh).
+#
+create_ollama_script() {
+    local filename=$1
+    [[ "$filename" ]] || fatal_error "You must provide a filename."
+
+    # check if the file already exists
+    if [[ -f "$filename" ]]; then
+        message "The launch script '$filename' already exists."
+        return 0
+    fi
+
+    # create the ollama script
+    cat > "$filename" <<EOF
+#!/bin/bash
+cd "\$(dirname "\$0")" || { echo "Error: Unable to change directory."; exit 1; }
+go run . "\$@"
+EOF
+    chmod +x "$filename"
+    message "File '$filename' created successfully."
+}
+
+
 #============================================================================
 # Initialize the project handler
 #
@@ -131,7 +212,7 @@ cmd_install() {
                 export CMAKE_CUDA_ARCHITECTURES='75'
                 ;;
             -*)
-                fatal_error "Error: Unknown option '$arg'"
+                fatal_error "Unknown option '$arg'"
                 ;;
         esac
     done
@@ -139,18 +220,21 @@ cmd_install() {
 
 
     # clone ollama repository
-    require_system_command git cmake go gcc-13 g++-13
+    require_system_command git cmake go gcc-13 g++-13 sed ccache
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
     safe_chdir "$LOCAL_DIR"
 
     # set ollama version
-    sed -i 's/"0.0.0"/"'"$VERSION"'"/g' version/version.go
+    modify_ollama_version "version/version.go" "$VERSION"
 
     # build ollama from source code
     # https://github.com/ollama/ollama/blob/main/docs/development.md
     export CUDA_PATH=/usr/local/cuda/
     cmake -B      build --preset "$PRESET"
     cmake --build build --preset "$PRESET" --config Release
+
+    #modify_go_version "go.mod" "1.23.0"
+    create_ollama_script "ollama.sh"
 }
 
 #============================================================================
@@ -181,6 +265,6 @@ cmd_launch() {
 
     export OLLAMA_HOST="127.0.0.1:$port"
     export OLLAMA_MODELS="$MODELS_OLLAMA_DIR"
-    #export OLLAMA_DEBUG=1
+    # export OLLAMA_DEBUG=1
     go run . serve
 }

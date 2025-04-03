@@ -26,11 +26,12 @@ different contexts beyond my usage.
 
 ## AI projects supported
 
- - [x] Stable Diffusion WebUI Forge
+ - [x] Open WebUI
+ - [x] Ollama
+ - [ ] llama.cpp
  - [x] ComfyUI
  - [x] InvokeAI
- - [x] Ollama
- - [x] Open WebUI
+ - [x] Stable Diffusion WebUI Forge
 
 
 ## Installation

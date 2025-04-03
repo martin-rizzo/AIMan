@@ -34,6 +34,7 @@
 # FUNCTIONS:
 #   >echox()                  : Prints messages in different formats.
 #   >message()                : Displays a regular message.
+#   >warning()                : Display a warning message.
 #   >error()                  : Displays an error message.
 #   >fatal_error()            : Displays a fatal error message and stops the script.
 #   >error_unrecognized_arg() : Displays an error for an unrecognized argument and stops the script.
@@ -105,6 +106,12 @@ message() {
         done
     fi
     echo >&2
+}
+
+# Display a warning message
+warning() {
+    local message=$1
+    echo -e "${CYAN}[${YELLOW}WARNING${CYAN}]${YELLOW} $message${DEFAULT_COLOR}" >&2
 }
 
 # Display an error message
@@ -262,9 +269,10 @@ enforce_constraints() {
 require_system_command() {
     for cmd in "$@"; do
         if ! command -v "$cmd" &> /dev/null; then
+            package=$cmd
             echox error "$cmd is not available!"
             echox "   you can try to install '$cmd' using the following command:"
-            echox "   > sudo dnf install $cmd"
+            echox "   > sudo dnf install $package"
             echox
             exit 1
         else
@@ -293,13 +301,12 @@ require_system_command() {
 #   fi
 #
 ask_confirmation() {
-    local message=$1 alert=$2
+    local message=$1 warning=$2
 
-    if [[ $alert ]]; then
-        echox
-        echox alert "$alert"
-    fi
     echox
+    if [[ $warning ]]; then
+        warning "$warning"
+    fi
     while true; do
         read -r -p " $message [y/N]: " response
         case ${response,,} in

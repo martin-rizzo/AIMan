@@ -92,8 +92,17 @@ cmd_install() {
     virtual_python !pip install --upgrade pip
     virtual_python !pip install pyyaml
 
-    ## NVIDIA GPU + pytorch 2.5.1 + CUDA 12.4
-    virtual_python !pip install torch torchvision torchaudio
+    ## pytorch 2.3.1 using CUDA 11.8 (NVIDIA GPU)
+    #virtual_python !pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu118
+
+    ## pytorch 2.4.1 using CUDA 12.1 (NVIDIA GPU)
+    virtual_python !pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+
+    ## pytorch 2.5.1 using CUDA 12.4 (NVIDIA GPU)
+    #virtual_python !pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+
+    ## LAST VERSION (2.6.0 using CUDA 12.6)
+    #virtual_python !pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
@@ -101,23 +110,28 @@ cmd_install() {
    #virtual_python !pip install accelerate
 
     #----------------- ADD CUSTOM NODES ------------------#
-
     safe_chdir "$LOCAL_DIR/custom_nodes"
 
-    ## ComfyUI Manager
-    # management functions to install, remove, disable, and enable custom nodes
-    git clone https://github.com/ltdrdata/ComfyUI-Manager
-    virtual_python !pip install -r ComfyUI-Manager/requirements.txt
+    # ask for user confirmation if they want to install "ComfyUI Manager"
+    if ask_confirmation \
+        "Would you like to install ComfyUI-Manager?" \
+        "ComfyUI-Manager allows you to install, remove, disable, and enable various custom nodes of ComfyUI."
+    then
+        ## ComfyUI Manager
+        # management functions to install, remove, disable, and enable custom nodes
+        git clone https://github.com/ltdrdata/ComfyUI-Manager
+        virtual_python !pip install -r ComfyUI-Manager/requirements.txt
+    fi
 
     ## Crystools
-    # a powerful set of tools, include performance graphs below the queue prompt
-    git clone https://github.com/crystian/ComfyUI-Crystools
-    virtual_python !pip install -r ComfyUI-Crystools/requirements.txt
+    # A powerful set of tools, include performance graphs below the queue prompt
+    #git clone https://github.com/crystian/ComfyUI-Crystools
+    #virtual_python !pip install -r ComfyUI-Crystools/requirements.txt
 
     ## Extra Models
-    # support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
-    git clone https://github.com/city96/ComfyUI_ExtraModels
-    virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
+    # Support miscellaneous image models: DiT, PixArt, T5 and a few custom VAEs
+    #git clone https://github.com/city96/ComfyUI_ExtraModels
+    #virtual_python !pip install -r ComfyUI_ExtraModels/requirements.txt
 
     ## OmniGen-ComfyUI
     # A custom node for OmniGen [https://github.com/VectorSpaceLab/OmniGen]
