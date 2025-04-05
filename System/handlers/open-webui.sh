@@ -86,49 +86,6 @@ install_pipelines() {
     cp "$pipeline_script" "$PIPELINES_WORKFLOWS_DIR"
 }
 
-# Launches/closes the three services within a 'screen' session.
-# Usage: control_screen_session <session> <command> [aiman_path]
-#
-# Parameters:
-#   session    - The name of the 'screen' session to be created or destroyed.
-#   command    - The action to perform: "launch" or "close".
-#   aiman_path - The full path to the 'aiman' command used to start the services.
-#
-control_screen_session() {
-    local session=$1 command=$2 aiman_path=$3
-    [[ -n "$session" ]] ||
-        bug_report "The control_screen_session() function requires a session name as the first argument"
-
-    # launch the three services within the screen session
-    if [[ $command == "launch" ]]; then
-
-        # launch OLLAMA service
-        sleep 1
-        screen -S "$session" -X focus top
-        screen -S "$session" -X screen -t   'OLLAMA'  "$aiman_path" ollama.launch
-
-        # split the screen and launch PIPELINES service in the new pane
-        sleep 1
-        screen -S "$session" -X split
-        screen -S "$session" -X focus next
-        screen -S "$session" -X screen -t 'PIPELINES' "$aiman_path" open-webui.launch --pipelines
-
-        # split the screen again and launch WEBUI service in the new pane
-        sleep 1
-        screen -S "$session" -X split
-        screen -S "$session" -X focus next
-        screen -S "$session" -X screen -t   'WEBUI'   "$aiman_path" open-webui.launch --webui --close-screen-on-exit
-
-    # close the screen session (shutting down all services)
-    elif [[ $command == "close" ]]; then
-        screen -S "$session" -X quit
-
-    # report an error if an unknown command is provided
-    else
-        bug_report "Invalid command '$command' in control_screen_session() function."
-    fi
-}
-
 # Launches/closes the three services within a `tmux` session
 # Usage: control_tmux_session <session> <command> [aiman_path]
 #
@@ -289,12 +246,11 @@ cmd_launch() {
 
     # default service to launch is TMUX with 3 panels: ollama/pipelines/webui
     local launch='tmux'
-    local close_screen=false
     local close_tmux=false
     local options=()
 
-    # process command-line arguments que especifican the service to launch
-    # and whether to close the screen session.
+    # process command-line arguments that specify the service to launch
+    # and whether to close the tmux session
     while [[ $# -gt 0 ]]; do
         case $1 in
             '--ollama')
@@ -303,14 +259,7 @@ cmd_launch() {
                 launch='pipelines' ; shift ;;
             '--webui')
                 launch='webui' ; shift  ;;
-            '--screen')
-                launch='screen' ; shift ;;
 
-            # internally used to close the 'screen' session on exit
-            '--close-screen-on-exit')
-                close_screen=true
-                shift
-                ;;
             # internally used to close the 'tmux' session on exit
             '--close-tmux-on-exit')
                 close_tmux=true
@@ -329,7 +278,6 @@ cmd_launch() {
 
 
     #-- LAUNCHING THE USER-SPECIFIED SERVICE -------------#
-    local screen_session="$NAME-screen"
     local tmux_session="$NAME-tmux"
 
     # launch "Ollama"
@@ -368,13 +316,6 @@ cmd_launch() {
         export PORT="8080"
         virtual_python !./start.sh "${options[@]}" "$@"
 
-
-    # launch WebUI + Pipelines + Ollama in three separate screen regions
-    elif [[ $launch == 'screen' ]]; then
-        require_system_command screen
-        control_screen_session   "$screen_session" launch "$AIMAN" &
-        screen               -S  "$screen_session" -t "LAUNCHING" sleep 5
-
     # launch WebUI + Pipelines + Ollama in three separate tmux windows
     elif [[ $launch == 'tmux' ]]; then
         require_system_command tmux
@@ -382,8 +323,7 @@ cmd_launch() {
     fi
 
     # on service completion,
-    # close the `screen` or `tmux` session if requested
-    [[ $close_screen == true ]] && control_screen_session "$screen_session" close
+    # close the `tmux` session if requested
     [[ $close_tmux   == true ]] && control_tmux_session   "$tmux_session"   close
 }
 
