@@ -151,27 +151,38 @@ control_tmux_session() {
         tmux split-window
 
         # launch OLLAMA in the first panel
-        message "Launching ollama"
+        message "Launching ollama (tmux)"
         tmux send-keys   -t "$session:0.0"    "'$aiman_path' launch ollama" C-m
         tmux select-pane -t "$session:0.0" -T 'OLLAMA'
 
         # launch PIPELINES in the second panel
-        message "Launching pipelines"
+        message "Launching pipelines (tmux)"
         tmux send-keys   -t "$session:0.1"    "'$aiman_path' launch open-webui --pipelines" C-m
         tmux select-pane -t "$session:0.1" -T 'PIPELINES'
 
         # launch WEBUI in the third panel
-        message "Launching open-webui"
+        message "Launching open-webui (tmux)"
         sleep 1
         tmux send-keys   -t "$session:0.2"    "'$aiman_path' launch open-webui --webui --close-tmux-on-exit" C-m
         sleep 1
         tmux select-pane -t "$session:0.2" -T "OPEN-WEBUI"
 
-        # attach to the tmux session to see all panels
+        # configure tmux
         tmux set-option pane-border-status top
         tmux set-option -g   status-style "fg=green"
         tmux set-option -ga  status-style "bg=default"
-        tmux attach-session -t "$session"
+
+        # when this script receives a SIGINT (Ctrl+C),
+        # it will terminate the processes matching 'open_webui.main'
+        trap "pgrep -f 'open_webui.main' | xargs kill" SIGINT
+
+        # attach to the tmux session to see all panels
+        # and wait until the process is no longer running
+        tmux attach-session -t "$session" &
+        pid=$! ; while kill -0 "$pid" 2>/dev/null; do
+            wait "$pid"
+        done
+
 
     # close the tmux session (shutting down all services)
     elif [[ $command == "close" ]]; then

@@ -160,8 +160,9 @@ cmd_install() {
     # powerful set of tools providing nodes for enhancing the functionality of ComfyUI
     #git clone https://github.com/ltdrdata/ComfyUI-Inspire-Pack
     #virtual_python !pip install -r ComfyUI-Inspire-Pack/requirements.txt
-
 }
+
+COMFYUI_PID=
 
 #============================================================================
 # Launches the project application in the specified environment.
@@ -187,5 +188,14 @@ cmd_launch() {
     message "launching ComfyUI application $port_message"
     message "main.py" "${options[@]}" "$@"
     message
-    virtual_python main.py "${options[@]}" "$@"
+
+    # when this script receives a SIGINT (Ctrl+C),
+    # it will terminate the comfyui processes
+    trap '[[ -n "$COMFYUI_PID" ]] && kill "$COMFYUI_PID"' SIGINT
+
+    # launch comfyui and wait until the process is no longer running
+    virtual_python main.py "${options[@]}" "$@" &
+    COMFYUI_PID=$! ; while kill -0 "$COMFYUI_PID" 2>/dev/null; do
+        wait "$COMFYUI_PID"
+    done
 }
