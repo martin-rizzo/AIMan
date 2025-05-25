@@ -177,6 +177,8 @@ cmd_launch() {
 
     #------------- COMFYUI OPTIONS -------------#
     local options=() port_message=''
+
+    options+=( --preview-method auto )
     if [[ $PORT ]]; then
         options+=( --port "$PORT" )
         port_message="on port $PORT"

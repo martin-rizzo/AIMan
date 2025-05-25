@@ -35,6 +35,16 @@
 # !! Prerequisites: CUDA Toolkit and GCC 13 are required.
 # !! Installation instructions are provided below. Proceed at your own risk.
 #
+# CUDA Toolkit Installation (Fedora 42+):
+#    > sudo dnf config-manager addrepo --from-repofile https://developer.download.nvidia.com/compute/cuda/repos/fedora41/x86_64/cuda-fedora41.repo
+#    > sudo dnf clean all
+#    > sudo dnf -y install cuda-toolkit-12-9
+#
+# CUDA Toolkit Installation (Fedora 41+):
+#    > sudo dnf config-manager addrepo --from-repofile https://developer.download.nvidia.com/compute/cuda/repos/fedora41/x86_64/cuda-fedora41.repo
+#    > sudo dnf clean all
+#    > sudo dnf -y install cuda-toolkit-12-8
+#
 # CUDA Toolkit Installation (Fedora 39+):
 #    > sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/fedora39/x86_64/cuda-fedora39.repo
 #    > sudo dnf clean all
@@ -155,6 +165,9 @@ _init_() {
     REMOTE_URL=$6
     REMOTE_HASH=$7
     VERSION=$REMOTE_HASH
+    GCC_COMMAND=gcc-14
+    GPP_COMMAND=g++-14:gcc14-c++
+    NVCC_COMMAND=/usr/local/cuda-12.9/bin/nvcc
 }
 
 #============================================================================
@@ -218,9 +231,12 @@ cmd_install() {
     done
     message "selected PRESET = '$PRESET'"
 
+    # remove the package reference from the binary path (marked with :)
+    GCC_COMMAND="${GCC_COMMAND%%:*}"
+    GPP_COMMAND="${GPP_COMMAND%%:*}"
 
     # clone ollama repository
-    require_system_command git cmake go gcc-13 g++-13 sed ccache
+    require_system_command git cmake go "$GCC_COMMAND" "$GPP_COMMAND" sed ccache
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
     safe_chdir "$LOCAL_DIR"
 
@@ -229,8 +245,21 @@ cmd_install() {
 
     # build ollama from source code
     # https://github.com/ollama/ollama/blob/main/docs/development.md
+
+    # compilando con CUDA v12.9 and G++ v14
+    # Edit the file:
+    #     /usr/local/cuda-12.9/targets/x86_64-linux/include/crt/math_functions.h
+    # which is essentially adding “noexcept (true)” for those specific functions:
+    #     extern __DEVICE_FUNCTIONS_DECL__ __device_builtin__ double   sinpi(double x) noexcept (true);
+    #     extern __DEVICE_FUNCTIONS_DECL__ __device_builtin__ float    sinpif(float x) noexcept (true);
+    #     extern __DEVICE_FUNCTIONS_DECL__ __device_builtin__ double   cospi(double x) noexcept (true);
+    #     extern __DEVICE_FUNCTIONS_DECL__ __device_builtin__ float    cospif(float x) noexcept (true);
+    #
     export CUDA_PATH=/usr/local/cuda/
-    cmake -B      build --preset "$PRESET"
+    export NVCC_CCBIN=/usr/bin/g++-14
+    export CC=$GCC_COMMAND
+    export CXX=$GPP_COMMAND
+    cmake -DCMAKE_CUDA_COMPILER="$NVCC_COMMAND" -B build --preset "$PRESET"
     cmake --build build --preset "$PRESET" --config Release
 
     #modify_go_version "go.mod" "1.23.0"
