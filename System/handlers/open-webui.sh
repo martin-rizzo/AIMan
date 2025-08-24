@@ -95,7 +95,7 @@ install_pipelines() {
 #   aiman_path - The full path to the 'aiman' command used to start the services.
 #
 control_tmux_session() {
-    local session=$1 command=$2 aiman_path=$3
+    local session=$1 command=$2 aiman_path=$3 arg=$4
     [[ -n "$session" ]] ||
         bug_report "The control_tmux_session() function requires a session name as the first argument"
 
@@ -105,24 +105,27 @@ control_tmux_session() {
         # create a new tmux session with the window split vertically into 3 panels
         tmux new-session -d -s "$session"
         tmux split-window
-        tmux split-window
 
         # launch OLLAMA in the first panel
         message "Launching ollama (tmux)"
-        tmux send-keys   -t "$session:0.0"    "'$aiman_path' launch ollama" C-m
-        tmux select-pane -t "$session:0.0" -T 'OLLAMA'
+        tmux send-keys   -t "$session:0.1"    "'$aiman_path' launch ollama" C-m
+        tmux select-pane -t "$session:0.1" -T 'OLLAMA'
 
         # launch PIPELINES in the second panel
-        message "Launching pipelines (tmux)"
-        tmux send-keys   -t "$session:0.1"    "'$aiman_path' launch open-webui --pipelines" C-m
-        tmux select-pane -t "$session:0.1" -T 'PIPELINES'
+        if [[ $arg == '--with-pipelines' ]]; then
+            message "Launching pipelines (tmux)"
+            tmux split-window
+            tmux send-keys   -t "$session:0.2"    "'$aiman_path' launch open-webui --pipelines" C-m
+            tmux select-pane -t "$session:0.2" -T 'PIPELINES'
+        fi
 
         # launch WEBUI in the third panel
         message "Launching open-webui (tmux)"
         sleep 1
-        tmux send-keys   -t "$session:0.2"    "'$aiman_path' launch open-webui --webui --close-tmux-on-exit" C-m
+        tmux send-keys   -t "$session:0.0"    "'$aiman_path' launch open-webui --webui --close-tmux-on-exit" C-m
         sleep 1
-        tmux select-pane -t "$session:0.2" -T "OPEN-WEBUI"
+        tmux select-pane -t "$session:0.0" -T "OPEN-WEBUI"
+        tmux select-pane -t "$session:0.0"
 
         # configure tmux
         tmux set-option pane-border-status top
@@ -206,7 +209,7 @@ cmd_install() {
     cp -RPp .env.example .env
 
     # building frontend using nodejs
-    npm install
+    npm install --force
     npm run build
 
     # install backend dependencies
@@ -245,7 +248,7 @@ cmd_install() {
 cmd_launch() {
 
     # default service to launch is TMUX with 3 panels: ollama/pipelines/webui
-    local launch='tmux'
+    local launch='multi'
     local close_tmux=false
     local options=()
 
@@ -253,12 +256,18 @@ cmd_launch() {
     # and whether to close the tmux session
     while [[ $# -gt 0 ]]; do
         case $1 in
+            '--webui')
+                launch='webui' ; shift ;;
             '--ollama')
                 launch='ollama' ; shift ;;
             '--pipelines')
                 launch='pipelines' ; shift ;;
-            '--webui')
-                launch='webui' ; shift  ;;
+            '--multi')
+                launch='multi' ; shift ;;
+            '--multipipe')
+                launch='multi-pipelines' ; shift ;;
+            '--gnome')
+                launch='gnome-terminal' ; shift ;;
 
             # internally used to close the 'tmux' session on exit
             '--close-tmux-on-exit')
@@ -276,14 +285,26 @@ cmd_launch() {
     #local port=''
     local port_message=''
 
-
     #-- LAUNCHING THE USER-SPECIFIED SERVICE -------------#
     local tmux_session="$NAME-tmux"
 
-    # launch "Ollama"
-    if [[ $launch == 'ollama' ]]; then
-        "$AIMAN" ollama.launch
+    # launch "Open WebUI"
+    if [[ $launch == 'webui' ]]; then
+        echo -ne "\033]0; Open WebUI 👋\a"
+        require_venv "$VENV" "$PYTHON"
+        safe_chdir "$LOCAL_DIR/backend"
+        message "working directory changed to: $PWD"
+        message "launching Open WebUI application $port_message"
+        message "./start.sh" "${options[@]}" "$@"
+        message
+        # export GLOBAL_LOG_LEVEL="DEBUG"
+        export HOST="127.0.0.1"
+        export PORT="8080"
+        virtual_python !./start.sh "${options[@]}" "$@"
 
+    # launch "Ollama"
+    elif [[ $launch == 'ollama' ]]; then
+        "$AIMAN" ollama.launch
 
     # launch "Pipelines" (a ui-agnostic openai api plugin framework)
     elif [[ $launch == 'pipelines' ]]; then
@@ -302,29 +323,28 @@ cmd_launch() {
         export PORT="$PIPELINES_PORT"
         virtual_python !./start.sh "${options[@]}" "$@"
 
-    # launch "Open WebUI"
-    elif [[ $launch == 'webui' ]]; then
-        echo -ne "\033]0; Open WebUI 👋\a"
-        require_venv "$VENV" "$PYTHON"
-        safe_chdir "$LOCAL_DIR/backend"
-        message "working directory changed to: $PWD"
-        message "launching Open WebUI application $port_message"
-        message "./start.sh" "${options[@]}" "$@"
-        message
-        # export GLOBAL_LOG_LEVEL="DEBUG"
-        export HOST="127.0.0.1"
-        export PORT="8080"
-        virtual_python !./start.sh "${options[@]}" "$@"
+    # launch WebUI +  Ollama in two separate tmux windows
+    elif [[ $launch == 'multi' ]]; then
+        require_system_command tmux
+        control_tmux_session "$tmux_session" launch "$AIMAN" --without-pipelines
 
     # launch WebUI + Pipelines + Ollama in three separate tmux windows
-    elif [[ $launch == 'tmux' ]]; then
+    elif [[ $launch == 'multi-pipelines' ]]; then
         require_system_command tmux
-        control_tmux_session "$tmux_session" launch "$AIMAN"
+        control_tmux_session "$tmux_session" launch "$AIMAN" --with-pipelines
+
+    # launch WebUI + Pipelines + Ollama in three separate terminal tabs (gnome)
+    elif [[ $launch == 'gnome-terminal' ]]; then
+        require_system_command gnome-terminal
+        gnome-terminal --tab -t OLLAMA     -- "$AIMAN" launch open-webui --ollama
+        gnome-terminal --tab -t PIPELINES  -- "$AIMAN" launch open-webui --pipelines
+        gnome-terminal --tab -t OPEN-WEBUI -- "$AIMAN" launch open-webui --webui
+
     fi
 
     # on service completion,
     # close the `tmux` session if requested
-    [[ $close_tmux   == true ]] && control_tmux_session   "$tmux_session"   close
+    [[ $close_tmux == true ]] && control_tmux_session "$tmux_session" close
 }
 
 #============================================================================
