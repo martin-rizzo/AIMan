@@ -246,6 +246,10 @@ cmd_install() {
     # build ollama from source code
     # https://github.com/ollama/ollama/blob/main/docs/development.md
 
+    ## GIM_MODE is not run-time configurable
+    ## https://github.com/ollama/ollama/issues/8339
+    # export GIN_MODE=release
+
     # compilando con CUDA v12.9 and G++ v14
     # Edit the file:
     #     /usr/local/cuda-12.9/targets/x86_64-linux/include/crt/math_functions.h
@@ -259,8 +263,8 @@ cmd_install() {
     export NVCC_CCBIN=/usr/bin/g++-14
     export CC=$GCC_COMMAND
     export CXX=$GPP_COMMAND
-    cmake -DCMAKE_CUDA_COMPILER="$NVCC_COMMAND" -B build --preset "$PRESET"
-    cmake --build build --preset "$PRESET" --config Release
+    cmake -B build        --preset "$PRESET" -DCMAKE_CUDA_COMPILER="$NVCC_COMMAND"
+    cmake --build build   --preset "$PRESET" --config Release
 
     #modify_go_version "go.mod" "1.23.0"
     create_ollama_script "ollama.sh"
@@ -294,6 +298,7 @@ cmd_launch() {
 
     export OLLAMA_HOST="127.0.0.1:$port"
     export OLLAMA_MODELS="$MODELS_OLLAMA_DIR"
+    export GIN_MODE=release
     # export OLLAMA_DEBUG=1
     go run . serve
 }
