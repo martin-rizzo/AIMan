@@ -37,7 +37,7 @@ AIMAN=${AIMAN:?}
 # Whether to install and configure the "Pipelines" framework
 #  (https://github.com/open-webui/pipelines)
 #  'true' is 100% recommended for enhanced functionality
-INSTALL_PIPELINES=true
+INSTALL_PIPELINES=false
 
 # Path to the 'pipelines' project directory (relative to open-webui).
 PIPELINES_REL="../open-webui-pipelines"
@@ -191,7 +191,7 @@ _init_() {
 #
 cmd_install() {
 
-    # Python >= 3.11 // Node.js >= 20.10
+    # Python >= 3.12 // Node.js >= 20.10
     require_system_command git npm "$PYTHON"
     require_storage_dir
     require_venv "$VENV" "$PYTHON"
@@ -212,8 +212,15 @@ cmd_install() {
     npm install --force
     npm run build
 
-    # install backend dependencies
     safe_chdir "$LOCAL_DIR"
+
+    # You must have Python 3.11 development headers and MariaDB C connector installed
+    # sudo dnf install python3.11-devel mariadb-connector-c-devel    
+    
+    # hack for ddgs version
+    sed -i 's/ddgs==9.11.2/ddgs>=9.11.2/g' backend/requirements.txt
+
+    # install backend dependencies
     virtual_python !pip install --upgrade pip
     virtual_python !pip install -r backend/requirements.txt -U
 
@@ -235,7 +242,7 @@ cmd_install() {
     virtual_python !pip install -r requirements.txt
 
     # install specific scripts that come predefined with PIPELINES
-    install_pipelines "Google GenAI Manifold Pipeline" "$pipelines/providers/google_manifold_pipeline.py"
+    # install_pipelines "Google GenAI Manifold Pipeline" "$pipelines/providers/google_manifold_pipeline.py"
 }
 
 #============================================================================

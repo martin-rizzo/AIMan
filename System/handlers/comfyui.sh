@@ -48,13 +48,28 @@
 #   - REMOTE_HASH : Git commit hash or tag of the recommended version
 
 _init_() {
-    #NAME=$1
+    NAME=$1
     PORT=$2
     VENV=$3
-    PYTHON=python3.10 # =$4
+    PYTHON=$4
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
+
+    case "$NAME" in
+        'comfyui')
+            PYTHON="python3.13"
+            TORCH="2.9"
+            ;;
+        'comfystable')
+            PYTHON="python3.10"
+            TORCH="2.5"
+            ;;
+        *)
+            echo "Error: Invalid name parameter. Please specify either 'comfystable' or 'comfyui'."
+            exit 1
+            ;;
+    esac
 }
 
 #============================================================================
@@ -72,17 +87,19 @@ cmd_install() {
 
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
     safe_chdir "$LOCAL_DIR/models"
-    require_symlink 'checkpoints'   "$MODELS_STABLEDIFFUSION_DIR" --convert-dir
-    require_symlink 'clip'          "$MODELS_TEXTENCODER_DIR"     --convert-dir
-    require_symlink 'controlnet'    "$MODELS_CONTROLNET_DIR"      --convert-dir
-    require_symlink 'embeddings'    "$MODELS_EMBEDDINGS_DIR"      --convert-dir
-    require_symlink 'hypernetworks' "$MODELS_HYPERNETWORK_DIR"    --convert-dir
-    require_symlink 'loras'         "$MODELS_LORA_DIR"            --convert-dir
-    require_symlink 'unet'          "$MODELS_DIR/unet"            --convert-dir
-    require_symlink 'vae'           "$MODELS_VAE_DIR"             --convert-dir
-    require_symlink 'vae_approx'    "$MODELS_VAE_APPROX_DIR"      --convert-dir
+    require_symlink 'checkpoints'      "$MODELS_STABLEDIFFUSION_DIR"  --convert-dir
+    require_symlink 'controlnet'       "$MODELS_CONTROLNET_DIR"       --convert-dir
+    require_symlink 'diffusion_models' "$MODELS_DIR/diffusion_models" --convert-dir
+    require_symlink 'embeddings'       "$MODELS_EMBEDDINGS_DIR"       --convert-dir
+    require_symlink 'hypernetworks'    "$MODELS_HYPERNETWORK_DIR"     --convert-dir
+    require_symlink 'loras'            "$MODELS_LORA_DIR"             --convert-dir
+    require_symlink 'text_encoders'    "$MODELS_TEXTENCODER_DIR"      --convert-dir
+    require_symlink 'unet'             "$MODELS_DIR/unet"             --convert-dir
+    require_symlink 'upscale_models'   "$MODELS_DIR/ESRGAN"           --convert-dir
+    require_symlink 'vae'              "$MODELS_VAE_DIR"              --convert-dir
+    require_symlink 'vae_approx'       "$MODELS_VAE_APPROX_DIR"       --convert-dir
     safe_chdir "$LOCAL_DIR"
-    require_symlink 'output'        "$OUTPUT_DIR"                 --convert-dir
+    require_symlink 'output' "$OUTPUT_DIR" --convert-dir
 
     #-------------------- INSTALLING ---------------------#
 
@@ -93,16 +110,34 @@ cmd_install() {
     virtual_python !pip install pyyaml
 
     ## pytorch 2.3.1 using CUDA 11.8 (NVIDIA GPU)
-    #virtual_python !pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu118
+    if [[ $TORCH == '2.3' ]]; then
+        virtual_python !pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu118
+    fi
 
     ## pytorch 2.4.1 using CUDA 12.1 (NVIDIA GPU)
-    virtual_python !pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+    if [[ $TORCH == '2.4' ]]; then
+        virtual_python !pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+    fi
 
     ## pytorch 2.5.1 using CUDA 12.4 (NVIDIA GPU)
-    #virtual_python !pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+    if [[ $TORCH == '2.5' ]]; then
+        virtual_python !pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+    fi
 
-    ## LAST VERSION (2.6.0 using CUDA 12.6)
-    #virtual_python !pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+    ## pytorch 2.7.1 using CUDA 12.6 (NVIDIA GPU)
+    if [[ $TORCH == '2.7' ]]; then
+        virtual_python !pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126
+    fi
+
+    ## pytorch 2.9.1 using CUDA 12.8 (NVIDIA GPU)
+    if [[ $TORCH == '2.9' ]]; then
+        virtual_python !pip install torch==2.9.1 torchvision==0.24.1 torchaudio==2.9.1 --index-url https://download.pytorch.org/whl/cu128
+    fi
+
+    ## pytorch 2.10.0 using CUDA 13.0 (NVIDIA GPU)
+    if [[ $TORCH == 'last' ]]; then
+        virtual_python !pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+    fi
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
@@ -117,10 +152,17 @@ cmd_install() {
         "Would you like to install ComfyUI-Manager?" \
         "ComfyUI-Manager allows you to install, remove, disable, and enable various custom nodes of ComfyUI."
     then
-        ## ComfyUI Manager
-        # management functions to install, remove, disable, and enable custom nodes
-        git clone https://github.com/ltdrdata/ComfyUI-Manager
+        git clone https://github.com/Comfy-Org/ComfyUI-Manager.git
         virtual_python !pip install -r ComfyUI-Manager/requirements.txt
+    fi
+
+    # ask for user confirmation if they want to install nodes for GGUF support
+    if ask_confirmation \
+        "Would you like to install ComfyUI-GGUF?" \
+        "ComfyUI-GGUF allows you to load checkpoints in GGUF format."
+    then
+        git clone https://github.com/city96/ComfyUI-GGUF.git
+        virtual_python !pip install -r ComfyUI-GGUF/requirements.txt
     fi
 
     ## Crystools
@@ -138,11 +180,6 @@ cmd_install() {
     #git clone https://github.com/AIFSH/OmniGen-ComfyUI
     #git clone https://github.com/harkonkr/OmniGen-ComfyUI
     #virtual_python !pip install -r OmniGen-ComfyUI/requirements.txt
-
-    ### ComfyUI GGUF
-    ## GGUF Quantization support for native ComfyUI models
-    #git clone https://github.com/city96/ComfyUI-GGUF
-    #virtual_python !pip install -r ComfyUI-GGUF/requirements.txt
 
     ### Comfyroll Studio
     ## many util nodes including prompt nodes, pipe nodes, text nodes, logic nodes, ...
