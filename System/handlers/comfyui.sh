@@ -59,7 +59,7 @@ _init_() {
     case "$NAME" in
         'comfyui')
             PYTHON="python3.13"
-            TORCH="2.9"
+            TORCH="2.10"
             ;;
         'comfystable')
             PYTHON="python3.10"
@@ -135,9 +135,14 @@ cmd_install() {
     fi
 
     ## pytorch 2.10.0 using CUDA 13.0 (NVIDIA GPU)
-    if [[ $TORCH == 'last' ]]; then
-        virtual_python !pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+    if [[ $TORCH == '2.10' ]]; then
+        virtual_python !pip install torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0 --index-url https://download.pytorch.org/whl/cu130
     fi
+
+    # ## pytorch 2.10.0 using CUDA 13.0 (NVIDIA GPU)
+    # if [[ $TORCH == 'last' ]]; then
+    #     virtual_python !pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+    # fi
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
