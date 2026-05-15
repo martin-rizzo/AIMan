@@ -108,7 +108,7 @@ modify_go_version() {
     # modify the go.mod file
     if sed -i "s/^go .*/go $version/" "$go_mod_file"
     then
-        message "Go version updated successfully."
+        message "Go version updated successfully to $version"
     else
         warning "Go version update failed."
     fi
@@ -155,7 +155,7 @@ EOF
 #   - LOCAL_DIR   : path to the local project directory
 #   - REMOTE_URL  : URL of the project's Git repository
 #   - REMOTE_HASH : Git commit hash or tag of the recommended version
-
+#
 _init_() {
     #NAME=$1
     PORT=$2
@@ -167,7 +167,24 @@ _init_() {
     VERSION=$REMOTE_HASH
     GCC_COMMAND=gcc-14
     GPP_COMMAND=g++-14:gcc14-c++
-    NVCC_COMMAND=/usr/local/cuda-12.9/bin/nvcc
+
+    # check if nvcc is available in PATH or in default NVIDIA location
+    if command -v nvcc &> /dev/null; then
+        NVCC_COMMAND="nvcc"
+    elif [ -x "/usr/local/cuda/bin/nvcc" ]; then
+        NVCC_COMMAND="/usr/local/cuda/bin/nvcc"
+    else
+        fatal_error "CUDA Toolkit not found." \
+"Please install it with:
+  sudo dnf config-manager addrepo --from-repofile=https://developer.download.nvidia.com/compute/cuda/repos/fedora${fedora_ver}/x86_64/cuda-fedora${fedora_ver}.repo
+  sudo dnf install cuda-toolkit"
+    fi
+
+    # check if go is installed
+    if ! command -v go &> /dev/null; then
+        fatal_error "Go is not installed. Please install Go: https://go.dev/dl/" \
+            "Use the recommended command: sudo apt install golang"
+    fi
 }
 
 #============================================================================
@@ -199,6 +216,9 @@ cmd_install() {
                 ;;
             --cuda12)
                 PRESET='CUDA 12'
+                ;;
+            --cuda13)
+                PRESET='CUDA 13'
                 ;;
             --jetpack5)
                 PRESET='JetPack 5'
@@ -266,7 +286,6 @@ cmd_install() {
     cmake -B build        --preset "$PRESET" -DCMAKE_CUDA_COMPILER="$NVCC_COMMAND"
     cmake --build build   --preset "$PRESET" --config Release
 
-    #modify_go_version "go.mod" "1.23.0"
     create_ollama_script "ollama.sh"
 }
 
@@ -290,6 +309,8 @@ cmd_launch() {
 
     #---------------- LAUNCHING ----------------#
     safe_chdir "$LOCAL_DIR"
+    modify_go_version "go.mod" "1.25.9"
+
     [[ $port ]] && port_message="on port $port"
     message "changed working directory to $PWD"
     message "launching Ollama Server $port_message"

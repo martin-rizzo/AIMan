@@ -216,7 +216,7 @@ cmd_install() {
 
     # You must have Python 3.11 development headers and MariaDB C connector installed
     # sudo dnf install python3.11-devel mariadb-connector-c-devel    
-    
+
     # hack for ddgs version
     sed -i 's/ddgs==9.11.2/ddgs>=9.11.2/g' backend/requirements.txt
 
@@ -307,6 +307,7 @@ cmd_launch() {
         # export GLOBAL_LOG_LEVEL="DEBUG"
         export HOST="127.0.0.1"
         export PORT="8080"
+        #export GLOBAL_LOG_LEVEL=DEBUG
         virtual_python !./start.sh "${options[@]}" "$@"
 
     # launch "Ollama"
