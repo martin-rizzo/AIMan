@@ -35,11 +35,6 @@
 # !! Prerequisites: CUDA Toolkit and GCC 13 are required.
 # !! Installation instructions are provided below. Proceed at your own risk.
 #
-# CUDA Toolkit Installation (Fedora 39+):
-#    > sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/fedora39/x86_64/cuda-fedora39.repo
-#    > sudo dnf clean all
-#    > sudo dnf install cuda-toolkit-12
-#
 # GCC 13 Installation (Fedora 39+):
 #    > sudo dnf install gcc-13 gcc13-c++
 # add symbolic links
@@ -49,6 +44,154 @@
 # Verificar que CUDA Toolkit esta instalado:
 #    > ??? /usr/local/cuda/bin/nvcc
 #
+
+
+# Finds the path to nvcc command.
+#
+# This function searches for the 'nvcc' compiler in the PATH or in the default
+# CUDA installation location. If not found, it provides an error message.
+#
+# Output:
+#   Writes the absolute path to 'nvcc'
+#
+fedora_find_nvcc() {
+    local cmd
+
+    # check if 'nvcc' is already in PATH
+    cmd=$(command -v nvcc 2>/dev/null)
+    if [ $? -eq 0 ] && [ -x "${cmd}" ]; then
+        echo "${cmd}"
+        return
+    fi
+
+    # check if 'nvcc' is present in the default CUDA installation path
+    cmd="/usr/local/cuda/bin/nvcc"
+    if [ -x "${cmd}" ]; then
+        echo "${cmd}"
+        return
+    fi
+
+    # if 'nvcc' is not found, provide an error message and exit with a fatal error
+    local fedora_ver
+    fedora_ver=$(rpm -E %fedora)
+    fatal_error "CUDA Toolkit not found." \
+"Please install it with:
+  sudo dnf config-manager addrepo --from-repofile=https://developer.download.nvidia.com/compute/cuda/repos/fedora${fedora_ver}/x86_64/cuda-fedora${fedora_ver}.repo
+  sudo dnf install cuda-toolkit"
+}
+
+
+# Validates that the installed CUDA version meets the specified minimum requirement.
+# If not, provides error message with installation instructions.
+#
+# Usage:
+#   fedora_check_cuda_version [MIN_CUDA_VERSION]
+#
+# Parameters:
+#   MIN_CUDA_VERSION (required): the minimum required CUDA major version.
+#
+# Example:
+#   fedora_check_cuda_version 13
+#
+fedora_check_cuda_version() {
+    local min_cuda_version="$1"
+    local cuda_version
+    local NVCC
+
+    [[ -z "$min_cuda_version" || ! "$min_cuda_version" =~ ^[0-9]+$ ]] && \
+        fatal_error "Minimum CUDA version must be a positive integer."
+
+    # try to find nvcc command
+    NVCC=$(fedora_find_nvcc)
+
+    # MEJORADO: Se añade '2>/dev/null' por si el comando falla o no responde correctamente
+    # extract CUDA major version (e.g., "13" from 'release 13.1')
+    cuda_version=$($NVCC --version 2>/dev/null | grep -oP 'release \K[0-9]+')
+
+    if [ -z "$cuda_version" ]; then
+        warning "Failed to determine CUDA version."
+        return 1
+    fi
+
+    message "Detected CUDA version: $cuda_version"
+    if [ "$cuda_version" -lt "$min_cuda_version" ]; then
+        fatal_error "CUDA version $min_cuda_version or newer is required. Found version $cuda_version."
+    fi
+
+    message "CUDA meets the required version ($min_cuda_version+)."
+    return 0
+}
+
+
+# Validates that the installed cuDNN version meets a specified minimum requirement.
+#
+# Usage:
+#   fedora_check_cudnn_version [MIN_CUDNN_VERSION]
+#
+# Parameters:
+#   MIN_CUDNN_VERSION (required): the minimum required cuDNN major version.
+#
+# Example:
+#   fedora_check_cudnn_version 9
+#
+fedora_check_cudnn_version() {
+    [[ -z "$1" || ! "$1" =~ ^[0-9]+$ ]] && \
+        fatal_error "Minimum cuDNN version must be a positive integer."
+
+    local min_cudnn_version="$1"
+    local cuDNN_header=""
+    local cudnn_version=""
+
+    # search for cuDNN version header
+    for path in "/usr/local/cuda/include/cudnn_version.h" "/usr/include/cudnn_version.h"; do
+        if [ -f "$path" ]; then
+            cuDNN_header="$path"
+            break
+        fi
+    done
+
+    if [ -z "$cuDNN_header" ]; then
+        fatal_error "cuDNN headers not found. Please verify your cuDNN installation." \
+"Please install it using one of the following methods:
+
+1. Manual Tarball Archive (Recommended for Fedora):
+   - Download the cuDNN Linux Tarball from https://developer.nvidia.com/cudnn-downloads
+   - Extract the downloaded archive:
+         tar -xf cudnn-linux-x86_64-<your_version>-archive.tar.xz
+   - Copy all include headers and library files to your CUDA installation directory:
+     (replace '<extracted_dir>' with your extracted folder name)
+        sudo cp    <extracted_dir>/include/* /usr/local/cuda/include/
+        sudo cp -P <extracted_dir>/lib/*     /usr/local/cuda/lib64/
+   - Grant standard read access permissions to the copied files:
+       sudo chmod a+r /usr/local/cuda/include/cudnn*.h /usr/local/cuda/lib64/libcudnn*
+
+2. Enterprise Linux RPM Alternative:
+   - Select the 'RHEL' distribution option on the NVIDIA download site.
+   - Download the RPM local installer file matching your target CUDA base version.
+   - Install the local package directly via package management:
+     sudo dnf localinstall ./cudnn-local-repo-rhel*.rpm"
+    fi
+
+    # extract major version from CUDNN_MAJOR definition securely
+    cudnn_version=$(grep -i '#define CUDNN_MAJOR' "$cuDNN_header" | awk '{print $3}' | tr -d '\r')
+
+    if [ -z "$cudnn_version" ]; then
+        warning "Failed to read cuDNN version from $cuDNN_header"
+        return 1
+    fi
+
+    message "Detected cuDNN version: $cudnn_version"
+
+    # compare with minimum required version
+    if [ "$cudnn_version" -lt "$min_cudnn_version" ]; then
+        fatal_error "cuDNN version $min_cudnn_version or higher is required. Found version $cudnn_version."
+    fi
+
+    message "cuDNN meets the required version ($min_cudnn_version+)."
+    return 0
+}
+
+
 
 #============================================================================
 # Initialize the project handler
@@ -66,10 +209,10 @@
 #   - REMOTE_HASH : Git commit hash or tag of the recommended version
 
 _init_() {
-    #NAME=$1
+    NAME=$1
     PORT=$2
-    #VENV=$3
-    #PYTHON=$4
+    VENV=$3
+    PYTHON=$4
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
@@ -96,16 +239,20 @@ cmd_install() {
 #         esac
 #     done
 
+    message "Installing $NAME..."
+    fedora_check_cuda_version 13
+    fedora_check_cudnn_version 9
+
     # clone llama.cpp repository
     require_system_command git cmake go gcc-13 g++-13
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
     safe_chdir "$LOCAL_DIR"
 
-    # build ollama from source code
+    # build llama.cpp from source code
     # https://github.com/ollama/ollama/blob/main/docs/development.md
-    export CUDA_PATH=/usr/local/cuda/
-    cmake -B      build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="86"
-    cmake --build build --config Release
+    # export CUDA_PATH=/usr/local/cuda/
+    # cmake -B      build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="86"
+    # cmake --build build --config Release
 }
 
 #============================================================================
