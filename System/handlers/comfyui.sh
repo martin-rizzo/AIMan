@@ -31,6 +31,10 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
+# The launcher extension that I use in chrome:
+# https://chromewebstore.google.com/detail/yet-another-speed-dial/imohnlganmafcmidafklgkgfgaagiohn
+YET_ANOTHER_SPEED_DIAL_EXT_ID=imohnlganmafcmidafklgkgfgaagiohn
+
 
 #============================================================================
 # Initialize the project handler
@@ -216,20 +220,57 @@ COMFYUI_PID=
 cmd_launch() {
 
     require_venv "$VENV" "$PYTHON"
+    local launching_message="launching ComfyUI application"
+
+    # set the specific Chrome Extension ID authorized to access ComfyUI (e.g., Speed Dial)
+    # this avoids "403 Forbidden" and ensures only this ID has CORS permission.
+    # you can set COMFYUI_ALLOWED_CHROME_EXT_ID in your .bashrc or environment.
+    local COMFYUI_ALLOWED_CHROME_EXT_ID="${COMFYUI_ALLOWED_CHROME_EXT_ID:-${YET_ANOTHER_SPEED_DIAL_EXT_ID}}"
+
 
     #------------- COMFYUI OPTIONS -------------#
-    local options=() port_message=''
+    local options=()
 
+    # enable high-quality Latent previews during the generation process
+    # set the method to display image previews during generation.
+    # available options:
+    #   - auto      : automatically selects the best available method.
+    #   - latent2rgb: fast, low-resolution preview (very lightweight).
+    #   - taesd     : high-quality preview using Tiny AutoEncoder (requires TAESD models).
+    #   - none      : disables previews entirely to save resources.
     options+=( --preview-method auto )
+
+    # set custom network port if required
     if [[ $PORT ]]; then
         options+=( --port "$PORT" )
-        port_message="on port $PORT"
+        launching_message="launching ComfyUI application on port $PORT"
+    fi
+
+    # enable CORS header for Chrome Extensions
+    if [[ -n "$COMFYUI_ALLOWED_CHROME_EXT_ID" ]]; then
+        options+=( --enable-cors-header "chrome-extension://$COMFYUI_ALLOWED_CHROME_EXT_ID" )
+    fi
+
+
+    # restrict listener to localhost to prevent external network access
+    # (safer than --listen)
+    options+=( --listen 127.0.0.1 )
+
+    # bypass "403 Forbidden" errors when calling from chrome extensions (e.g Speed Dial)
+    # Replace 'YOUR_EXTENSION_ID' with the ID found in chrome://extensions
+    # if the ID is unknown, you can use '*' temporarily, but more dangerous
+    # asi que mejor specific ID is recommended.
+    local ext_id="YOUR_EXTENSION_ID_HERE"
+    ext_id="imohnlganmafcmidafklgkgfgaagiohn"
+
+    if [[ $ext_id != 'YOUR_EXTENSION_ID_HERE' ]]; then
+        options+=( --enable-cors-header "chrome-extension://$ext_id" )
     fi
 
     #---------------- LAUNCHING ----------------#
     safe_chdir "$LOCAL_DIR"
     message "changed working directory to $PWD"
-    message "launching ComfyUI application $port_message"
+    message "$launching_message"
     message "main.py" "${options[@]}" "$@"
     message
 
@@ -237,9 +278,37 @@ cmd_launch() {
     # it will terminate the comfyui processes
     trap '[[ -n "$COMFYUI_PID" ]] && kill "$COMFYUI_PID"' SIGINT
 
-    # launch comfyui and wait until the process is no longer running
-    virtual_python main.py "${options[@]}" "$@" &
-    COMFYUI_PID=$! ; while kill -0 "$COMFYUI_PID" 2>/dev/null; do
-        wait "$COMFYUI_PID"
+    while true; do
+        local key='' restart=''
+
+        # launch ComfyUI as a background job to be able to monitor the keyboard
+        virtual_python '&main.py' "${options[@]}" "$@"
+        COMFYUI_PID=$!
+        message "comfyUI launched with PID: $COMFYUI_PID"
+
+        # loop while comfyui is running
+        echo ">>>> Press 'r' to restart, 'q' to quit."
+        while kill -0 "$COMFYUI_PID" 2>/dev/null; do
+            read -t 1 -n 1 -r key # read 1 character (-n1) with a 1-second timeout (-t1)
+
+            if [[ $key == "r" ]]; then
+                restart=true
+                echo -e "\nRestarting ComfyUI..."
+                kill "$COMFYUI_PID"
+            fi
+
+            if [[ $key == "q" ]]; then
+                echo -e "\nShutting down..."
+                kill "$COMFYUI_PID"
+            fi
+
+        done
+
+        # wait for comfyui process to finish
+        # and exit if a restart was not requested
+        wait "$COMFYUI_PID" 2>/dev/null
+        [[ ! $restart ]] && exit 0
     done
+
 }
+
