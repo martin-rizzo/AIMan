@@ -32,6 +32,7 @@
 #     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 AIMAN=$(realpath "${BASH_SOURCE[0]}")
+WORKING_DIR=$PWD
 SCRIPT_DIR=$(dirname "$AIMAN")
 SCRIPT_NAME=$(basename "$AIMAN")
 SCRIPT_VER=0.1      # script version
