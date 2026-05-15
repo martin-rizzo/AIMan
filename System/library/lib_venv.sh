@@ -259,10 +259,14 @@ virtual_python() {
         return 0
 
     # if the command starts with "!", execute it as a normal linux command
-    elif  [[ "$command" == "!"* ]]; then
+    elif [[ "$command" == "!"* ]]; then
         "${command:1}" "$@"
 
-    # otherwise, execute it as a python script
+    # if the command starts with "&", run it as a python script (background)
+    elif [[ "$command" == "&"* ]]; then
+        python "${command:1}" "$@" &
+
+    # otherwise, run it as a python script
     else
         python "$command" "$@"
     fi
