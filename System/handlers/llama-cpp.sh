@@ -191,6 +191,24 @@ fedora_check_cudnn_version() {
     return 0
 }
 
+# Validates that the libcurl development files are installed on the system.
+# If not, provides an error message with DNF installation instructions.
+#
+# Usage:
+#   fedora_require_libcurl
+#
+# Example:
+#   fedora_require_libcurl
+#
+fedora_require_libcurl() {
+    # check if libcurl development package is registered in the system
+    if ! pkg-config --exists libcurl 2>/dev/null; then
+        fatal_error "libcurl-devel is not installed." \
+"Install the curl development package via DNF:
+      sudo dnf install libcurl-devel"
+    fi
+}
+
 
 
 #============================================================================
@@ -244,15 +262,23 @@ cmd_install() {
     fedora_check_cudnn_version 9
 
     # clone llama.cpp repository
-    require_system_command git cmake go gcc-13 g++-13
+    require_system_command pkg-config git cmake go # gcc-13 g++-13
+    fedora_require_libcurl
     clone_repository "$REMOTE_URL" "$REMOTE_HASH" "$LOCAL_DIR"
     safe_chdir "$LOCAL_DIR"
 
     # build llama.cpp from source code
     # https://github.com/ollama/ollama/blob/main/docs/development.md
-    # export CUDA_PATH=/usr/local/cuda/
-    # cmake -B      build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="86"
-    # cmake --build build --config Release
+    export CUDACXX
+    CUDACXX=$(fedora_find_nvcc)
+    rm -rf build
+    cmake -B      build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="86" -DCMAKE_BUILD_TYPE=Release
+    cmake --build build --config Release --parallel "$(nproc)"
+
+    ## MLX support for llama.cpp
+    #rm -rf build
+    #cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="86" -DGGML_MLX=ON -DCMAKE_BUILD_TYPE=Release
+    #cmake --build build --config Release --parallel "$(nproc)"
 }
 
 #============================================================================
