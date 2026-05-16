@@ -54,6 +54,10 @@ GREEN='\e[1;32m'
 YELLOW='\e[1;33m'
 #BLUE='\e[1;34m'
 CYAN='\e[1;36m'
+MAGENTA='\e[1;35m'
+UNDERLINE='\e[4;37m'
+BOLD='\e[1m'
+RESET='\e[0m'
 DEFAULT_COLOR='\e[0m'
 
 # GLOBAL INTERNAL VAR
@@ -112,6 +116,13 @@ message() {
 warning() {
     local message=$1
     echo -e "${CYAN}[${YELLOW}WARNING${CYAN}]${YELLOW} $message${DEFAULT_COLOR}" >&2
+    shift
+    # print informational messages, if any were provided
+    while [[ $# -gt 0 ]]; do
+        local info_message=$1
+        echo -e " ${CYAN}\xF0\x9F\x9B\x88 $info_message${DEFAULT_COLOR}" >&2
+        shift
+    done
 }
 
 # Display an error message
