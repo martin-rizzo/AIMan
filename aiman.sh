@@ -133,6 +133,14 @@ source 'System/library/lib_projectdb.sh'
 source 'System/library/lib_venv.sh'
 load_project_db "$HANDLERS_DIR/00_database.csv"
 
+
+# verify
+if [ -z "$GOPATH" ]; then
+    warning "GOPATH is not defined. It is highly recommended to set it to a hidden directory like '.go'." \
+"To store Go data in a hidden directory, add the following line to your ~/.bashrc file:
+    export GOPATH=\$HOME/.go"
+fi
+
 # loop through all the script parameters
 show_help=false
 show_version=false
