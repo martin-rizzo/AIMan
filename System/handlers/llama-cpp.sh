@@ -289,22 +289,101 @@ cmd_install() {
 #   cmd_launch [user_args]
 #
 cmd_launch() {
-    local model="/mnt/X/DISK_X/AI_Models/llama-cpp/Qwen2-VL-7B-Q4_K_M.gguf"
-    local mmproj="/mnt/X/DISK_X/AI_Models/llama-cpp/mmproj-Qwen2-VL-7B-Instruct-abliterated-f16.gguf"
-    local port=9100
-    local port_message=''
+    local PORT=8081
     local llama_server="$LOCAL_DIR/build/bin/llama-server"
+    local MODELS_PRESET="$HOME/llama-presets.ini"
 
-#     # attempt to override the default port based on project configuration
-#     if [[ $PORT ]]; then
-#         port=$PORT
-#     fi
+    # Shared control directory and file outside of the restrictive /tmp/
+    local IPC_DIR="/var/tmp/aiman"
+    local PIPE_FILE="$IPC_DIR/llama_server_trigger"
+
+    #------------- LLAMA.CPP OPTIONS -------------#
+    local options=()
+    local launching_extra_message=""
+    options+=( --models-preset "$MODELS_PRESET" )
+
+    if [[ $PORT ]]; then
+        options+=( --port "$PORT" )
+        launching_extra_message="on port $PORT"
+    fi
 
     #---------------- LAUNCHING ----------------#
     safe_chdir "$LOCAL_DIR"
-    [[ $port ]] && port_message="on port $port"
     message "changed working directory to $PWD"
-    message "launching llama.cpp server $port_message"
-    message
-    "$llama_server" -m "$model" --mmproj "$mmproj" --port "$port"
+    message "launching llama.cpp cli in router mode ${launching_extra_message}"
+    message "$llama_server" "${options[@]}"
+
+    # Set up a clean, open shared workspace directory
+    rm -rf "$IPC_DIR"
+    mkdir -p "$IPC_DIR"
+    chmod 777 "$IPC_DIR" # Allows other users to access the directory content
+
+    # Create the named pipe and set open permissions
+    mkfifo "$PIPE_FILE"
+    chmod 666 "$PIPE_FILE"
+
+    # Clean up files and process on exit
+    cleanup() {
+        rm -rf "$IPC_DIR"
+        [[ -n "$LLAMA_PID" ]] && kill "$LLAMA_PID" 2>/dev/null
+    }
+
+    # Keep linters happy with explicit function mapping
+    trap cleanup SIGINT EXIT
+
+    while true; do
+        local key='' restart='' external_restart=false
+
+        # Launch llama-server as a background job
+        "$llama_server" "${options[@]}" &
+        LLAMA_PID=$!
+        message "llama-server launched with PID: $LLAMA_PID"
+
+        # banner explaining all controls
+        echo
+        echo -e "${MAGENTA}╭─────────────────────────────────────────────────────────────────╮${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${CYAN}⚙️  LLAMA-SERVER CONTROL PANEL${RESET}                                   ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}├─────────────────────────────────────────────────────────────────┤${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${GREEN}[r]${RESET} ${BOLD}Keyboard:${RESET} Restart the server immediately                    ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${RED}[q]${RESET} ${BOLD}Keyboard:${RESET} Shut down and exit completely                     ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${YELLOW}[IPC Trigger]${RESET} From another user/project run:                    ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET}                                                                 ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET}   echo \"restart\" > ${PIPE_FILE}${RESET}          ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET}                                                                 ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}╰─────────────────────────────────────────────────────────────────╯${RESET}\n"
+
+        while kill -0 "$LLAMA_PID" 2>/dev/null; do
+            # 1. Check keyboard input (1-second timeout)
+            read -t 1 -n 1 -r key
+
+            # 2. Check the pipe for external commands without blocking
+            if read -t 0.1 -r cmd < "$PIPE_FILE" 2>/dev/null; then
+                if [[ $cmd == "restart" ]]; then
+                    external_restart=true
+                fi
+            fi
+
+            if [[ $key == "r" || $external_restart == true ]]; then
+                restart=true
+                echo -e "\nRestarting llama-server..."
+                kill "$LLAMA_PID" 2>/dev/null
+                break
+            fi
+
+            if [[ $key == "q" ]]; then
+                echo -e "\nShutting down..."
+                kill "$LLAMA_PID" 2>/dev/null
+                break
+            fi
+        done
+
+        # Wait for process to finish
+        wait "$LLAMA_PID" 2>/dev/null
+
+        if [[ ! $restart ]]; then
+            cleanup
+            trap - SIGINT EXIT
+            return 0
+        fi
+    done
 }
