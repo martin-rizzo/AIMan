@@ -64,6 +64,15 @@ declare -a CACHE_PROJECT_INFO
 #     project,dir,repo,hash,license,name,brief,description
 #
 load_project_db() {
+    local shared_tmp_dir='/var/tmp/aiman'
+
+    # ATTENTION, shared temp dir will be accessible for any user!!
+    mkdir -p  "$shared_tmp_dir"
+    chmod 777 "$shared_tmp_dir"
+    [[ -d "$shared_tmp_dir" ]] || \
+        bug_report "AIMan could not create the '$shared_tmp_dir' directory"
+
+
     local csv_db_file=$1
     # iterate through each line of the CSV file
     IFS=','; while read -r project_handler dir repo hash license name brief description; do
@@ -97,7 +106,7 @@ load_project_db() {
 
         # append the trimmed project information to the $PROJECTS_DB variable
         PROJECTS_LIST+="$project "
-        PROJECTS_DB+="$project,$handler,$dir,$repo,$hash,$license,$name,$brief,$description
+        PROJECTS_DB+="$project,$handler,$dir,$repo,$hash,$license,$name,$brief,$description,$shared_tmp_dir
 "
     done < "$csv_db_file"
 }
@@ -113,15 +122,17 @@ load_project_db() {
 #   Any number of parameters may be passed to the function, which
 #   correspond to the project information to be printed.
 #   Valid parameters are:
-#      "@local_dir"   : Outputs the local directory of the project.
-#      "@local_venv"  : Outputs the local virtual environment directory of the project.
-#      "@handler"     : Outputs the path of the AIMan script responsible for managing the project.
-#      "@repo"        : Outputs the repository URL of the project.
-#      "@hash"        : Outputs the commit hash of the project.
-#      "@license"     : Outputs the license of the project.
-#      "@name"        : Outputs the full name of the project.
-#      "@brief"       : Outputs a brief description of the project.
-#      "@description" : Outputs the full description of the project.
+#      "@local_dir"     : Outputs the local directory of the project.
+#      "@local_venv"    : Outputs the local virtual environment directory of the project.
+#      "@handler"       : Outputs the path of the AIMan script responsible for managing the project.
+#      "@repo"          : Outputs the repository URL of the project.
+#      "@hash"          : Outputs the commit hash of the project.
+#      "@license"       : Outputs the license of the project.
+#      "@name"          : Outputs the full name of the project.
+#      "@brief"         : Outputs a brief description of the project.
+#      "@description"   : Outputs the full description of the project.
+#      "@shared_tmp_dir": Outputs the path of the shared temporary directory.
+#                         (useful for creating pipes and shared files)
 #      Any other parameter will be printed as-is.
 #
 # Example:
@@ -142,7 +153,7 @@ project_info() {
     # (if '@' is provided as the project name, it means that the cache content should be printed)
     if [[ $project_name != '@' && $project_name != "${CACHE_PROJECT_INFO[0]}" ]]; then
         CACHE_PROJECT_INFO=()
-        IFS=','; while read -r project handler local_dir repo hash license name brief description; do
+        IFS=','; while read -r project handler local_dir repo hash license name brief description shared_tmp_dir; do
             if [[ $project == "$project_name" ]]; then
                 CACHE_PROJECT_INFO[0]=$project
                 CACHE_PROJECT_INFO[1]="$REPOS_DIR/${local_dir}"
@@ -154,6 +165,7 @@ project_info() {
                 CACHE_PROJECT_INFO[7]=$name
                 CACHE_PROJECT_INFO[8]=$brief
                 CACHE_PROJECT_INFO[9]=$description
+                CACHE_PROJECT_INFO[10]=$shared_tmp_dir
                 break
             fi
         done <<< "$PROJECTS_DB"
@@ -165,16 +177,17 @@ project_info() {
         shift
         for parameter in "$@"; do
             case "$parameter" in
-                "@id"         ) echo -n "${CACHE_PROJECT_INFO[0]}" ;;
-                "@local_dir"  ) echo -n "${CACHE_PROJECT_INFO[1]}" ;;
-                "@local_venv" ) echo -n "${CACHE_PROJECT_INFO[2]}" ;;
-                "@handler"    ) echo -n "${CACHE_PROJECT_INFO[3]}" ;;
-                "@repo"       ) echo -n "${CACHE_PROJECT_INFO[4]}" ;;
-                "@hash"       ) echo -n "${CACHE_PROJECT_INFO[5]}" ;;
-                "@license"    ) echo -n "${CACHE_PROJECT_INFO[6]}" ;;
-                "@name"       ) echo -n "${CACHE_PROJECT_INFO[7]}" ;;
-                "@brief"      ) echo -n "${CACHE_PROJECT_INFO[8]}" ;;
-                "@description") echo -n "${CACHE_PROJECT_INFO[9]}" ;;
+                "@id"            ) echo -n "${CACHE_PROJECT_INFO[0]}"  ;;
+                "@local_dir"     ) echo -n "${CACHE_PROJECT_INFO[1]}"  ;;
+                "@local_venv"    ) echo -n "${CACHE_PROJECT_INFO[2]}"  ;;
+                "@handler"       ) echo -n "${CACHE_PROJECT_INFO[3]}"  ;;
+                "@repo"          ) echo -n "${CACHE_PROJECT_INFO[4]}"  ;;
+                "@hash"          ) echo -n "${CACHE_PROJECT_INFO[5]}"  ;;
+                "@license"       ) echo -n "${CACHE_PROJECT_INFO[6]}"  ;;
+                "@name"          ) echo -n "${CACHE_PROJECT_INFO[7]}"  ;;
+                "@brief"         ) echo -n "${CACHE_PROJECT_INFO[8]}"  ;;
+                "@description"   ) echo -n "${CACHE_PROJECT_INFO[9]}"  ;;
+                "@shared_tmp_dir") echo -n "${CACHE_PROJECT_INFO[10]}" ;;
                 *)              echo -n "$parameter"          ;;
             esac
         done

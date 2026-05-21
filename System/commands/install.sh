@@ -80,6 +80,7 @@ function run_command() {
     repo=$(project_info @ @repo)
     hash=$(project_info @ @hash)
     handler=$(project_info @ @handler)
+    shared_tmp_dir=$(project_info @ @shared_tmp_dir)
     port=$PROJECT_PORT
     python=$COMPATIBLE_PYTHON
 
@@ -98,6 +99,6 @@ function run_command() {
     is_valid_function _init_ cmd_install \
     || bug_report "The project handler for '$PROJECT_NAME' is missing required functions ('_init_' or 'cmd_install')"
 
-    _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash"
+    _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash" "$shared_tmp_dir"
     cmd_install "$@"
 }

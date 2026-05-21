@@ -53,11 +53,12 @@ function run_command() {
 
     # get project information
     local project_dir port venv python repo hash handler
-    project_dir=$(project_info @ @local_dir )
-    venv=$(project_info        @ @local_venv)
-    repo=$(project_info        @ @repo      )
-    hash=$(project_info        @ @hash      )
-    handler=$(project_info     @ @handler   )
+    project_dir=$(project_info    @ @local_dir     )
+    venv=$(project_info           @ @local_venv    )
+    repo=$(project_info           @ @repo          )
+    hash=$(project_info           @ @hash          )
+    handler=$(project_info        @ @handler       )
+    shared_tmp_dir=$(project_info @ @shared_tmp_dir)
     port=$PROJECT_PORT
     python=$COMPATIBLE_PYTHON
 
@@ -96,7 +97,7 @@ function run_command() {
 
     # remove any extra files that were installed outside the main project
     if is_valid_function _init_ cmd_remove_extra; then
-        _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash"
+        _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash" "$shared_tmp_dir"
         cmd_remove_extra
     fi
 
