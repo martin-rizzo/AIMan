@@ -59,6 +59,11 @@ _init_() {
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
+    SHARED_TMP_DIR=$8  #< temporary directory shared with other apps and users
+    
+    # ensure the shared folder exists
+    [[ -d "$SHARED_TMP_DIR" ]] || \
+        bug_report "init parameter 8: '$SHARED_TMP_DIR' is not a valid directory"
 
     case "$NAME" in
         'comfyui')
@@ -213,102 +218,124 @@ COMFYUI_PID=
 #============================================================================
 # Launches the project application in the specified environment.
 #
-# Usage:
-#   _init_ ...
-#   cmd_launch [user_args]
+# The AIMAN environment invokes the functions in the following order:
+#     _init_ ...
+#     cmd_launch [user_args]
+#
+# This function implements a robust launch mechanism for ComfyUI that:
+#  - Sets up environment variables and options
+#  - Manages process lifecycle with restart and quit controls
+#  - Handles keyboard input for user interaction
+#  - Supports external IPC triggers via named pipe
+#  - Cleans up resources on exit
 #
 cmd_launch() {
-
     require_venv "$VENV" "$PYTHON"
-    local launching_message="launching ComfyUI application"
 
-    # set the specific Chrome Extension ID authorized to access ComfyUI (e.g., Speed Dial)
+    # set the specific Chrome Extension ID authorized to launch ComfyUI (e.g., Speed Dial)
     # this avoids "403 Forbidden" and ensures only this ID has CORS permission.
     # you can set COMFYUI_ALLOWED_CHROME_EXT_ID in your .bashrc or environment.
     local COMFYUI_ALLOWED_CHROME_EXT_ID="${COMFYUI_ALLOWED_CHROME_EXT_ID:-${YET_ANOTHER_SPEED_DIAL_EXT_ID}}"
 
+    # pipe file to control restarting/quitting
+    # the pipe must be in a shared directory
+    # so that any user/process can access it
+    local PIPE_FILE="$SHARED_TMP_DIR/comfyui_trigger"
 
+    
     #------------- COMFYUI OPTIONS -------------#
     local options=()
-
-    # enable high-quality Latent previews during the generation process
-    # set the method to display image previews during generation.
-    # available options:
-    #   - auto      : automatically selects the best available method.
-    #   - latent2rgb: fast, low-resolution preview (very lightweight).
-    #   - taesd     : high-quality preview using Tiny AutoEncoder (requires TAESD models).
-    #   - none      : disables previews entirely to save resources.
+    local launching_extra_message=""
+    
+    # Enable high-quality Latent previews during generation
     options+=( --preview-method auto )
-
-    # set custom network port if required
-    if [[ $PORT ]]; then
+    
+    # Set custom network port if required
+    if [[ -n "$PORT" ]]; then
         options+=( --port "$PORT" )
-        launching_message="launching ComfyUI application on port $PORT"
+        launching_extra_message="on port $PORT"
     fi
-
-    # enable CORS header for Chrome Extensions
+    
+    # enable CORS header for allowed Chrome Extension
+    # (this enables the chrome extension to launch ComfyUI)
     if [[ -n "$COMFYUI_ALLOWED_CHROME_EXT_ID" ]]; then
         options+=( --enable-cors-header "chrome-extension://$COMFYUI_ALLOWED_CHROME_EXT_ID" )
     fi
-
-
+    
     # restrict listener to localhost to prevent external network access
-    # (safer than --listen)
     options+=( --listen 127.0.0.1 )
-
-    # bypass "403 Forbidden" errors when calling from chrome extensions (e.g Speed Dial)
-    # Replace 'YOUR_EXTENSION_ID' with the ID found in chrome://extensions
-    # if the ID is unknown, you can use '*' temporarily, but more dangerous
-    # asi que mejor specific ID is recommended.
-    local ext_id="YOUR_EXTENSION_ID_HERE"
-    ext_id="imohnlganmafcmidafklgkgfgaagiohn"
-
-    if [[ $ext_id != 'YOUR_EXTENSION_ID_HERE' ]]; then
-        options+=( --enable-cors-header "chrome-extension://$ext_id" )
-    fi
-
+    
+    
     #---------------- LAUNCHING ----------------#
     safe_chdir "$LOCAL_DIR"
     message "changed working directory to $PWD"
-    message "$launching_message"
-    message "main.py" "${options[@]}" "$@"
-    message
-
-    # when this script receives a SIGINT (Ctrl+C),
-    # it will terminate the comfyui processes
-    trap '[[ -n "$COMFYUI_PID" ]] && kill "$COMFYUI_PID"' SIGINT
-
+    
+    # create the named pipe and set open permissions
+    rm -f "$PIPE_FILE"
+    mkfifo "$PIPE_FILE"
+    chmod 666 "$PIPE_FILE"
+    
+    # clean up files and process on exit
+    # shellcheck disable=SC2329
+    cleanup_on_exit() {
+        rm -f "$PIPE_FILE"
+        [[ -n "$COMFYUI_PID" ]] && kill "$COMFYUI_PID" 2>/dev/null
+    }
+    trap cleanup_on_exit SIGINT EXIT
+    
     while true; do
-        local key='' restart=''
-
-        # launch ComfyUI as a background job to be able to monitor the keyboard
+        local key='' cmd=''
+        
+        # Launch ComfyUI as a background job
+        message "launching ComfyUI application ${launching_extra_message}"
+        message         'main.py' "${options[@]}" "$@"
         virtual_python '&main.py' "${options[@]}" "$@"
         COMFYUI_PID=$!
         message "comfyUI launched with PID: $COMFYUI_PID"
-
-        # loop while comfyui is running
-        echo ">>>> Press 'r' to restart, 'q' to quit."
+        
+        # print banner explaining all controls
+        echo
+        echo -e "${MAGENTA}╭─────────────────────────────────────────────────────────────────╮${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${CYAN}⚙️  COMFYUI CONTROL PANEL${RESET}                                        ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}├─────────────────────────────────────────────────────────────────┤${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${GREEN}[r]${RESET} ${BOLD}Keyboard:${RESET} Restart ComfyUI immediately                       ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${RED}[q]${RESET} ${BOLD}Keyboard:${RESET} Shut down and exit completely                     ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET} ${YELLOW}[IPC Trigger]${RESET} From another user/project run:                    ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET}                                                                 ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET}   echo \"restart\" > ${PIPE_FILE}${RESET}               ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}│${RESET}                                                                 ${MAGENTA}│${RESET}"
+        echo -e "${MAGENTA}╰─────────────────────────────────────────────────────────────────╯${RESET}\n"
+        
         while kill -0 "$COMFYUI_PID" 2>/dev/null; do
-            read -t 1 -n 1 -r key # read 1 character (-n1) with a 1-second timeout (-t1)
 
-            if [[ $key == "r" ]]; then
-                restart=true
-                echo -e "\nRestarting ComfyUI..."
-                kill "$COMFYUI_PID"
+            # check the pipe for external commands (100ms timeout)
+            if [[ -p "$PIPE_FILE" ]]; then
+                read -t 0.1 -r cmd <> "$PIPE_FILE" 2>/dev/null
             fi
-
-            if [[ $key == "q" ]]; then
-                echo -e "\nShutting down..."
-                kill "$COMFYUI_PID"
+            
+            # check keyboard input (100ms timeout)
+            read -t 0.1 -n 1 -r key 2>/dev/null
+            [[ $key == "r" ]] && cmd="restart"
+            [[ $key == "q" ]] && cmd="quit"
+            
+            if [[ "$cmd" == "quit" || "$cmd" == "restart" ]]; then
+                kill "$COMFYUI_PID" 2>/dev/null
+                break
             fi
+            
+            # small sleep to prevent CPU spiking
+            sleep 1
 
         done
+        
+        # wait as max 5 seconds to normally finish ComfyUI
+        # and then kill any process of ComfyUI that may be stuck
+        timeout 5s wait "$COMFYUI_PID" 2>/dev/null
+        echo
+        if [[ $cmd == "quit" ]]; then
+            echo -e "Shutting down..."
+            return 0
+        fi
 
-        # wait for comfyui process to finish
-        # and exit if a restart was not requested
-        wait "$COMFYUI_PID" 2>/dev/null
-        [[ ! $restart ]] && exit 0
     done
-
 }
-
