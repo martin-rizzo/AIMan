@@ -229,11 +229,12 @@ fedora_require_libcurl() {
 _init_() {
     NAME=$1
     PORT=$2
-    VENV=$3
-    PYTHON=$4
+    #VENV=$3
+    #PYTHON=$4
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
+    SHARED_TMP_DIR=$8  #< temporary directory shared with other apps and users
     #VERSION=$REMOTE_HASH
 }
 
@@ -290,17 +291,21 @@ cmd_install() {
 #
 cmd_launch() {
     local PORT=8081
-    local llama_server="$LOCAL_DIR/build/bin/llama-server"
+    local LLAMA_SERVER="$LOCAL_DIR/build/bin/llama-server"
     local MODELS_PRESET="$HOME/llama-presets.ini"
 
-    # Shared control directory and file outside of the restrictive /tmp/
-    local IPC_DIR="/var/tmp/aiman"
-    local PIPE_FILE="$IPC_DIR/llama_server_trigger"
+    # ensure the shared folder exists
+    [[ -d $SHARED_TMP_DIR ]] \
+    || bug_report "init parameter 8: '$SHARED_TMP_DIR' is not a directory"
+
+    # pipe is located in the shared folder to avoid permission issues
+    local PIPE_FILE="$SHARED_TMP_DIR/llama_server_trigger"
 
     #------------- LLAMA.CPP OPTIONS -------------#
     local options=()
     local launching_extra_message=""
     options+=( --models-preset "$MODELS_PRESET" )
+    options+=( --models-max 1 )
 
     if [[ $PORT ]]; then
         options+=( --port "$PORT" )
@@ -310,36 +315,32 @@ cmd_launch() {
     #---------------- LAUNCHING ----------------#
     safe_chdir "$LOCAL_DIR"
     message "changed working directory to $PWD"
-    message "launching llama.cpp cli in router mode ${launching_extra_message}"
-    message "$llama_server" "${options[@]}"
 
-    # Set up a clean, open shared workspace directory
-    rm -rf "$IPC_DIR"
-    mkdir -p "$IPC_DIR"
-    chmod 777 "$IPC_DIR" # Allows other users to access the directory content
-
-    # Create the named pipe and set open permissions
+    # create the named pipe and set open permissions
+    rm -f "$PIPE_FILE"
     mkfifo "$PIPE_FILE"
     chmod 666 "$PIPE_FILE"
 
-    # Clean up files and process on exit
-    cleanup() {
-        rm -rf "$IPC_DIR"
+    # clean up files and process on exit
+    # shellcheck disable=SC2329
+    cleanup_on_exit() {
+        rm -f "$PIPE_FILE"
         [[ -n "$LLAMA_PID" ]] && kill "$LLAMA_PID" 2>/dev/null
     }
+    trap cleanup_on_exit SIGINT EXIT
 
-    # Keep linters happy with explicit function mapping
-    trap cleanup SIGINT EXIT
 
     while true; do
-        local key='' restart='' external_restart=false
+        local key='' cmd=''
 
-        # Launch llama-server as a background job
-        "$llama_server" "${options[@]}" &
+        # launch llama-server as a background job
+        message "launching llama.cpp cli in router mode ${launching_extra_message}"
+        message "$LLAMA_SERVER" "${options[@]}"
+        "$LLAMA_SERVER" "${options[@]}" &
         LLAMA_PID=$!
         message "llama-server launched with PID: $LLAMA_PID"
 
-        # banner explaining all controls
+        # print banner explaining all controls
         echo
         echo -e "${MAGENTA}╭─────────────────────────────────────────────────────────────────╮${RESET}"
         echo -e "${MAGENTA}│${RESET} ${CYAN}⚙️  LLAMA-SERVER CONTROL PANEL${RESET}                                   ${MAGENTA}│${RESET}"
@@ -353,36 +354,32 @@ cmd_launch() {
         echo -e "${MAGENTA}╰─────────────────────────────────────────────────────────────────╯${RESET}\n"
 
         while kill -0 "$LLAMA_PID" 2>/dev/null; do
-            # 1. Check keyboard input (1-second timeout)
-            read -t 1 -n 1 -r key
 
-            # 2. Check the pipe for external commands without blocking
-            if read -t 0.1 -r cmd < "$PIPE_FILE" 2>/dev/null; then
-                if [[ $cmd == "restart" ]]; then
-                    external_restart=true
-                fi
-            fi
+            # check the pipe for external commands (100ms timeout)
+            [[ -p "$PIPE_FILE" ]] && read -t 0.1 -r cmd <> "$PIPE_FILE" 2>/dev/null
 
-            if [[ $key == "r" || $external_restart == true ]]; then
-                restart=true
-                echo -e "\nRestarting llama-server..."
+            # check keyboard input (100ms timeout)
+            read -t 0.1 -n 1 -r key
+            [[ $key == "r" ]] && cmd="restart"
+            [[ $key == "q" ]] && cmd="quit"
+
+            if [[ "$cmd" == "quit" || "$cmd" == "restart" ]]; then
                 kill "$LLAMA_PID" 2>/dev/null
                 break
             fi
 
-            if [[ $key == "q" ]]; then
-                echo -e "\nShutting down..."
-                kill "$LLAMA_PID" 2>/dev/null
-                break
-            fi
+            # small sleep to prevent CPU spiking
+            sleep 1
+
         done
 
-        # Wait for process to finish
-        wait "$LLAMA_PID" 2>/dev/null
+        # wait as max 5 seconds to normally finish llama.cpp
+        # and then kill any process of llama-server that may be stuck
+        timeout 5s wait "$LLAMA_PID" 2>/dev/null
+        pkill -9 -f llama-server
 
-        if [[ ! $restart ]]; then
-            cleanup
-            trap - SIGINT EXIT
+        if [[ $cmd == "quit" ]]; then
+            echo -e "\nShutting down..." 
             return 0
         fi
     done
