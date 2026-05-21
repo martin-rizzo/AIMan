@@ -69,7 +69,7 @@ function run_command() {
     project_info "$PROJECT_NAME"
 
     # get project information
-    local project_dir port venv python repo hash handler
+    local project_dir venv repo hash handler port python temp_dir
     project_dir=$(project_info @ @local_dir)
     venv=$(project_info @ @local_venv)
     repo=$(project_info @ @repo)
@@ -77,6 +77,13 @@ function run_command() {
     handler=$(project_info @ @handler)
     port=$PROJECT_PORT
     python=$COMPATIBLE_PYTHON
+    temp_dir='/var/tmp/aiman'
+
+    # ATTENTION, temp dir will be accessible for any user!!
+    mkdir -p "$temp_dir"
+    chmod 777 "$temp_dir"
+    [[ -d $temp_dir ]] \
+    || bug_report "AIMan could not create the '$temp_dir' directory"
 
     # ensure the project handler exists
     [[ -f $handler ]] \
@@ -88,6 +95,6 @@ function run_command() {
     is_valid_function _init_ cmd_launch \
     || bug_report "The project handler for '$PROJECT_NAME' is missing required functions ('_init_' or 'cmd_launch')"
 
-    _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash"
+    _init_ "$PROJECT_NAME" "$port" "$venv" "$python" "$project_dir" "$repo" "$hash" "$temp_dir"
     cmd_launch "$@"
 }
