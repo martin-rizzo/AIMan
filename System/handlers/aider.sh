@@ -85,7 +85,6 @@ cmd_install() {
 #
 cmd_launch() {
     require_venv "$VENV" "$PYTHON"
-    safe_chdir "$LOCAL_DIR"
 
     # check if launching with a ollama model ("--model ollama/<model-name>")
     if [[ "$1" == "--model" && "$2" == ollama/* ]]; then
@@ -95,12 +94,14 @@ cmd_launch() {
                 'you can define "export OLLAMA_API_BASE=http://localhost:11434" in your bashrc'
         fi
         echox wait "launching Aider with ollama model: $2"
+        safe_chdir "$WORKING_DIR"
         virtual_python -m aider --no-git "$@"
         exit 0
     fi
 
     echox wait "launching Aider"
     # Run Aider using the Python interpreter in the correct environment
+    safe_chdir "$WORKING_DIR"
     virtual_python -m aider --no-git "$@"
 }
 #============================================================================
