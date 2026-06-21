@@ -34,123 +34,68 @@
 # Check if AIMAN variable is set, otherwise exit with an error
 AIMAN=${AIMAN:?}
 
-# Whether to install and configure the "Pipelines" framework
-#  (https://github.com/open-webui/pipelines)
-#  'true' is 100% recommended for enhanced functionality
-INSTALL_PIPELINES=false
-
-# Path to the 'pipelines' project directory (relative to open-webui).
-PIPELINES_REL="../open-webui-pipelines"
-
-# Directory to store 'pipelines' workflows.
-# This will be created if it doesn't exist.
-PIPELINES_WORKFLOWS_DIR="$MODELS_DIR/Pipelines"
-
-# Port number for the 'pipelines' server
-PIPELINES_PORT=9099
-
-
 #--------------------------------- HELPERS ----------------------------------
 
-# Installs a pipeline script into the '$PIPELINES_WORKFLOWS_DIR' directory.
+# Launches/closes an Open WebUI and Llama.cpp session using tmux.
 #
-# Usage: install_pipelines <pipeline_name> <path_to_script>
+# This function enables key bindings for window navigation (F1/F2) and mouse
+# scroll support. It then starts two windows: one running "llama.cpp" and
+# another running "Open-WebUI" interface, attaching the user to that session.
+# If the command is "close", it terminates the specified session.
 #
-# Parameters:
-#   pipeline_name  - The name of the pipeline, ej: "Google GenAI Manifold Pipeline"
-#   path_to_script - Full path to the script file that needs to be installed.
-#
-install_pipelines() {
-    local pipeline_name=$1 pipeline_script=$2
-    local filename
-
-    [[ -n "$pipeline_script" ]] \
-      || bug_report "install_pipelines() did not receive any script to install"
-    [[ -f "$pipeline_script" ]] \
-      || bug_report "install_pipelines() did not find the script '$pipeline_script'"
-
-    # if no pipeline name was provided, set it to the basename of the script
-    filename=$(basename "$pipeline_script")
-    if [[ -z $pipeline_name ]]; then
-        pipeline_name=$filename
-    fi
-
-    # check if a file with the same name already exists in the pipelines directory
-    if [[ -e "$PIPELINES_WORKFLOWS_DIR/$filename" ]]; then
-        echox check "$filename already installed"
-        return
-    fi
-
-    echox wait "Installing $pipeline_name"
-    mkdir -p "$PIPELINES_WORKFLOWS_DIR"
-    cp "$pipeline_script" "$PIPELINES_WORKFLOWS_DIR"
-}
-
-# Launches/closes the three services within a `tmux` session
-# Usage: control_tmux_session <session> <command> [aiman_path]
+# Usage:
+#   control_owui_and_llamacpp <command> <session_name>
 #
 # Parameters:
-#   session    - The name of the 'tmux' session to be created or destroyed.
-#   command    - The action to perform: "launch" or "close".
-#   aiman_path - The full path to the 'aiman' command used to start the services.
+#   command     : The action to perform. Must be either "launch" or "close".
+#   session_name: The name of the tmux session to create or manage.
 #
-control_tmux_session() {
-    local session=$1 command=$2 aiman_path=$3 arg=$4
-    [[ -n "$session" ]] ||
-        bug_report "The control_tmux_session() function requires a session name as the first argument"
+# Example:
+#   control_owui_and_llamacpp launch ai_session
+#   control_owui_and_llamacpp close  ai_session
+#
+function control_owui_and_llamacpp() {
+    local command=$1 session=$2
+    require_system_command tmux
 
-    # launch the three services within the tmux session
     if [[ $command == "launch" ]]; then
 
-        # create a new tmux session with the window split vertically into 3 panels
-        tmux new-session -d -s "$session"
-        tmux split-window
+        # create a temporary configuration file for tmux
+        local TMUX_CONF
+        TMUX_CONF=$(mktemp)
 
-        # launch OLLAMA in the first panel
-        message "Launching ollama (tmux)"
-        tmux send-keys   -t "$session:0.1"    "'$aiman_path' launch ollama" C-m
-        tmux select-pane -t "$session:0.1" -T 'OLLAMA'
+        # enable mouse support (scrolling and clicking)
+        echo "set -g mouse on" >> "$TMUX_CONF"
 
-        # launch PIPELINES in the second panel
-        if [[ $arg == '--with-pipelines' ]]; then
-            message "Launching pipelines (tmux)"
-            tmux split-window
-            tmux send-keys   -t "$session:0.2"    "'$aiman_path' launch open-webui --pipelines" C-m
-            tmux select-pane -t "$session:0.2" -T 'PIPELINES'
-        fi
+        # bind "PageUp" to enter copy mode and scroll up
+        echo "bind-key -n PageUp copy-mode -u" >> "$TMUX_CONF"
 
-        # launch WEBUI in the third panel
-        message "Launching open-webui (tmux)"
-        sleep 1
-        tmux send-keys   -t "$session:0.0"    "'$aiman_path' launch open-webui --webui --close-tmux-on-exit" C-m
-        sleep 1
-        tmux select-pane -t "$session:0.0" -T "OPEN-WEBUI"
-        tmux select-pane -t "$session:0.0"
+        # enable natural PageDown behavior within copy-mode
+        echo "bind-key -T copy-mode-vi PageDown send-keys -X page-down" >> "$TMUX_CONF"
 
-        # configure tmux
-        tmux set-option pane-border-status top
-        tmux set-option -g   status-style "fg=green"
-        tmux set-option -ga  status-style "bg=default"
+        # force tmux to start window indexing from 1
+        echo "set -g base-index 1" >> "$TMUX_CONF"
 
-        # when this script receives a SIGINT (Ctrl+C),
-        # it will terminate the processes matching 'open_webui.main'
-        trap "pgrep -f 'open_webui.main' | xargs kill" SIGINT
+        # define window navigation with "F1" and "F2" keys
+        echo "bind-key -n F1 select-window -t :1" >> "$TMUX_CONF"
+        echo "bind-key -n F2 select-window -t :2" >> "$TMUX_CONF"
 
-        # attach to the tmux session to see all panels
-        # and wait until the process is no longer running
-        tmux attach-session -t "$session" &
-        pid=$! ; while kill -0 "$pid" 2>/dev/null; do
-            wait "$pid"
-        done
+        # start the session in detached mode with "llama.cpp"
+        # and create the second window for "Open-WebUI"
+        # attaching the session to the current terminal
+        tmux -f "$TMUX_CONF" new-session -d -s "$session" -n "Llama.cpp"  "$AIMAN launch open-webui --llama-cpp --close-tmux-on-exit"
+        tmux new-window                     -t "$session" -n "Open-WebUI" "$AIMAN launch open-webui --webui --close-tmux-on-exit"
+        tmux attach-session -t "$session"
 
+        # remove the temporary configuration file after connection is established
+        rm -f "$TMUX_CONF"
 
-    # close the tmux session (shutting down all services)
     elif [[ $command == "close" ]]; then
         tmux kill-session -t "$session"
 
     # report an error if an unknown command is provided
     else
-        bug_report "Invalid command '$command' in control_tmux_session() function."
+        bug_report "Invalid command '$command' in control_owui_and_llamacpp() function."
 
     fi
 }
@@ -179,7 +124,6 @@ _init_() {
     LOCAL_DIR=$5
     REMOTE_URL=$6
     REMOTE_HASH=$7
-    PIPELINES_LOCAL_DIR="${LOCAL_DIR:?}/${PIPELINES_REL:?}"
 }
 
 #============================================================================
@@ -224,25 +168,6 @@ cmd_install() {
     virtual_python !pip install --upgrade pip
     virtual_python !pip install -r backend/requirements.txt -U
 
-    #----------------- INSTALL PIPELINES -----------------#
-
-    # if the installation of pipelines is not required, return early
-    [[ $INSTALL_PIPELINES != true ]] && return
-
-    # define source paths to the predefined pipeline examples
-    # shellcheck disable=SC2034
-    local filters="$PIPELINES_LOCAL_DIR/examples/filters"      \
-          pipelines="$PIPELINES_LOCAL_DIR/examples/pipelines"  \
-          scaffolds="$PIPELINES_LOCAL_DIR/examples/scaffolds"
-
-    # MAIN
-    mkdir -p   "$PIPELINES_LOCAL_DIR"
-    safe_chdir "$PIPELINES_LOCAL_DIR"
-    git clone https://github.com/open-webui/pipelines.git .
-    virtual_python !pip install -r requirements.txt
-
-    # install specific scripts that come predefined with PIPELINES
-    # install_pipelines "Google GenAI Manifold Pipeline" "$pipelines/providers/google_manifold_pipeline.py"
 }
 
 #============================================================================
@@ -254,7 +179,7 @@ cmd_install() {
 #
 cmd_launch() {
 
-    # default service to launch is TMUX with 3 panels: ollama/pipelines/webui
+    # default service to launch is TMUX with panels (webui + llama.cpp?)
     local launch='multi'
     local close_tmux=false
     local options=()
@@ -263,21 +188,28 @@ cmd_launch() {
     # and whether to close the tmux session
     while [[ $# -gt 0 ]]; do
         case $1 in
-            '--webui')
-                launch='webui' ; shift ;;
-            '--ollama')
-                launch='ollama' ; shift ;;
-            '--pipelines')
-                launch='pipelines' ; shift ;;
+            '--webui' | '--ui' | '-w')
+                launch='webui'
+                shift
+                ;;
+            '--llama-cpp' | '--llm' | '-l')
+                launch='llama.cpp'
+                shift
+                ;;
+            '--ollama' | '--ollm' | '-o')
+                launch='ollama'
+                shift
+                ;;
             '--multi')
-                launch='multi' ; shift ;;
-            '--multipipe')
-                launch='multi-pipelines' ; shift ;;
+                launch='multi'
+                shift
+                ;;
             '--gnome')
-                launch='gnome-terminal' ; shift ;;
-
-            # internally used to close the 'tmux' session on exit
+                launch='gnome-terminal'
+                shift
+                ;;
             '--close-tmux-on-exit')
+                # internally used to close the 'tmux' session on exit
                 close_tmux=true
                 shift
                 ;;
@@ -312,47 +244,27 @@ cmd_launch() {
 
     # launch "Ollama"
     elif [[ $launch == 'ollama' ]]; then
-        "$AIMAN" ollama.launch
+        "$AIMAN" launch ollama
 
-    # launch "Pipelines" (a ui-agnostic openai api plugin framework)
-    elif [[ $launch == 'pipelines' ]]; then
-        if [[ $INSTALL_PIPELINES != true ]]; then
-            fatal_error "Automatic installation of Pipelines with Open WebUI is disabled" \
-                "This is due to 'INSTALL_PIPELINES' is set to '$INSTALL_PIPELINES 'in System/handlers/open-webui.sh"
-        fi
-        require_venv "$VENV" "$PYTHON"
-        safe_chdir "$PIPELINES_LOCAL_DIR"
-        message "working directory changed to: $PWD"
-        message "launching Pipelines $port_message"
-        message "./start.sh" "${options[@]}" "$@"
-        message
-        mkdir -p "$PIPELINES_WORKFLOWS_DIR"
-        export PIPELINES_DIR="$PIPELINES_WORKFLOWS_DIR"
-        export PORT="$PIPELINES_PORT"
-        virtual_python !./start.sh "${options[@]}" "$@"
+    # launch "llama.cpp"
+    elif [[ $launch == 'llama.cpp' ]]; then
+        "$AIMAN" launch llama.cpp
 
     # launch WebUI +  Ollama in two separate tmux windows
     elif [[ $launch == 'multi' ]]; then
-        require_system_command tmux
-        control_tmux_session "$tmux_session" launch "$AIMAN" --without-pipelines
+        control_owui_and_llamacpp launch "$tmux_session"
 
-    # launch WebUI + Pipelines + Ollama in three separate tmux windows
-    elif [[ $launch == 'multi-pipelines' ]]; then
-        require_system_command tmux
-        control_tmux_session "$tmux_session" launch "$AIMAN" --with-pipelines
-
-    # launch WebUI + Pipelines + Ollama in three separate terminal tabs (gnome)
+    # launch WebUI + Ollama in three separate terminal tabs (gnome)
     elif [[ $launch == 'gnome-terminal' ]]; then
         require_system_command gnome-terminal
         gnome-terminal --tab -t OLLAMA     -- "$AIMAN" launch open-webui --ollama
-        gnome-terminal --tab -t PIPELINES  -- "$AIMAN" launch open-webui --pipelines
         gnome-terminal --tab -t OPEN-WEBUI -- "$AIMAN" launch open-webui --webui
 
     fi
 
     # on service completion,
     # close the `tmux` session if requested
-    [[ $close_tmux == true ]] && control_tmux_session "$tmux_session" close
+    [[ $close_tmux == true ]] && control_owui_and_llamacpp close "$tmux_session"
 }
 
 #============================================================================
@@ -363,12 +275,7 @@ cmd_launch() {
 #   cmd_remove_extra [user_args]
 #
 cmd_remove_extra() {
-
-    if [[ $INSTALL_PIPELINES == true ]]; then
-        echox wait  "Removing sub-project 'open-webui-pipelines'"
-        rm -rf "${PIPELINES_LOCAL_DIR:?}"
-        echox check "Sub-project 'open-webui-pipelines' has been removed."
-    fi
+    :
 }
 
 
