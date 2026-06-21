@@ -292,7 +292,9 @@ cmd_install() {
 cmd_launch() {
     local PORT=8081
     local LLAMA_SERVER="$LOCAL_DIR/build/bin/llama-server"
-    local MODELS_PRESET="$HOME/llama-presets.ini"
+    local MODELS_PRESET="$MODELS_LLAMA_DIR/00_MODELS-PRESETS.ini"
+
+    #export LLAMA_ARG_MODELS_DIR="$MODELS_LLAMA_DIR"
 
     # ensure the shared folder exists
     [[ -d $SHARED_TMP_DIR ]] \
@@ -317,6 +319,7 @@ cmd_launch() {
     message "changed working directory to $PWD"
 
     # create the named pipe and set open permissions
+    message "creating named pipe '$PIPE_FILE'"
     rm -f "$PIPE_FILE"
     mkfifo "$PIPE_FILE"
     chmod 666 "$PIPE_FILE"
