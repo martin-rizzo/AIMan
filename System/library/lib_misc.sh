@@ -193,9 +193,11 @@ clone_repository() {
                     "This is an internal error likely caused by a mistake in the code"
     fi
 
+    message "git clone '$repo' '$directory'"
     git clone "$repo" "$directory"
     if [[ $hash != '' && $hash != '-' ]]; then
         safe_chdir "$directory"
+        message "git reset --hard '$hash'"
         git reset --hard "$hash"
     fi
     safe_chdir "$previous_dir"

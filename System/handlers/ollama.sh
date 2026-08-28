@@ -279,12 +279,37 @@ cmd_install() {
     #     extern __DEVICE_FUNCTIONS_DECL__ __device_builtin__ double   cospi(double x) noexcept (true);
     #     extern __DEVICE_FUNCTIONS_DECL__ __device_builtin__ float    cospif(float x) noexcept (true);
     #
-    export CUDA_PATH=/usr/local/cuda/
-    export NVCC_CCBIN=/usr/bin/g++-14
+
+    # export CUDA_HOME=/usr/local/cuda
+    # export PATH=$CUDA_HOME/bin:$PATH
+    # export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+    #export CUDA_PATH=/usr/local/cuda/
+    #export NVCC_CCBIN=/usr/bin/g++-14
+    # export CC=$GCC_COMMAND
+    # export CXX=$GPP_COMMAND
+    # cmake -B build        --preset "$PRESET" -DCMAKE_CUDA_COMPILER="$NVCC_COMMAND"
+    # cmake --build build   --preset "$PRESET" --config Release
+
+    export CUDA_HOME=/usr/local/cuda
+    export PATH=$CUDA_HOME/bin:$PATH
+    export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
     export CC=$GCC_COMMAND
     export CXX=$GPP_COMMAND
-    cmake -B build        --preset "$PRESET" -DCMAKE_CUDA_COMPILER="$NVCC_COMMAND"
-    cmake --build build   --preset "$PRESET" --config Release
+    export CUDACXX="$NVCC_COMMAND"
+
+    # clear the build cache
+    go clean -cache
+
+    # modify the ollama config to trick the compiler and use GO v1.25
+    go mod edit -go=1.25
+
+    # BUILD!
+    cmake -B build \
+        -DOLLAMA_LLAMA_BACKENDS="cuda_v13" \
+        -DCMAKE_CUDA_ARCHITECTURES=native \
+        -DCMAKE_BUILD_TYPE=Release
+    cmake --build build --config Release --parallel "$(nproc)"
+    CGO_ENABLED=1 go build .
 
     create_ollama_script "ollama.sh"
 }

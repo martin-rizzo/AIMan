@@ -68,7 +68,7 @@ _init_() {
     case "$NAME" in
         'comfyui')
             PYTHON="python3.13"
-            TORCH="2.10"
+            TORCH="2.11"
             ;;
         'comfystable')
             PYTHON="python3.10"
@@ -120,38 +120,46 @@ cmd_install() {
 
     ## pytorch 2.3.1 using CUDA 11.8 (NVIDIA GPU)
     if [[ $TORCH == '2.3' ]]; then
+        message "Installing PyTorch 2.3.1 using CUDA 11.8"
         virtual_python !pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu118
     fi
 
     ## pytorch 2.4.1 using CUDA 12.1 (NVIDIA GPU)
     if [[ $TORCH == '2.4' ]]; then
+        message "Installing PyTorch 2.4.1 using CUDA 12.1"
         virtual_python !pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
     fi
 
     ## pytorch 2.5.1 using CUDA 12.4 (NVIDIA GPU)
     if [[ $TORCH == '2.5' ]]; then
+        message "Installing PyTorch 2.5.1 using CUDA 12.4"
         virtual_python !pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
     fi
 
     ## pytorch 2.7.1 using CUDA 12.6 (NVIDIA GPU)
     if [[ $TORCH == '2.7' ]]; then
+        message "Installing PyTorch 2.7.1 using CUDA 12.6"
         virtual_python !pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126
     fi
 
     ## pytorch 2.9.1 using CUDA 12.8 (NVIDIA GPU)
     if [[ $TORCH == '2.9' ]]; then
+        message "Installing PyTorch 2.9.1 using CUDA 12.8"
         virtual_python !pip install torch==2.9.1 torchvision==0.24.1 torchaudio==2.9.1 --index-url https://download.pytorch.org/whl/cu128
     fi
 
     ## pytorch 2.10.0 using CUDA 13.0 (NVIDIA GPU)
     if [[ $TORCH == '2.10' ]]; then
+        message "Installing PyTorch 2.10.0 using CUDA 13.0"
         virtual_python !pip install torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0 --index-url https://download.pytorch.org/whl/cu130
     fi
 
-    # ## pytorch 2.10.0 using CUDA 13.0 (NVIDIA GPU)
-    # if [[ $TORCH == 'last' ]]; then
-    #     virtual_python !pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
-    # fi
+    ## pytorch 2.11.0 using CUDA 13.0 (NVIDIA GPU)
+    if [[ $TORCH == '2.11' ]]; then
+        message "Installing PyTorch 2.11.0 using CUDA 13.0"
+        virtual_python !pip install torch==2.11.0 torchvision==0.26.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cu130
+    fi
+
 
     ## Dependencies
     virtual_python !pip install -r requirements.txt
@@ -242,30 +250,58 @@ cmd_launch() {
     # so that any user/process can access it
     local PIPE_FILE="$SHARED_TMP_DIR/comfyui_trigger"
 
-    
+
     #------------- COMFYUI OPTIONS -------------#
     local options=()
     local launching_extra_message=""
-    
+
     # Enable high-quality Latent previews during generation
-    options+=( --preview-method auto )
-    
+    #options+=( --preview-method auto )
+    options+=( --preview-method latent2rgb )
+
+    # Force the VAE to run in a specific precision (float32, bfloat16, etc...)
+    #options+=( --fp32-vae )
+    #options+=( --bf16-vae )
+
+    # Specify the frontend version to use (repository @ version)
+    #options+=( --front-end-version Comfy-Org/ComfyUI_frontend@latest )
+    #options+=( --front-end-version Comfy-Org/ComfyUI_frontend@1.50.2 )
+
+    # Disables PyTorch from locking RAM pages, letting the OS free memory dynamically,
+    # fixes severe delays caused by recent ComfyUI versions reloading models from disk.
+    #options+=( --disable-pinned-memory --high-ram )
+
+    ## ???
+    #options+=( --fp32-vae )
+
+    ## Use old aggressive caching style
+    #options+=( --cache-classic )
+
+    ## ???
+    #options+=( --disable-smart-memory )
+
+    ## ???
+    #options+=( --async-offload --cache-lru 10 --fast  )
+
+    ## ???
+    #options+=( --fast --cpu )
+
     # Set custom network port if required
     if [[ -n "$PORT" ]]; then
         options+=( --port "$PORT" )
         launching_extra_message="on port $PORT"
     fi
-    
+
     # enable CORS header for allowed Chrome Extension
     # (this enables the chrome extension to launch ComfyUI)
     if [[ -n "$COMFYUI_ALLOWED_CHROME_EXT_ID" ]]; then
         options+=( --enable-cors-header "chrome-extension://$COMFYUI_ALLOWED_CHROME_EXT_ID" )
     fi
-    
+
     # restrict listener to localhost to prevent external network access
     options+=( --listen 127.0.0.1 )
-    
-    
+
+
     #---------------- LAUNCHING ----------------#
     safe_chdir "$LOCAL_DIR"
     message "changed working directory to $PWD"

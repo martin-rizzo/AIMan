@@ -273,7 +273,10 @@ cmd_install() {
     export CUDACXX
     CUDACXX=$(fedora_find_nvcc)
     rm -rf build
-    cmake -B      build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="86" -DCMAKE_BUILD_TYPE=Release
+    cmake -B build                      \
+        -DGGML_CUDA=ON                  \
+        -DCMAKE_CUDA_ARCHITECTURES="86" \
+        -DCMAKE_BUILD_TYPE=Release
     cmake --build build --config Release --parallel "$(nproc)"
 
     ## MLX support for llama.cpp
