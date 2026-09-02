@@ -68,11 +68,12 @@ _init_() {
     case "$NAME" in
         'comfyui')
             PYTHON="python3.13"
-            TORCH="2.11"
+            TORCH="2.12"
             ;;
         'comfystable')
             PYTHON="python3.10"
             TORCH="2.5"
+            KITCHEN="0.2.7"
             ;;
         *)
             echo "Error: Invalid name parameter. Please specify either 'comfystable' or 'comfyui'."
@@ -158,6 +159,18 @@ cmd_install() {
     if [[ $TORCH == '2.11' ]]; then
         message "Installing PyTorch 2.11.0 using CUDA 13.0"
         virtual_python !pip install torch==2.11.0 torchvision==0.26.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cu130
+    fi
+
+    ## pytorch 2.12.1 using CUDA 13.0 (NVIDIA GPU)
+    if [[ $TORCH == '2.12' ]]; then
+       message "Installing PyTorch 2.12.1 using CUDA 13.0"
+       virtual_python !pip install torch==2.12.1 torchvision==0.27.1 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cu130
+    fi
+
+    ## force Comfy Kitchen version to prevent dependency conflicts
+    if [[ -n $KITCHEN ]]; then
+       message "Forcing installation of comfy-kitchen version: $KITCHEN"
+       virtual_python !pip install comfy-kitchen=="$KITCHEN" --force-reinstall
     fi
 
 
@@ -251,40 +264,42 @@ cmd_launch() {
     local PIPE_FILE="$SHARED_TMP_DIR/comfyui_trigger"
 
 
-    #------------- COMFYUI OPTIONS -------------#
+    #------------------------ ComfyUI Startup Flags ------------------------#
     local options=()
     local launching_extra_message=""
 
-    # Enable high-quality Latent previews during generation
-    #options+=( --preview-method auto )
+    ## Enable high-quality Latent previews during generation
+    #    options+=( --preview-method none       ) # disables all previews
+    #    options+=( --preview-method auto       ) # selects the optimal method only
+    #    options+=( --preview-method latent2rgb ) # fast low-resolution view
+    #    options+=( --preview-method taesd      ) # slow high-quality VAE view
     options+=( --preview-method latent2rgb )
 
-    # Force the VAE to run in a specific precision (float32, bfloat16, etc...)
-    #options+=( --fp32-vae )
-    #options+=( --bf16-vae )
+    ## Aggressively offload to RAM instead of keeping models in VRAM
+    #    options+=( --disable-smart-memory )
 
-    # Specify the frontend version to use (repository @ version)
-    #options+=( --front-end-version Comfy-Org/ComfyUI_frontend@latest )
-    #options+=( --front-end-version Comfy-Org/ComfyUI_frontend@1.50.2 )
+    ## Force the VAE to run in a specific precision (float32, bfloat16, etc...)
+    #    options+=( --fp32-vae )  # Runs the VAE in full-precision float32
+    #    options+=( --fp16-vae )  # Runs the VAE in reduced float16 precision
+    #    options+=( --bf16-vae )  # Runs the VAE in bfloat16
 
-    # Disables PyTorch from locking RAM pages, letting the OS free memory dynamically,
-    # fixes severe delays caused by recent ComfyUI versions reloading models from disk.
-    #options+=( --disable-pinned-memory --high-ram )
+    ## Force the VAE to run on the CPU
+    #    options+=( --cpu-vae )
 
-    ## ???
-    #options+=( --fp32-vae )
+    ## Specify the frontend version to use (repository @ version)
+    #    options+=( --front-end-version Comfy-Org/ComfyUI_frontend@latest )
+    #    options+=( --front-end-version Comfy-Org/ComfyUI_frontend@1.50.2 )
+
+    ## Disables PyTorch from locking RAM pages, letting the OS free memory dynamically,
+    ## fixes severe delays caused by recent ComfyUI versions reloading models from disk.
+    #    options+=( --disable-pinned-memory --high-ram )
 
     ## Use old aggressive caching style
-    #options+=( --cache-classic )
+    #    options+=( --cache-classic )
 
-    ## ???
-    #options+=( --disable-smart-memory )
-
-    ## ???
-    #options+=( --async-offload --cache-lru 10 --fast  )
-
-    ## ???
-    #options+=( --fast --cpu )
+    ## Enables experimental optimizations to speed up generation,
+    ## delivers a 20-25% performance boost, but quality is not guaranteed.
+    #    options+=( --fast )
 
     # Set custom network port if required
     if [[ -n "$PORT" ]]; then
@@ -302,7 +317,8 @@ cmd_launch() {
     options+=( --listen 127.0.0.1 )
 
 
-    #---------------- LAUNCHING ----------------#
+    #------------------------------ Launching ------------------------------#
+
     safe_chdir "$LOCAL_DIR"
     message "changed working directory to $PWD"
     
