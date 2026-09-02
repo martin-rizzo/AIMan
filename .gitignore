@@ -15,6 +15,14 @@ Thumbs.db
 #> log files
 *.log
 
+#-----------------------------
+# IDEs and EDITORS
+#
+Xcodeproj/
+.xcuserdata/
+.vscode/
+*.sublime-project
+*.sublime-workspace
 
 #-----------------------------
 # REPOSITORIES
