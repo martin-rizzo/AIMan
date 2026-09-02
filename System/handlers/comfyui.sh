@@ -263,10 +263,24 @@ cmd_launch() {
     # so that any user/process can access it
     local PIPE_FILE="$SHARED_TMP_DIR/comfyui_trigger"
 
+    local USE_RAMDISK=false
 
     #------------------------ ComfyUI Startup Flags ------------------------#
+
+    # Collects user-supplied command line options into an array,
+    # while internal options (e.g., --ramdisk) are handled separately
     local options=()
-    local launching_extra_message=""
+    for arg in "$@"; do
+        echo "$arg"
+        case "$arg" in
+            --ramdisk)
+                USE_RAMDISK=true
+                ;;
+            *)
+                options+=("$arg")
+                ;;
+        esac
+    done
 
     ## Enable high-quality Latent previews during generation
     #    options+=( --preview-method none       ) # disables all previews
@@ -302,6 +316,7 @@ cmd_launch() {
     #    options+=( --fast )
 
     # Set custom network port if required
+    local launching_extra_message=""
     if [[ -n "$PORT" ]]; then
         options+=( --port "$PORT" )
         launching_extra_message="on port $PORT"
@@ -315,6 +330,14 @@ cmd_launch() {
 
     # restrict listener to localhost to prevent external network access
     options+=( --listen 127.0.0.1 )
+
+    #------------------------------- RamDisk -------------------------------#
+
+    if [[ $USE_RAMDISK == true ]]; then
+        message "Launching ComfyUI in RAMDisk mode"
+    else
+        message "Launching ComfyUI in normal mode"
+    fi
 
 
     #------------------------------ Launching ------------------------------#
@@ -340,8 +363,8 @@ cmd_launch() {
         
         # Launch ComfyUI as a background job
         message "launching ComfyUI application ${launching_extra_message}"
-        message         'main.py' "${options[@]}" "$@"
-        virtual_python '&main.py' "${options[@]}" "$@"
+        message         'main.py' "${options[@]}"
+        virtual_python '&main.py' "${options[@]}"
         COMFYUI_PID=$!
         message "comfyUI launched with PID: $COMFYUI_PID"
         
